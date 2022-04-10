@@ -1,0 +1,93 @@
+---
+title: "MethyGenotyper"
+author: "Minghan Qu, Yi Jiang, Chaolong Wang"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{MethyGenotyper}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+The `MethyGenotyper` package provides functions to infer genotypes (output a VCF file) for specific probes and on Illumina's Infinium MethylationEPIC (EPIC) array. The probes include genotyping probes, color-channel-switching (CCS) SNP probes, and Type-II SNP probes. We defined allelic balance (AB) as the proportion of signals supporting the alternative allele and calculated AB for each probe and sample. 
+
+- __Genotyping probe:__ There are 59 genotyping probes (started with "rs") on EPIC array. Six of them on sex chromosomes were removed. We calculated AB as the proportion of signals supporting alternative alleles over total signals.
+- __CCS SNP probe:__ There are ## CCS SNP probes on EPIC array. These probes are type-I probes with SNPs at single base extension (SBE) resulting in CCS (A,T <-> C,G mutation). The signals for probes with CCS SNPs are called out-of-band signals. We calculated AB as the proportion of out-of-band signals over total signals.
+- __Type-II SNP probe:__ There are ## Type-II SNP probes. We only focus on probes with SNPs at SBE. We calculated AB as the proportion of signals supporting alternative alleles over total signals. 
+
+We used `ewastools` to call genotypes based on the AB values. This tool fit three beta distributions for three genotypes (reference homozygous, heterozygous, and alternative homozygous) and one uniform distribution for outliers. Genotype probabilities of the three genotypes ($P_0$, $P_1$, and $P_2$ for reference homozygous, heterozygous, and alternative homozygous, respectively) will be calculated for each probe and sample. Lastly, a VCF file containing allele frequency (AF), $R^2$, genotype probability, and dosage genotype (DS) will be produced:
+
+- __DS:__ $G = P_1 + 2P_2$
+- __AF:__ $p = \frac{\sum G}{2N}$, where $N$ is the sample size
+- __$R^2$:__ $R^2 = \frac{\sigma^2}{2p(1-p)}$, where $\sigma^2$ is the variance of dosage genotypes
+
+As an option, we also provided several convenient tools for estimating kinships and sample contamination.
+
+## Dependencies
+
+This document has the following dependencies
+
+```{r dependencies, eval=TRUE, message=FALSE, warning=FALSE}
+library(minfi)
+library(tidyverse)
+library(ewastools)
+library(foreach)
+library(doParallel)
+# library(methyGenotyper)
+```
+
+## Recommended workflow
+
+### Read manifest file and IDAT file list
+
+Load EPIC manifest file. Required columns: Name, AddressA_ID, AddressB_ID, Infinium_Design_Type, and Color_Channel.
+
+```{r mnfst, eval=TRUE, warning=FALSE, message=TRUE}
+data(mnfst)
+head(mnfst)
+```
+
+Read IDAT file list. Here is an example of processing three IDAT files from `minfiDataEPIC`. Your may process your own data by specifying your target file list. Required collumns: Sample_Name, Basename.
+
+```{r rgSet, eval=TRUE, warning=FALSE, message=TRUE}
+target <- get_target("EPIC")
+head(target)
+```
+
+### Read IDAT files and noob and dye-bias correction
+
+With the following code, the IDAT files listed in the variable `target` will be read one-by-one. For each sample, a noob background correction and dye-bias correction will be done. You can specify the number of CPUs to enable parallel processing. After that, a list of four elements will be returned, including corrected signals of probe A and probe B for the two color channels.
+
+```{r correct_noob_dye, eval=FALSE, warning=FALSE, message=FALSE}
+rgData <- correct_noob_dye(target, mnfst, cpu=3)
+```
+
+### Call genotypes
+
+As shown below, you can call genotypes for genotyping probes, CCS SNP probes, and type-II SNP probes. For each probe and each sample, an allelic balance (AB) will be calculated, which indicates the proportion of signals supporting the alternative allele. The AB values can be fitted with three beta distribution denoting the three genotypes (reference homozygous, heterozygous, and alternative homozygous) and one uniform distribution denoting outliers. We used `ewastools` to call genotypes based on the AB values. In addition, you can plot the fitted distribution of the AB values and produce a VCF file of the inferred genotypes by specifying `plotBeta=TRUE` and `vcf=TRUE`.
+
+```{r callGeno, eval=FALSE, warning=FALSE, message=FALSE}
+# Call genotypes for genotyping probes
+dosage_genotyping <- callGeno_genotyping(rgData, plotBeta=TRUE, vcf=TRUE)
+# Call genotypes for CCS snp probes
+dosage_ccs <- callGeno_ccs(rgData, plotBeta=TRUE, vcf=TRUE)
+# Call genotypes for type-II snp probes
+dosage_typeII <- callGeno_typeII(rgData, plotBeta=TRUE, vcf=TRUE)
+```
+
+### Estimate kinship
+
+
+### Estimate sample contamination
+
+
+
