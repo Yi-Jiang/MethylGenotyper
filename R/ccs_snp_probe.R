@@ -5,6 +5,7 @@
 #' @param plotBeta If TRUE, plot beta distributions for reference homozygous, heterozygous, and alternative homozygous.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
 #' @return A matrix of genotype calls.
+#' @export
 callGeno_ccs <- function(rgData, plotBeta=FALSE, vcf=FALSE){
   AB_geno <- getAB_ccs(rgData)
   genotypes = ewastools::call_genotypes(AB_geno, learn=TRUE)
@@ -20,6 +21,7 @@ callGeno_ccs <- function(rgData, plotBeta=FALSE, vcf=FALSE){
 #' 
 #' @param rgData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
 #' @return Allelic balances.
+#' @export
 getAB_ccs = function(rgData){
   data(probeInfo_ccs)
   dR <- filter(probeInfo_ccs, Color=="Red")

@@ -9,6 +9,7 @@
 #' \item{AG}{ - A matrix of probeA signals in Green channel}
 #' \item{BR}{ - A matrix of probeB signals in Red channel}
 #' \item{BG}{ - A matrix of probeB signals in Green channel}
+#' @export
 correct_noob_dye <- function(target, mnfst, cpu){
     data(probelist)
     cl <- makeCluster(cpu)
@@ -109,6 +110,7 @@ correct_noob_dye <- function(target, mnfst, cpu){
 #' @param bg Background signals.
 #' @return mu and sigma by fitting background signals with normal distribution.
 #' @return alpha by fitting foreground signals with exponential distribution.
+#' @export
 backgroundCorrectionNoobFit <- function(ib, bg){
     e <- MASS::huber(bg)
     mu <- e$mu
@@ -123,6 +125,7 @@ backgroundCorrectionNoobFit <- function(ib, bg){
 #' @param alpha Foreground signal parameters returned by `backgroundCorrectionNoobFit`.
 #' @param x Foreground signals to be corrected.
 #' @return The conditional expectation of the signal given the observed foreground and background.
+#' @export
 normExpSignal <- function(mu, sigma, alpha, x){
     sigma2 <- sigma * sigma
     if (alpha <= 0)

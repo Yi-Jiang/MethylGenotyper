@@ -3,6 +3,7 @@
 #' 
 #' @param genotypes Genotype calls produced by using `ewastools::call_genotypes`.
 #' @param type One of "genotyping_probe", "ccs_snp_probe", and "typeII_snp_probe".
+#' @export
 plot_beta_distribution <- function(genotypes, type){
   pdf(paste0("beta_distribution.", type, ".pdf"), width=500, height=500)
   plot(
@@ -22,6 +23,7 @@ plot_beta_distribution <- function(genotypes, type){
 #' 
 #' @param R2 R-square
 #' @return Constrained R2
+#' @export
 constrain_R2 <- function(R2){
   if(R2>1){
     if(R2>1.1){
@@ -41,6 +43,7 @@ constrain_R2 <- function(R2){
 #' 
 #' @param R2 R-square
 #' @return Whether the variant passed filtering.
+#' @export
 filter_by_R2 <- function(R2){
   if(R2>1.1){
     filter="R2>1.1"
@@ -58,6 +61,7 @@ filter_by_R2 <- function(R2){
 #' @param vcf If TRUE, will write a VCF file in the current directory.
 #' @param type One of genotyping_probe, ccs_snp_probe, and typeII_snp_probe.
 #' @return A matrix of genotype calls.
+#' @export
 format_genotypes <- function(genotypes, vcf=FALSE, type){
   for(i in 1:3){
     colnames(genotypes$gamma[[i]]) <- colnames(genotypes$snps)

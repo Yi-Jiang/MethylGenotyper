@@ -3,6 +3,7 @@
 #' 
 #' @param type. One of "EPIC" and "450K"
 #' @return A data frame of the IDAT file list
+#' @export
 get_target <- function(type="EPIC"){
   if(type=="EPIC"){
     library(minfiDataEPIC)
