@@ -4,12 +4,22 @@
 \alias{format_genotypes}
 \title{Format genotype calls produced by ewastools}
 \usage{
-format_genotypes(genotypes, vcf = FALSE, type)
+format_genotypes(
+  genotypes,
+  vcf = FALSE,
+  R2_cutoff = 0.7,
+  MAF_cutoff = 0.01,
+  type
+)
 }
 \arguments{
 \item{genotypes}{Genotype calls produced by using \code{ewastools::call_genotypes}.}
 
 \item{vcf}{If TRUE, will write a VCF file in the current directory.}
+
+\item{R2_cutoff}{An R-square cutoff to filter variants. Note that for VCF output, variants with R-square below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with R-square below the cutoff will be removed.}
+
+\item{MAF_cutoff}{An MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with MAF below the cutoff will be removed.}
 
 \item{type}{One of genotyping_probe, ccs_snp_probe, and typeII_snp_probe.}
 }

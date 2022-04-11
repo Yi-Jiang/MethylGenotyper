@@ -6,10 +6,10 @@
 #' @export
 get_target <- function(type="EPIC"){
   if(type=="EPIC"){
-    library(minfiDataEPIC)
+    suppressMessages(library(minfiDataEPIC))
     baseDir <- system.file("extdata", package = "minfiDataEPIC")
   }else if(type=="450K" | type=="450k"){
-    library(minfiData)
+    suppressMessages(library(minfiData))
     baseDir <- system.file("extdata", package = "minfiData")
   }else{
     print("Please specify one of EPIC and 450K.")

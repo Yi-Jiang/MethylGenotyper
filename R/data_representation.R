@@ -42,13 +42,31 @@ constrain_R2 <- function(R2){
 #' Variants with R2>1.1 (marked as .) or R2<0.7 are recommended to remove.
 #' 
 #' @param R2 R-square
+#' @param R2_cutoff An R-square cutoff to filter variants.
 #' @return Whether the variant passed filtering.
 #' @export
-filter_by_R2 <- function(R2){
+filter_by_R2 <- function(R2, R2_cutoff){
   if(R2>1.1){
     filter="R2>1.1"
-  }else if(R2<0.7){
-    filter="R2<0.7"
+  }else if(R2<R2_cutoff){
+    filter=paste0("R2<", R2_cutoff)
+  }else{
+    filter="PASS"
+  }
+  filter
+}
+
+#' Filter by AF
+#' 
+#' Variants with MAF<0.01 are recommended to remove.
+#' 
+#' @param AF Allele frequency
+#' @param MAF_cutoff An MAF (Minor allele frequency) cutoff to filter variants.
+#' @return Whether the variant passed filtering.
+#' @export
+filter_by_AF <- function(AF, MAF_cutoff){
+  if(AF < MAF_cutoff | AF > (1-MAF_cutoff)){
+    filter=paste0("MAF<", MAF_cutoff)
   }else{
     filter="PASS"
   }
@@ -59,10 +77,12 @@ filter_by_R2 <- function(R2){
 #' 
 #' @param genotypes Genotype calls produced by using `ewastools::call_genotypes`.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
+#' @param R2_cutoff An R-square cutoff to filter variants. Note that for VCF output, variants with R-square below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with R-square below the cutoff will be removed.
+#' @param MAF_cutoff An MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
 #' @param type One of genotyping_probe, ccs_snp_probe, and typeII_snp_probe.
 #' @return A matrix of genotype calls.
 #' @export
-format_genotypes <- function(genotypes, vcf=FALSE, type){
+format_genotypes <- function(genotypes, vcf=FALSE, R2_cutoff=0.7, MAF_cutoff=0.01, type){
   for(i in 1:3){
     colnames(genotypes$gamma[[i]]) <- colnames(genotypes$snps)
     rownames(genotypes$gamma[[i]]) <- rownames(genotypes$snps)
@@ -72,7 +92,9 @@ format_genotypes <- function(genotypes, vcf=FALSE, type){
   R2 <- apply(dosage, 1, var) / (2 * AF * (1 - AF))
   R2[is.na(R2)] <- 0
   R2_constrained <- sapply(R2, constrain_R2)
-  filter <- sapply(R2, filter_by_R2)
+  filter <- sapply(AF, function(x) filter_by_AF(x, MAF_cutoff))
+  filter2 <- sapply(R2, function(x) filter_by_R2(x, R2_cutoff))
+  filter[filter2!="PASS"] <- filter2[filter2!="PASS"]
   
   ## Write into a VCF file
   if(vcf){
@@ -117,6 +139,9 @@ format_genotypes <- function(genotypes, vcf=FALSE, type){
     vcf <- vcf[, -6]
     write.table(header, file=paste0("genotypes.", type, ".vcf"), sep="\t", row.names=F, quote=F, col.names=F)
     write.table(vcf, file=paste0("genotypes.", type, ".vcf"), sep="\t", row.names=F, quote=F, col.names=F, append=T)
+    
+    ## Filter dosage
+    dosage <- dosage[filter=="PASS",,drop=F]
     dosage
   }
 }

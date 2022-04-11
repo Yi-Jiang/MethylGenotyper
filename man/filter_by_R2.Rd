@@ -4,10 +4,12 @@
 \alias{filter_by_R2}
 \title{Filter by R2}
 \usage{
-filter_by_R2(R2)
+filter_by_R2(R2, R2_cutoff)
 }
 \arguments{
 \item{R2}{R-square}
+
+\item{R2_cutoff}{An R-square cutoff to filter variants.}
 }
 \value{
 Whether the variant passed filtering.

@@ -12,7 +12,7 @@
 
 <meta name="author" content="Minghan Qu, Yi Jiang, Chaolong Wang" />
 
-<meta name="date" content="2022-04-02" />
+<meta name="date" content="2022-04-11" />
 
 <title>MethyGenotyper</title>
 
@@ -336,7 +336,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">MethyGenotyper</h1>
 <h4 class="author">Minghan Qu, Yi Jiang, Chaolong Wang</h4>
-<h4 class="date">2022-04-02</h4>
+<h4 class="date">2022-04-11</h4>
 
 
 
@@ -359,53 +359,71 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div id="dependencies" class="section level2">
 <h2>Dependencies</h2>
 <p>This document has the following dependencies</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(minfi)</span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">library</span>(tidyverse)</span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="kw">library</span>(ewastools)</span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">library</span>(foreach)</span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="kw">library</span>(doParallel)</span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="co"># library(methyGenotyper)</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(MethyGenotyper)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">library</span>(minfi)</span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="kw">library</span>(tidyverse)</span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">library</span>(ewastools)</span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="kw">library</span>(foreach)</span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="kw">library</span>(doParallel)</span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="kw">library</span>(reshape)</span></code></pre></div>
 </div>
 <div id="recommended-workflow" class="section level2">
 <h2>Recommended workflow</h2>
 <div id="read-manifest-file-and-idat-file-list" class="section level3">
 <h3>Read manifest file and IDAT file list</h3>
-<p>Read manifest file. Required columns: Name, AddressA_ID, AddressB_ID, Infinium_Design_Type, and Color_Channel.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>mnfst &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;../data/manifest-file.csv&quot;</span>, <span class="dt">header=</span>T, <span class="dt">stringsAsFactors=</span>F) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb2-2"><a href="#cb2-2"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(Name, AddressA_ID, AddressB_ID, Infinium_Design_Type, Color_Channel)</span>
-<span id="cb2-3"><a href="#cb2-3"></a>mnfst<span class="op">$</span>AddressA_ID =<span class="st"> </span><span class="kw">as.numeric</span>(mnfst<span class="op">$</span>AddressA_ID)</span>
-<span id="cb2-4"><a href="#cb2-4"></a>mnfst<span class="op">$</span>AddressB_ID =<span class="st"> </span><span class="kw">as.numeric</span>(mnfst<span class="op">$</span>AddressB_ID)</span></code></pre></div>
-<p>Read IDAT file list. Required collumns: Sample_Name, Basename.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>target =<span class="st"> </span><span class="kw">read.table</span>(<span class="st">&quot;../data/Samplelist.txt&quot;</span>, <span class="dt">header=</span>T, <span class="dt">sep=</span><span class="st">&quot;</span><span class="ch">\t</span><span class="st">&quot;</span>, <span class="dt">stringsAsFactors=</span><span class="ot">FALSE</span>)</span></code></pre></div>
+<p>Load EPIC manifest file. Required columns: Name, AddressA_ID, AddressB_ID, Infinium_Design_Type, and Color_Channel.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">data</span>(mnfst)</span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">head</span>(mnfst)</span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="co">#&gt;         Name AddressA_ID AddressB_ID Infinium_Design_Type Color_Channel</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt; 1 cg07881041    85713262          NA                   II              </span></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="co">#&gt; 2 cg18478105    46761277    86644198                    I           Grn</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="co">#&gt; 3 cg23229610    21717843          NA                   II              </span></span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt; 4 cg03513874    29622133          NA                   II              </span></span>
+<span id="cb2-8"><a href="#cb2-8"></a><span class="co">#&gt; 5 cg09835024    16745152    81631976                    I           Red</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a><span class="co">#&gt; 6 cg05451842    16681196          NA                   II</span></span></code></pre></div>
+<p>Read IDAT file list. Here is an example of processing three IDAT files from <code>minfiDataEPIC</code>. Your may process your own data by specifying your target file list. Required collumns: Sample_Name, Basename.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>target &lt;-<span class="st"> </span><span class="kw">get_target</span>(<span class="st">&quot;EPIC&quot;</span>)</span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="co">#&gt; Loading required package: IlluminaHumanMethylationEPICmanifest</span></span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="co">#&gt; Loading required package: IlluminaHumanMethylationEPICanno.ilm10b2.hg19</span></span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="kw">head</span>(target)</span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="co">#&gt;    Sample_Name</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="co">#&gt; 1 200144450018</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a><span class="co">#&gt; 2 200144450019</span></span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="co">#&gt; 3 200144450021</span></span>
+<span id="cb3-9"><a href="#cb3-9"></a><span class="co">#&gt;                                                                                           Basename</span></span>
+<span id="cb3-10"><a href="#cb3-10"></a><span class="co">#&gt; 1 C:/Users/DELL/Documents/R/win-library/4.0/minfiDataEPIC/extdata/200144450018/200144450018_R04C01</span></span>
+<span id="cb3-11"><a href="#cb3-11"></a><span class="co">#&gt; 2 C:/Users/DELL/Documents/R/win-library/4.0/minfiDataEPIC/extdata/200144450019/200144450019_R07C01</span></span>
+<span id="cb3-12"><a href="#cb3-12"></a><span class="co">#&gt; 3 C:/Users/DELL/Documents/R/win-library/4.0/minfiDataEPIC/extdata/200144450021/200144450021_R05C01</span></span></code></pre></div>
 </div>
-<div id="noob-and-dye-bias-correction" class="section level3">
-<h3>noob and dye-bias correction</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>rgData &lt;-<span class="st"> </span><span class="kw">correct_noob_dye</span>(target, mnfst, <span class="dv">5</span>)</span></code></pre></div>
+<div id="read-idat-files-and-noob-and-dye-bias-correction" class="section level3">
+<h3>Read IDAT files and noob and dye-bias correction</h3>
+<p>With the following code, the IDAT files listed in the variable <code>target</code> will be read one-by-one. For each sample, a noob background correction and dye-bias correction will be done. You can specify the number of CPUs to enable parallel processing. After that, a list of four elements will be returned, including corrected signals of probe A and probe B for the two color channels.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>rgData &lt;-<span class="st"> </span><span class="kw">correct_noob_dye</span>(target, mnfst, <span class="dt">cpu=</span><span class="dv">3</span>)</span></code></pre></div>
 </div>
-<div id="call-genotypes-for-genotyping-probes" class="section level3">
-<h3>Call genotypes for genotyping probes</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>dosage_genotyping &lt;-<span class="st"> </span><span class="kw">callGeno_genotyping</span>(rgData, <span class="dt">plotBeta=</span><span class="ot">TRUE</span>, <span class="dt">vcf=</span><span class="ot">TRUE</span>)</span></code></pre></div>
+<div id="call-genotypes" class="section level3">
+<h3>Call genotypes</h3>
+<p>As shown below, you can call genotypes for genotyping probes, CCS SNP probes, and type-II SNP probes. For each probe and each sample, an allelic balance (AB) will be calculated, which indicates the proportion of signals supporting the alternative allele. The AB values can be fitted with three beta distribution denoting the three genotypes (reference homozygous, heterozygous, and alternative homozygous) and one uniform distribution denoting outliers. We used <code>ewastools</code> to call genotypes based on the AB values. In addition, you can plot the fitted distribution of the AB values and produce a VCF file of the inferred genotypes by specifying <code>plotBeta=TRUE</code> and <code>vcf=TRUE</code>.</p>
+<p>You can also specify <span class="math inline">\(R^2\)</span> and MAF cutoffs to filter variants. Note that for VCF output, variants with <span class="math inline">\(R^2\)</span> or MAF below the cutoffs will be marked in the <code>FILTER</code> column. For the returned matrix, variants with <span class="math inline">\(R^2\)</span> or MAF below the cutoffs will be removed.</p>
+<p>We noted that in the example data, most of variants have <span class="math inline">\(R^2\)</span>=0. This is because we only used three samples here.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># Call genotypes for genotyping probes</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a>dosage_genotyping &lt;-<span class="st"> </span><span class="kw">callGeno_genotyping</span>(rgData, <span class="dt">plotBeta=</span><span class="ot">TRUE</span>, <span class="dt">vcf=</span><span class="ot">TRUE</span>, <span class="dt">R2_cutoff=</span><span class="fl">0.7</span>, <span class="dt">MAF_cutoff=</span><span class="fl">0.01</span>)</span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="co"># Call genotypes for CCS snp probes</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a>dosage_ccs &lt;-<span class="st"> </span><span class="kw">callGeno_ccs</span>(rgData, <span class="dt">plotBeta=</span><span class="ot">TRUE</span>, <span class="dt">vcf=</span><span class="ot">TRUE</span>, <span class="dt">R2_cutoff=</span><span class="fl">0.7</span>, <span class="dt">MAF_cutoff=</span><span class="fl">0.01</span>)</span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="co"># Call genotypes for type-II snp probes</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a>dosage_typeII &lt;-<span class="st"> </span><span class="kw">callGeno_typeII</span>(rgData, <span class="dt">plotBeta=</span><span class="ot">TRUE</span>, <span class="dt">vcf=</span><span class="ot">TRUE</span>, <span class="dt">R2_cutoff=</span><span class="fl">0.7</span>, <span class="dt">MAF_cutoff=</span><span class="fl">0.01</span>)</span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="co"># Combine genotypes inferred from the three probe types</span></span>
+<span id="cb5-8"><a href="#cb5-8"></a>dosage &lt;-<span class="st"> </span><span class="kw">rbind</span>(dosage_genotyping, dosage_ccs, dosage_typeII)</span></code></pre></div>
 </div>
-<div id="call-genotypes-for-ccs-snp-probes" class="section level3">
-<h3>Call genotypes for CCS snp probes</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>dosage_ccs &lt;-<span class="st"> </span><span class="kw">callGeno_ccs</span>(rgData, <span class="dt">plotBeta=</span><span class="ot">TRUE</span>, <span class="dt">vcf=</span><span class="ot">TRUE</span>)</span></code></pre></div>
-</div>
-<div id="call-genotypes-for-type-ii-snp-probes" class="section level3">
-<h3>Call genotypes for type-II snp probes</h3>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>dosage_typeII &lt;-<span class="st"> </span><span class="kw">callGeno_typeII</span>(rgData, <span class="dt">plotBeta=</span><span class="ot">TRUE</span>, <span class="dt">vcf=</span><span class="ot">TRUE</span>)</span></code></pre></div>
-</div>
-<div id="estimate-kinship" class="section level3">
-<h3>Estimate kinship</h3>
+<div id="estimate-sample-relationships" class="section level3">
+<h3>Estimate sample relationships</h3>
+<p>With the inferred genotypes, you can estimate sample relationships using the <code>getKinship</code> function. It produces a data frame containing kinship coefficient (<span class="math inline">\(\phi\)</span>) and sample relationships between each two samples.</p>
+<p>Kinship coefficient is calculated according to the SEEKIN software (Dou et al. Plos Genetics 2017): <span class="math display">\[2\phi_{ij} = \frac{\sum_m(G_{im}-2p_m)(G_{jm}-2p_m)}{2p_m(1-p_m)(R^2)^2}\]</span>, where <span class="math inline">\(\phi_{ij}\)</span> denotes the kinship coefficient between <span class="math inline">\(i\)</span>-th and <span class="math inline">\(j\)</span>-th sample. <span class="math inline">\(G_{im}\)</span> and <span class="math inline">\(G_{jm}\)</span> denotes genotypes of <span class="math inline">\(m\)</span>-th SNP for <span class="math inline">\(i\)</span>-th and <span class="math inline">\(j\)</span>-th sample. <span class="math inline">\(p_m\)</span> denotes allele frequency of <span class="math inline">\(m\)</span>-th SNP. <span class="math inline">\(R^2\)</span> is calculated as <span class="math inline">\(R^2 = \frac{\sigma^2}{2p(1-p)}\)</span>, where <span class="math inline">\(\sigma^2\)</span> is the variance of genotype.</p>
+<p>Sample relationships can be inferred according to kinship coefficients (Manichaikul et al. Bioinformatics 2010). Sample pairs with <span class="math inline">\(\phi \ge \frac{1}{2^\frac{3}{2}}\)</span> are duplicate samples or monozygotic twin. Sample pairs with <span class="math inline">\(\phi &lt; \frac{1}{2^\frac{3}{2}}\)</span> and <span class="math inline">\(\phi \ge \frac{1}{2^\frac{5}{2}}\)</span> are first-degree relatives. Sample pairs with <span class="math inline">\(\phi &lt; \frac{1}{2^\frac{5}{2}}\)</span> and <span class="math inline">\(\phi \ge \frac{1}{2^\frac{7}{2}}\)</span> are second-degree relatives. Sample pairs with <span class="math inline">\(\phi &lt; \frac{1}{2^\frac{7}{2}}\)</span> and <span class="math inline">\(\phi \ge \frac{1}{2^\frac{9}{2}}\)</span> are third-degree relatives. Sample pairs with <span class="math inline">\(\phi &lt; \frac{1}{2^\frac{9}{2}}\)</span> are unrelated.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>kinship &lt;-<span class="st"> </span><span class="kw">getKinship</span>(dosage)</span></code></pre></div>
 </div>
 <div id="estimate-sample-contamination" class="section level3">
 <h3>Estimate sample contamination</h3>
-</div>
-<div id="faq" class="section level3">
-<h3>FAQ</h3>
-<div id="version-of-manifest-files" class="section level4">
-<h4>Version of manifest files</h4>
-<p>In v1.0 B2, they fixed switch in red/green signal for 21 Infinium I SNP probes provide both B1 and B5 manifest files</p>
-</div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>inbreed &lt;-<span class="st"> </span><span class="kw">getInbreed</span>(dosage)</span></code></pre></div>
 </div>
 </div>
 

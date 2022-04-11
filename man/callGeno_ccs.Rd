@@ -4,7 +4,13 @@
 \alias{callGeno_ccs}
 \title{Call genotypes for CCS SNP probes}
 \usage{
-callGeno_ccs(rgData, plotBeta = FALSE, vcf = FALSE)
+callGeno_ccs(
+  rgData,
+  plotBeta = FALSE,
+  vcf = FALSE,
+  R2_cutoff = 0.7,
+  MAF_cutoff = 0.01
+)
 }
 \arguments{
 \item{rgData}{Noob and dye-bias corrected signals produced by using \code{correct_noob_dye}.}
@@ -12,6 +18,10 @@ callGeno_ccs(rgData, plotBeta = FALSE, vcf = FALSE)
 \item{plotBeta}{If TRUE, plot beta distributions for reference homozygous, heterozygous, and alternative homozygous.}
 
 \item{vcf}{If TRUE, will write a VCF file in the current directory.}
+
+\item{R2_cutoff}{An R-square cutoff to filter variants. Note that for VCF output, variants with R-square below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with R-square below the cutoff will be removed.}
+
+\item{MAF_cutoff}{An MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with MAF below the cutoff will be removed.}
 }
 \value{
 A matrix of genotype calls.

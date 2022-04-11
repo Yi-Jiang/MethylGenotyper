@@ -4,15 +4,17 @@
 #' @param rgData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
 #' @param plotBeta If TRUE, plot beta distributions for reference homozygous, heterozygous, and alternative homozygous.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
+#' @param R2_cutoff An R-square cutoff to filter variants. Note that for VCF output, variants with R-square below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with R-square below the cutoff will be removed.
+#' @param MAF_cutoff An MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
 #' @return A matrix of genotype calls.
 #' @export
-callGeno_ccs <- function(rgData, plotBeta=FALSE, vcf=FALSE){
+callGeno_ccs <- function(rgData, plotBeta=FALSE, vcf=FALSE, R2_cutoff=0.7, MAF_cutoff=0.01){
   AB_geno <- getAB_ccs(rgData)
   genotypes = ewastools::call_genotypes(AB_geno, learn=TRUE)
   if(plotBeta){
     plot_beta_distribution(genotypes, type="ccs_snp_probe")
   }
-  dosage <- format_genotypes(genotypes, vcf=vcf, type="ccs_snp_probe")
+  dosage <- format_genotypes(genotypes, vcf=vcf, R2_cutoff=R2_cutoff, MAF_cutoff=MAF_cutoff, type="ccs_snp_probe")
   dosage
 }
 
