@@ -4,7 +4,7 @@
 \alias{correct_noob_dye}
 \title{Noob and dye-bias correction}
 \usage{
-correct_noob_dye(target, mnfst, cpu)
+correct_noob_dye(target, mnfst, cpu = 1)
 }
 \arguments{
 \item{target}{A data frame with the}

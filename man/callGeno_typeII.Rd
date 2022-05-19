@@ -9,7 +9,10 @@ callGeno_typeII(
   plotBeta = FALSE,
   vcf = FALSE,
   R2_cutoff = 0.7,
-  MAF_cutoff = 0.01
+  MAF_cutoff = 0.01,
+  train = FALSE,
+  cpu = 1,
+  pop = "ALL"
 )
 }
 \arguments{
@@ -21,7 +24,13 @@ callGeno_typeII(
 
 \item{R2_cutoff}{An R-square cutoff to filter variants. Note that for VCF output, variants with R-square below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with R-square below the cutoff will be removed.}
 
-\item{MAF_cutoff}{An MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with MAF below the cutoff will be removed.}
+\item{MAF_cutoff}{A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with MAF below the cutoff will be removed.}
+
+\item{train}{If TRUE, will fit the distribution of allelic balances and filter probes by number of peaks. If FALSE, will use predefined probe list.}
+
+\item{cpu}{Number of CPU. Only effective when train=TRUE.}
+
+\item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.}
 }
 \value{
 A matrix of genotype calls.

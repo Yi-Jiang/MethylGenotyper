@@ -3,7 +3,7 @@
 \docType{data}
 \name{probeInfo_geno}
 \alias{probeInfo_geno}
-\title{Genotyping probe information}
+\title{SNP probe information}
 \format{
 A data frame with 53 rows and 8 columns:
 \describe{

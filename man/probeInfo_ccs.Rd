@@ -3,7 +3,7 @@
 \docType{data}
 \name{probeInfo_ccs}
 \alias{probeInfo_ccs}
-\title{CCS SNP probe information}
+\title{CCS probe information}
 \format{
 A data frame with 132 rows and 8 columns:
 \describe{
@@ -24,6 +24,6 @@ A data frame with 132 rows and 8 columns:
 data(probeInfo_ccs)
 }
 \description{
-A dataset containing CCS SNP probe information.
+A dataset containing CCS probe information.
 }
 \keyword{datasets}

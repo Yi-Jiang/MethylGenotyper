@@ -2,16 +2,18 @@
 % Please edit documentation in R/ccs_snp_probe.R
 \name{getAB_ccs}
 \alias{getAB_ccs}
-\title{Get allelic balances for CCS SNP probes}
+\title{Get allelic balances for CCS probes}
 \usage{
-getAB_ccs(rgData)
+getAB_ccs(rgData, pop = "ALL")
 }
 \arguments{
 \item{rgData}{Noob and dye-bias corrected signals produced by using \code{correct_noob_dye}.}
+
+\item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.}
 }
 \value{
 Allelic balances.
 }
 \description{
-Get allelic balances for CCS SNP probes
+Get allelic balances for CCS probes
 }

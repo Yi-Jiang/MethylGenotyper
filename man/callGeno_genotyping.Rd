@@ -21,7 +21,7 @@ callGeno_genotyping(
 
 \item{R2_cutoff}{An R-square cutoff to filter variants. Note that for VCF output, variants with R-square below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with R-square below the cutoff will be removed.}
 
-\item{MAF_cutoff}{An MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with MAF below the cutoff will be removed.}
+\item{MAF_cutoff}{A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with MAF below the cutoff will be removed.}
 }
 \value{
 A matrix of genotype calls.

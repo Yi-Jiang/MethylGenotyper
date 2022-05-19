@@ -4,10 +4,12 @@
 \alias{getAB_typeII}
 \title{Get allelic balances for Type-II SNP probes}
 \usage{
-getAB_typeII(rgData)
+getAB_typeII(rgData, pop = "ALL")
 }
 \arguments{
 \item{rgData}{Noob and dye-bias corrected signals produced by using \code{correct_noob_dye}.}
+
+\item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.}
 }
 \value{
 Allelic balances.
