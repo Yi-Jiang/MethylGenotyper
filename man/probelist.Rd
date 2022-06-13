@@ -5,7 +5,7 @@
 \alias{probelist}
 \title{Probe list}
 \format{
-A data frame with 5057 rows and 2 columns:
+A data frame with 27190 rows and 2 columns:
 \describe{
 \item{CpG}{CpG list}
 \item{Type}{Probe types}
@@ -15,9 +15,9 @@ A data frame with 5057 rows and 2 columns:
 data(probelist)
 }
 \description{
-A dataset containing the list of 53 genotyping probes on autosomes, 132 CCS SNP probes, and 4872 type-II SNP probes.
+A dataset containing the list of 53 SNP probes on autosomes, 717 CCS SNP probes, and 27879 type-II probes.
 }
 \seealso{
-Probe informations: \code{\link{probeInfo_geno()}}, \code{\link{probeInfo_ccs()}}, and \code{\link{probeInfo_typeII()}}.
+Probe informations: \code{\link{probeInfo_snp()}}, \code{\link{probeInfo_ccs()}}, and \code{\link{probeInfo_typeII()}}.
 }
 \keyword{datasets}

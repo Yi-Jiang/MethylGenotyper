@@ -5,14 +5,14 @@
 #' @return A vector of sample relationships.
 #' @export
 getRelation <- function(phi) {
-  a <- ifelse(phi>=0.5^1.5, "Dup",
-          ifelse(phi>=0.5^2.5, "1st",
-              ifelse(phi>=0.5^3.5, "2nd",
-                 ifelse(phi>=0.5^4.5, "3rd", "UN")
-              )
-           )
-        )
-  a <- factor(a, levels=c("Dup", "1st", "2nd", "3rd", "UN"))
+  a <- ifelse(phi>=0.5^1.5, "MZ",
+    ifelse(phi>=0.5^2.5, "1st",
+      ifelse(phi>=0.5^3.5, "2nd",
+        ifelse(phi>=0.5^4.5, "3rd", "UN")
+      )
+    )
+  )
+  a <- factor(a, levels=c("MZ", "1st", "2nd", "3rd", "UN"))
   a
 }
 
@@ -64,9 +64,9 @@ getInbreed <- function(dosage){
   nHet_obs <- apply(binGeno, 2, function(x) sum(x==1))
   nHet_exp <- sum(apply(binGeno, 1, function(x) mean(x)*(1-mean(x)/2)))
   inbreed <- tibble(IID = colnames(binGeno), 
-                  nHet_obs = nHet_obs,
-                  nHet_exp = nHet_exp,
-                  F_pred = 1 - nHet_obs / nHet_exp,
-                  contamination = predContamination(1 - nHet_obs / nHet_exp))
+                    nHet_obs = nHet_obs,
+                    nHet_exp = nHet_exp,
+                    F_pred = 1 - nHet_obs / nHet_exp,
+                    contamination = predContamination(1 - nHet_obs / nHet_exp))
   inbreed
 }

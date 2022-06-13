@@ -5,7 +5,7 @@
 \alias{probeInfo_ccs}
 \title{CCS SNP probe information}
 \format{
-A data frame with 132 rows and 8 columns:
+A data frame with 717 rows and 16 columns:
 \describe{
 \item{Chr}{Chromosome ID}
 \item{Pos}{Position}
@@ -15,6 +15,14 @@ A data frame with 132 rows and 8 columns:
 \item{CpG}{CpG}
 \item{Color}{Color channel}
 \item{Group}{NA}
+\item{ALL_AF}{Allele frequency of all population}
+\item{EAS_AF}{Allele frequency of East Asian}
+\item{AMR_AF}{Allele frequency of American}
+\item{AFR_AF}{Allele frequency of African}
+\item{EUR_AF}{Allele frequency of European}
+\item{SAS_AF}{Allele frequency of South Asian}
+\item{h_0.1}{Passed peak density test or not}
+\item{loc_pass}{Passed peak position test or not}
 }
 }
 \source{

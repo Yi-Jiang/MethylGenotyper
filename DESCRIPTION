@@ -2,7 +2,7 @@ Package: MethyGenotyper
 Type: Package
 Title: Call genotypes for specific probes from Infinium MethylationEPIC (EPIC) BeadChip data
 Version: 1.0
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 Depends: 
     R (>= 2.10)
 LazyData: true

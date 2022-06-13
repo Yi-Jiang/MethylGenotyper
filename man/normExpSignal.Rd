@@ -2,7 +2,7 @@
 % Please edit documentation in R/backgroundCorrection.R
 \name{normExpSignal}
 \alias{normExpSignal}
-\title{Normal-exponential deconvolution (adapted from `SeSAMe``)}
+\title{Normal-exponential deconvolution (adapted from \code{SeSAMe})}
 \usage{
 normExpSignal(mu, sigma, alpha, x)
 }
@@ -17,5 +17,5 @@ normExpSignal(mu, sigma, alpha, x)
 The conditional expectation of the signal given the observed foreground and background.
 }
 \description{
-Normal-exponential deconvolution (adapted from `SeSAMe``)
+Normal-exponential deconvolution (adapted from \code{SeSAMe})
 }

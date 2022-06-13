@@ -10,7 +10,7 @@
 #' \item{BR}{ - A matrix of probeB signals in Red channel}
 #' \item{BG}{ - A matrix of probeB signals in Green channel}
 #' @export
-correct_noob_dye <- function(target, mnfst, cpu){
+correct_noob_dye <- function(target, mnfst, cpu=1){
     data(probelist)
     cl <- makeCluster(cpu)
     registerDoParallel(cl)
@@ -52,7 +52,7 @@ correct_noob_dye <- function(target, mnfst, cpu){
         rgData0$BR_noob <- normExpSignal(fitR$mu, fitR$sigma, fitR$alpha, rgData0$BR) + 15
         rgData0$AR_noob <- normExpSignal(fitR$mu, fitR$sigma, fitR$alpha, rgData0$AR) + 15
         
-        ## Only keep genotyping probes, CCS SNP probes, and Type-II SNP probes
+        ## Only keep SNP probes, CCS SNP probes, and Type-II probes
         rgData0 <- rgData0[rgData0$Name %in% probelist$CpG,]
         
         ## Fit linear regression of red and green channel
@@ -119,7 +119,7 @@ backgroundCorrectionNoobFit <- function(ib, bg){
     list(mu = mu, sigma = sigma, alpha = alpha)
 }
 
-#' Normal-exponential deconvolution (adapted from `SeSAMe``)
+#' Normal-exponential deconvolution (adapted from `SeSAMe`)
 #' 
 #' @param mu,sigma Background signal parameters returned by `backgroundCorrectionNoobFit`.
 #' @param alpha Foreground signal parameters returned by `backgroundCorrectionNoobFit`.

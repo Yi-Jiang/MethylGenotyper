@@ -15,11 +15,11 @@
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
 "mnfst"
 
-#' Genotyping probe information
+#' SNP probe information
 #' 
-#' A dataset containing genotyping probe information.
+#' A dataset containing SNP probe information. Only autosome probes are included.
 #' 
-#' @usage data(probeInfo_geno)
+#' @usage data(probeInfo_snp)
 #' @format A data frame with 53 rows and 8 columns:
 #' \describe{
 #'  \item{Chr}{Chromosome ID}
@@ -32,14 +32,14 @@
 #'  \item{Group}{Probe types, color channel, and signal corresponds to alternative allele}
 #' }
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
-"probeInfo_geno"
+"probeInfo_snp"
 
 #' CCS SNP probe information
 #' 
 #' A dataset containing CCS SNP probe information.
 #' 
 #' @usage data(probeInfo_ccs)
-#' @format A data frame with 132 rows and 8 columns:
+#' @format A data frame with 717 rows and 16 columns:
 #' \describe{
 #'  \item{Chr}{Chromosome ID}
 #'  \item{Pos}{Position}
@@ -49,16 +49,24 @@
 #'  \item{CpG}{CpG}
 #'  \item{Color}{Color channel}
 #'  \item{Group}{NA}
+#'  \item{ALL_AF}{Allele frequency of all population}
+#'  \item{EAS_AF}{Allele frequency of East Asian}
+#'  \item{AMR_AF}{Allele frequency of American}
+#'  \item{AFR_AF}{Allele frequency of African}
+#'  \item{EUR_AF}{Allele frequency of European}
+#'  \item{SAS_AF}{Allele frequency of South Asian}
+#'  \item{h_0.1}{Passed peak density test or not}
+#'  \item{loc_pass}{Passed peak position test or not}
 #' }
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
 "probeInfo_ccs"
 
-#' Type-II SNP probe information
+#' Type-II probe information
 #' 
-#' A dataset containing Type-II SNP probe information.
+#' A dataset containing information of Type-II probes with SNPs at the extension bases. We only consider the situation that the alternative allele is A/T and the reference allele is C/G.
 #' 
-#' @usage data(probeInfo_ccs)
-#' @format A data frame with 4872 rows and 8 columns:
+#' @usage data(probeInfo_typeII)
+#' @format A data frame with 26420 rows and 16 columns:
 #' \describe{
 #'  \item{Chr}{Chromosome ID}
 #'  \item{Pos}{Position}
@@ -68,20 +76,28 @@
 #'  \item{CpG}{CpG}
 #'  \item{Color}{Color channel}
 #'  \item{Group}{Probe types, color channel, and signal corresponds to alternative allele}
+#'  \item{ALL_AF}{Allele frequency of all population}
+#'  \item{EAS_AF}{Allele frequency of East Asian}
+#'  \item{AMR_AF}{Allele frequency of American}
+#'  \item{AFR_AF}{Allele frequency of African}
+#'  \item{EUR_AF}{Allele frequency of European}
+#'  \item{SAS_AF}{Allele frequency of South Asian}
+#'  \item{h_0.1}{Passed peak density test or not}
+#'  \item{loc_pass}{Passed peak position test or not}
 #' }
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
 "probeInfo_typeII"
 
 #' Probe list
 #' 
-#' A dataset containing the list of 53 genotyping probes on autosomes, 132 CCS SNP probes, and 4872 type-II SNP probes.
+#' A dataset containing the list of 53 SNP probes on autosomes, 717 CCS SNP probes, and 27879 type-II probes.
 #' 
 #' @usage data(probelist)
-#' @format A data frame with 5057 rows and 2 columns:
+#' @format A data frame with 27190 rows and 2 columns:
 #' \describe{
 #'  \item{CpG}{CpG list}
 #'  \item{Type}{Probe types}
 #' }
-#' @seealso Probe informations: \code{\link{probeInfo_geno()}}, \code{\link{probeInfo_ccs()}}, and \code{\link{probeInfo_typeII()}}.
+#' @seealso Probe informations: \code{\link{probeInfo_snp()}}, \code{\link{probeInfo_ccs()}}, and \code{\link{probeInfo_typeII()}}.
 "probelist"
 
