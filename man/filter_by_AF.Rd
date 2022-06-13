@@ -4,7 +4,7 @@
 \alias{filter_by_AF}
 \title{Filter by AF}
 \usage{
-filter_by_AF(AF, MAF_cutoff)
+filter_by_AF(AF, MAF_cutoff = 0.01)
 }
 \arguments{
 \item{AF}{Allele frequency}

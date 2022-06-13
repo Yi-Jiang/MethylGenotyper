@@ -7,9 +7,9 @@
 plot_beta_distribution(genotypes, type)
 }
 \arguments{
-\item{genotypes}{Genotype calls produced by using \code{ewastools::call_genotypes}.}
+\item{genotypes}{Genotype calls.}
 
-\item{type}{One of "genotyping_probe", "ccs_snp_probe", and "typeII_snp_probe".}
+\item{type}{One of "snp_probe", "ccs_snp_probe", and "typeII_probe".}
 }
 \description{
 Plot beta distributions for reference homozygous, heterozygous, and alternative homozygous

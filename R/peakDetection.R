@@ -1,13 +1,13 @@
 
 #' Filter probes according to the number and position of peaks
 #' 
-#' @param AB_geno Matrix of allelic balances.
+#' @param RAI Matrix of RAI (Ratio of Alternative allele Intensity).
 #' @param cpu Number of CPU.
 #' @return Probe filtering results
 #' @export
-getMod <- function(AB_geno, cpu=1){
+getMod <- function(RAI, cpu=1){
   # Estimate number of modes for each probe
-  n <- apply(AB_geno, 1, function(x) (nmodes(x, 0.05, lowsup=0, uppsup=1)))
+  n <- apply(RAI, 1, function(x) (nmodes(x, 0.05, lowsup=0, uppsup=1)))
   mod <- tibble(Name=names(n), nmod=n)
   mod$nmod2 <- mod$nmod
   mod[mod$nmod2>3, "nmod2"] <- 3
@@ -17,7 +17,7 @@ getMod <- function(AB_geno, cpu=1){
   registerDoParallel(cl) 
   out <- foreach(i=mod$Name, .packages=c("tidyverse","multimode")) %dopar% {
     tryCatch({
-      a <- locmodes(AB_geno[i, ], mod0=filter(mod, Name==i)$nmod2)
+      a <- locmodes(RAI[i, ], mod0=filter(mod, Name==i)$nmod2)
       a
     }, error = function(e) return(paste0("The variable '", i, "'", " caused the error: '", e, "'")))
   }

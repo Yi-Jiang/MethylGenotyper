@@ -4,10 +4,10 @@
 \alias{getMod}
 \title{Filter probes according to the number and position of peaks}
 \usage{
-getMod(AB_geno, cpu = 1)
+getMod(RAI, cpu = 1)
 }
 \arguments{
-\item{AB_geno}{Matrix of allelic balances.}
+\item{RAI}{Matrix of RAI (Ratio of Alternative allele Intensity).}
 
 \item{cpu}{Number of CPU.}
 }

@@ -4,12 +4,14 @@
 \alias{filter_by_R2}
 \title{Filter by R2}
 \usage{
-filter_by_R2(R2, R2_cutoff)
+filter_by_R2(R2, R2_cutoff_up = 1.1, R2_cutoff_down = 0.7)
 }
 \arguments{
 \item{R2}{R-square}
 
-\item{R2_cutoff}{An R-square cutoff to filter variants.}
+\item{R2_cutoff_up}{Variants with R-square greater than this cutoff should be removed.}
+
+\item{R2_cutoff_down}{Variants with R-square less than this cutoff should be removed.}
 }
 \value{
 Whether the variant passed filtering.
