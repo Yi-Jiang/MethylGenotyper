@@ -1,4 +1,4 @@
-Package: MethyGenotyper
+Package: MethylGenotyper
 Type: Package
 Title: Call genotypes for specific probes from Infinium MethylationEPIC (EPIC) BeadChip data
 Version: 1.0
