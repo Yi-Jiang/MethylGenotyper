@@ -1,7 +1,7 @@
 
 #' Noob and dye-bias correction
 #' 
-#' @param target A data frame with the 
+#' @param target A data frame of two columns: Sample_Name, Basename, where Basename tells the location of IDAT files.
 #' @param mnfst Manifest file. Required columns: Name, AddressA_ID (numeric), AddressB_ID (numeric), Infinium_Design_Type, and Color_Channel
 #' @param cpu Number of CPU.
 #' @return A list of noob and dye-bias corrected signals containing:

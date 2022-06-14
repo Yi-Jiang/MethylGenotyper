@@ -2,7 +2,7 @@
 #' Call genotypes for SNP probes
 #' 
 #' @param rgData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
-#' @param input Input data types. One of "raw", "beta", and "mval". If type is "beta" or "mval", please use probes as rows and samples as columns.
+#' @param input Input data types. One of "raw", "beta", and "mval". If input is "beta" or "mval", please use probes as rows and samples as columns.
 #' @param plotBeta If TRUE, plot beta distributions for reference homozygous, heterozygous, and alternative homozygous.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
 #' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned matrix, variants with R-square outside this range will be removed.
