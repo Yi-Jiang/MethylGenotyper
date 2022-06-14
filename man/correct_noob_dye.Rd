@@ -7,7 +7,7 @@
 correct_noob_dye(target, mnfst, cpu = 1)
 }
 \arguments{
-\item{target}{A data frame with the}
+\item{target}{A data frame of two columns: Sample_Name, Basename, where Basename tells the location of IDAT files.}
 
 \item{mnfst}{Manifest file. Required columns: Name, AddressA_ID (numeric), AddressB_ID (numeric), Infinium_Design_Type, and Color_Channel}
 

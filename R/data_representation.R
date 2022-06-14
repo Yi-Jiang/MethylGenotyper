@@ -48,9 +48,11 @@ constrain_R2 <- function(R2){
 #' @export
 filter_by_R2 <- function(R2, R2_cutoff_up=1.1, R2_cutoff_down=0.7){
   if(R2>R2_cutoff_up){
-    filter=paste0("R2>", R2_cutoff_up)
+    #filter=paste0("R2>", R2_cutoff_up)
+    filter="R2_high"
   }else if(R2<R2_cutoff_down){
-    filter=paste0("R2<", R2_cutoff_down)
+    #filter=paste0("R2<", R2_cutoff_down)
+    filter="R2_low"
   }else{
     filter="PASS"
   }
@@ -67,7 +69,8 @@ filter_by_R2 <- function(R2, R2_cutoff_up=1.1, R2_cutoff_down=0.7){
 #' @export
 filter_by_AF <- function(AF, MAF_cutoff=0.01){
   if(AF < MAF_cutoff | AF > (1-MAF_cutoff)){
-    filter=paste0("MAF<", MAF_cutoff)
+    #filter=paste0("MAF<", MAF_cutoff)
+    filter="MAF"
   }else{
     filter="PASS"
   }
@@ -102,7 +105,8 @@ getHWE <- function(hardgeno){
 #' @export
 filter_by_HWE <- function(hwe_p, hwe_p_cutoff){
   if(hwe_p < hwe_p_cutoff){
-    filter=paste0("P(HWE)<", hwe_p_cutoff)
+    #filter=paste0("P(HWE)<", hwe_p_cutoff)
+    filter="HWE"
   }else{
     filter="PASS"
   }
@@ -134,7 +138,7 @@ dosage2hard <- function(genotypes){
   hardgeno
 }
 
-#' Format genotype calls produced by ewastools
+#' Format genotype calls produced by `callGeno` function
 #' 
 #' @param genotypes Genotype calls.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
@@ -149,6 +153,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, R2_cutoff_up=1.1, R2_cutoff_d
     rownames(genotypes$gamma[[i]]) <- rownames(genotypes$snps)
   }
   dosage <- genotypes$gamma[[2]] + 2 * genotypes$gamma[[3]]
+  probes <- rownames(dosage)
   AF <- rowMeans(dosage) / 2
   AF[is.na(AF)] <- 0
   R2 <- apply(dosage, 1, var) / (2 * AF * (1 - AF))
@@ -161,33 +166,58 @@ format_genotypes <- function(genotypes, vcf=FALSE, R2_cutoff_up=1.1, R2_cutoff_d
   filter <- paste(filter_AF, filter_R2, filter_HWE, sep=",")
   filter[filter=="PASS,PASS,pASS"] <- "PASS"
   filter[filter!="PASS,PASS,pASS"] <- gsub(",PASS", "", gsub("PASS,", "", filter[filter!="PASS,PASS,pASS"]))
-
+  
+  ## Mark probes failed the first iteration in callGeno.
+  AF <- round(AF, 3)
+  AF[probes %in% genotypes$fail_1st_probes] <- "."
+  R2_constrained[probes %in% genotypes$fail_1st_probes] <- "."
+  filter[probes %in% genotypes$fail_1st_probes] <- "GenoCall"
+  
   ## Write into a VCF file
   if(vcf){
+    ## Header
     samplelist <- paste(colnames(dosage), collapse="\t")
     header <- paste(
       "##fileformat=VCFv4.2",
       "##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele frequency\">",
       "##INFO=<ID=R2,Number=1,Type=Float,Description=\"R-square, encoded as var(G)/2p(1-p), where G is dosage genotype and p is allele frequency. Variants with 1<R2<=1.1 are constrained to 1. Variants with R2>1.1 (marked as .) are recommended to remove.\">",
+      paste0("##FILTER=<ID=MAF,Description=\"MAF is below ", MAF_cutoff, "\">"),
+      paste0("##FILTER=<ID=R2_low,Description=\"R2 is below ", R2_cutoff_down, "\">"),
+      paste0("##FILTER=<ID=R2_high,Description=\"R2 is above ", R2_cutoff_up, "\">"),
+      paste0("##FILTER=<ID=HWE,Description=\"Deviation from Hardy-Weinberg Equilibrium (HWE)\">"),
+      paste0("##FILTER=<ID=GenoCall,Description=\"Failed at the first iteration of genotype calling\">"),
       "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
       "##FORMAT=<ID=DS,Number=1,Type=Float,Description=\"Genotype dosage.\">",
       "##FORMAT=<ID=RAI,Number=1,Type=Float,Description=\"RAI (Ratio of Alternative allele Intensity).\">",
-      "##FORMAT=<ID=GP,Number=1,Type=Float,Description=\"Genotype probability of reference homozygous, heterozygous, and alternative homozygous produced by using ewastools::call_genotypes.\">",
+      "##FORMAT=<ID=GP,Number=1,Type=Float,Description=\"Genotype probability of reference homozygous, heterozygous, and alternative homozygous produced by using the callGeno function\">",
       paste0("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t", samplelist),
       sep = "\n"
     )
     hardgeno <- dosage2hard(genotypes)
+    
+    ## Mark probes failed the first iteration in callGeno.
+    dosage <- round(dosage, 2)
+    genotypes$gamma[[1]] <- round(genotypes$gamma[[1]])
+    genotypes$gamma[[2]] <- round(genotypes$gamma[[2]])
+    genotypes$gamma[[3]] <- round(genotypes$gamma[[3]])
+    hardgeno[genotypes$fail_1st_probes,] <- "."
+    dosage[genotypes$fail_1st_probes,] <- "."
+    genotypes$gamma[[1]][genotypes$fail_1st_probes,] <- "."
+    genotypes$gamma[[2]][genotypes$fail_1st_probes,] <- "."
+    genotypes$gamma[[3]][genotypes$fail_1st_probes,] <- "."
+    
+    ## Genotype
     geno <- matrix(nrow=nrow(dosage), ncol=ncol(dosage))
     colnames(geno) <- colnames(dosage)
     for(i in 1:nrow(geno)){
       for(j in 1:ncol(geno)){
         geno[i,j] <- paste0(
           hardgeno[i,j], ":",
-          round(dosage[i,j], 2), ":", 
+          dosage[i,j], ":", 
           round(genotypes$snps[i,j], 2), ":", 
-          round(genotypes$gamma[[1]][i,j], 2), ",", 
-          round(genotypes$gamma[[2]][i,j], 2), ",", 
-          round(genotypes$gamma[[3]][i,j], 2))
+          genotypes$gamma[[1]][i,j], ",", 
+          genotypes$gamma[[2]][i,j], ",", 
+          genotypes$gamma[[3]][i,j])
       }
     }
     geno <- as.data.frame(cbind(CpG = rownames(dosage), geno))
@@ -201,9 +231,10 @@ format_genotypes <- function(genotypes, vcf=FALSE, R2_cutoff_up=1.1, R2_cutoff_d
       print("Error: misspecified probe types!")
       return
     }
+    rownames(probeInfo) <- probeInfo$CpG
     vcf <- cbind(
-      probeInfo[probeInfo$CpG %in% rownames(genotypes$snps), 1:6], 
-      tibble(QUAL=".", FILTER=filter, INFO=paste0("AF=", round(AF, 3), ";R2=", R2_constrained), FORMAT="GT:DS:RAI:GP")
+      probeInfo[probes, 1:6], 
+      tibble(QUAL=".", FILTER=filter, INFO=paste0("AF=", AF, ";R2=", R2_constrained), FORMAT="GT:DS:RAI:GP")
     ) %>% left_join(geno, by=c("CpG"))
     vcf <- vcf[, -6]
     write.table(header, file=paste0("genotypes.", type, ".vcf"), sep="\t", row.names=F, quote=F, col.names=F)

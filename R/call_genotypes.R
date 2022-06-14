@@ -103,7 +103,8 @@ callGeno <- function(RAI, learn=FALSE, maxiter=50){
     loglik <- runEM()
     
     # Remove probes of low quality
-    failHWE <- rep(FALSE, length(probe_marks))
+    fail_1st <- rep(FALSE, length(probe_marks))
+    fail_1st_probes <- c()
     for(probe in probes){
       gamma0 <- gamma[probe_marks[!NAs]==probe,] # gamma values for a specific probe. row: sample, col: three genotype probabilities.
       colnames(gamma0) <- c("0/0", "0/1", "1/1")
@@ -118,10 +119,11 @@ callGeno <- function(RAI, learn=FALSE, maxiter=50){
       #R2 <- var(dosage) / (2 * AF * (1 - AF))
       #if(is.na(R2) | R2 < 0.5 | R2 > 1.3){
       if(hwe$pvalvec < 1e-6){
-        failHWE[probe_marks==probe] <- TRUE
+        fail_1st[probe_marks==probe] <- TRUE
+        fail_1st_probes <- c(fail_1st_probes, probe)
       }
     }
-    RAI_vec_hq = RAI_vec[!NAs & !failHWE]
+    RAI_vec_hq = RAI_vec[!NAs & !fail_1st]
     n = length(RAI_vec_hq)
     
     # Second iteration
@@ -130,12 +132,12 @@ callGeno <- function(RAI, learn=FALSE, maxiter=50){
   
   ## Re-insert missing values
   tmp = rep(NA_real_, times=length(RAI))
-  tmp[!NAs & !failHWE] = outliers
+  tmp[!NAs & !fail_1st] = outliers
   outliers = tmp
   dim(outliers) = dim(RAI)
   gamma = lapply(1:3,function(k){
     tmp = rep(NA_real_, times=length(RAI))
-    tmp[!NAs & !failHWE] = gamma[,k]
+    tmp[!NAs & !fail_1st] = gamma[,k]
     dim(tmp) = dim(RAI)
     tmp
   })
@@ -145,7 +147,8 @@ callGeno <- function(RAI, learn=FALSE, maxiter=50){
     outliers=outliers, # m*n, where m is number of probes, n is number of samples.
     gamma=gamma, # list of 3, indicating genotype probabilities. Each element is a m*n matrix.
     par=list(pi=pi, shapes1=shapes1, shapes2=shapes2, alpha=alpha),
-    loglik=loglik
+    loglik=loglik,
+    fail_1st_probes=fail_1st_probes # probes failed the first iteration.
   ))
 }
 

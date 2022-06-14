@@ -17,7 +17,7 @@ callGeno_snp(
 \arguments{
 \item{rgData}{Noob and dye-bias corrected signals produced by using \code{correct_noob_dye}.}
 
-\item{input}{Input data types. One of "raw", "beta", and "mval". If type is "beta" or "mval", please use probes as rows and samples as columns.}
+\item{input}{Input data types. One of "raw", "beta", and "mval". If input is "beta" or "mval", please use probes as rows and samples as columns.}
 
 \item{plotBeta}{If TRUE, plot beta distributions for reference homozygous, heterozygous, and alternative homozygous.}
 
