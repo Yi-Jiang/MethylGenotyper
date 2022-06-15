@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_representation.R
 \name{format_genotypes}
 \alias{format_genotypes}
-\title{Format genotype calls produced by ewastools}
+\title{Format genotype calls produced by \code{callGeno} function}
 \usage{
 format_genotypes(
   genotypes,
@@ -28,5 +28,5 @@ format_genotypes(
 A matrix of genotype calls.
 }
 \description{
-Format genotype calls produced by ewastools
+Format genotype calls produced by \code{callGeno} function
 }

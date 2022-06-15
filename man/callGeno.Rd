@@ -2,7 +2,7 @@
 % Please edit documentation in R/call_genotypes.R
 \name{callGeno}
 \alias{callGeno}
-\title{Genotype calling (adapted from \code{ewastools})}
+\title{Call genotypes (adapted from \code{ewastools})}
 \usage{
 callGeno(RAI, learn = FALSE, maxiter = 50)
 }
@@ -21,6 +21,5 @@ A list containing
 \item{gamma}{A-posteriori probabilities for each of the three genotypes}
 }
 \description{
-A mixture model (3 Beta distributions, 1 uniform distribution for outliers) is fitted to probes.
-After learning the model parameters via Expectation-Maximization (EM) algorithm, the probability of being an outlier is computed for each SNP.
+A mixture model (3 Beta distributions, 1 uniform distribution for outliers) is fitted to probes. The model parameters are learnt via Expectation-Maximization (EM) algorithm. We used a "two-step" strategy to call genotypes, which is run by fitting the mixture model twice. For the first step, we fit the mixture model, call genotypes, and filter out the probes deviating Hardy-Weinberg Equilibrium (HWE, P < 1E-6). For the second step, we fit the model and call genotypes again, using the pre-filtered data.
 }

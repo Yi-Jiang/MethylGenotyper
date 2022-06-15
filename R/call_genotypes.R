@@ -1,6 +1,6 @@
-#' @title Genotype calling (adapted from `ewastools`)
-#' @description A mixture model (3 Beta distributions, 1 uniform distribution for outliers) is fitted to probes.
-#' After learning the model parameters via Expectation-Maximization (EM) algorithm, the probability of being an outlier is computed for each SNP.
+#' Call genotypes (adapted from `ewastools`)
+#' 
+#' A mixture model (3 Beta distributions, 1 uniform distribution for outliers) is fitted to probes. The model parameters are learnt via Expectation-Maximization (EM) algorithm. We used a "two-step" strategy to call genotypes, which is run by fitting the mixture model twice. For the first step, we fit the mixture model, call genotypes, and filter out the probes deviating Hardy-Weinberg Equilibrium (HWE, P < 1E-6). For the second step, we fit the model and call genotypes again, using the pre-filtered data.
 #'
 #' @param RAI A matrix of RAI (Ratio of Alternative allele Intensity) for probes. Provide probes as rows and samples as columns.
 #' @param learn If learn=TRUE, will learn dataset-specific parameters using the EM algorithm. The genotype calling process will be iterated two times, with the first iteration for selecting probes and the second iteration for re-training.
@@ -152,7 +152,8 @@ callGeno <- function(RAI, learn=FALSE, maxiter=50){
   ))
 }
 
-#' @rdname call_genotypes
+#' eBeta (adapted from `ewastools`)
+#' @export
 eBeta = function(x,w){
   
   # Beta distribution parameter estimation
