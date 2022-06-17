@@ -241,6 +241,6 @@ format_genotypes <- function(genotypes, vcf=FALSE, R2_cutoff_up=1.1, R2_cutoff_d
     write.table(vcf, file=paste0("genotypes.", type, ".vcf"), sep="\t", row.names=F, quote=F, col.names=F, append=T)
   }
   ## Filter dosage
-  dosage <- dosage[filter=="PASS",,drop=F]
+  dosage <- apply(dosage[filter=="PASS",,drop=F], 1:2, as.numeric)
   dosage
 }
