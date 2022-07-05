@@ -12,7 +12,7 @@
 
 <meta name="author" content="Minghan Qu, Yi Jiang, Chaolong Wang" />
 
-<meta name="date" content="2022-06-15" />
+<meta name="date" content="2022-07-05" />
 
 <title>MethylGenotyper</title>
 
@@ -336,7 +336,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">MethylGenotyper</h1>
 <h4 class="author">Minghan Qu, Yi Jiang, Chaolong Wang</h4>
-<h4 class="date">2022-06-15</h4>
+<h4 class="date">2022-07-05</h4>
 
 
 
@@ -365,7 +365,9 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <span id="cb1-4"><a href="#cb1-4"></a><span class="kw">library</span>(foreach)</span>
 <span id="cb1-5"><a href="#cb1-5"></a><span class="kw">library</span>(doParallel)</span>
 <span id="cb1-6"><a href="#cb1-6"></a><span class="kw">library</span>(reshape)</span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="kw">library</span>(HardyWeinberg)</span></code></pre></div>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="kw">library</span>(HardyWeinberg)</span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="kw">library</span>(multimode)</span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="kw">library</span>(rlist)</span></code></pre></div>
 </div>
 <div id="recommended-workflow" class="section level2">
 <h2>Recommended workflow</h2>
@@ -411,11 +413,11 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <span id="cb5-6"><a href="#cb5-6"></a>dosage_typeII &lt;-<span class="st"> </span><span class="kw">callGeno_typeII</span>(rgData, <span class="dt">input=</span><span class="st">&quot;raw&quot;</span>, <span class="dt">plotBeta=</span><span class="ot">TRUE</span>, <span class="dt">vcf=</span><span class="ot">TRUE</span>, <span class="dt">R2_cutoff_up=</span><span class="fl">1.1</span>, <span class="dt">R2_cutoff_down=</span><span class="fl">0.7</span>, <span class="dt">MAF_cutoff=</span><span class="fl">0.01</span>)</span>
 <span id="cb5-7"><a href="#cb5-7"></a><span class="co"># Combine genotypes inferred from the three probe types</span></span>
 <span id="cb5-8"><a href="#cb5-8"></a>dosage &lt;-<span class="st"> </span><span class="kw">rbind</span>(dosage_snp, dosage_ccs, dosage_typeII)</span></code></pre></div>
-<p>As an alternative option, you can input a matrix of beta value or M value. This option only works for SNP probes and type-II probes. Here are the examples of calling genotypes from beta values. For input of M values, please specify <code>input=&quot;mval&quot;</code>. Remember to conduct background correction and dye-bias correction before running the following code.</p>
+<p>As an alternative option, you can input a matrix of beta values or M values, with each row indicates a probe and each column indicates a sample. This option only works for SNP probes and type-II probes. Here are the examples of calling genotypes from beta values. For input of M values, please specify <code>input=&quot;mval&quot;</code>. Remember to conduct background correction and dye-bias correction before running the following code.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="co"># Call genotypes for SNP probes</span></span>
-<span id="cb6-2"><a href="#cb6-2"></a>dosage_snp &lt;-<span class="st"> </span><span class="kw">callGeno_snp</span>(rgData, <span class="dt">input=</span><span class="st">&quot;beta&quot;</span>, <span class="dt">plotBeta=</span><span class="ot">TRUE</span>, <span class="dt">vcf=</span><span class="ot">TRUE</span>, <span class="dt">R2_cutoff_up=</span><span class="fl">1.1</span>, <span class="dt">R2_cutoff_down=</span><span class="fl">0.7</span>, <span class="dt">MAF_cutoff=</span><span class="fl">0.01</span>)</span>
+<span id="cb6-2"><a href="#cb6-2"></a>dosage_snp &lt;-<span class="st"> </span><span class="kw">callGeno_snp</span>(beta_matrix, <span class="dt">input=</span><span class="st">&quot;beta&quot;</span>, <span class="dt">plotBeta=</span><span class="ot">TRUE</span>, <span class="dt">vcf=</span><span class="ot">TRUE</span>, <span class="dt">R2_cutoff_up=</span><span class="fl">1.1</span>, <span class="dt">R2_cutoff_down=</span><span class="fl">0.7</span>, <span class="dt">MAF_cutoff=</span><span class="fl">0.01</span>)</span>
 <span id="cb6-3"><a href="#cb6-3"></a><span class="co"># Call genotypes for type-II probes</span></span>
-<span id="cb6-4"><a href="#cb6-4"></a>dosage_typeII &lt;-<span class="st"> </span><span class="kw">callGeno_typeII</span>(rgData, <span class="dt">input=</span><span class="st">&quot;beta&quot;</span>, <span class="dt">plotBeta=</span><span class="ot">TRUE</span>, <span class="dt">vcf=</span><span class="ot">TRUE</span>, <span class="dt">R2_cutoff_up=</span><span class="fl">1.1</span>, <span class="dt">R2_cutoff_down=</span><span class="fl">0.7</span>, <span class="dt">MAF_cutoff=</span><span class="fl">0.01</span>)</span>
+<span id="cb6-4"><a href="#cb6-4"></a>dosage_typeII &lt;-<span class="st"> </span><span class="kw">callGeno_typeII</span>(beta_matrix, <span class="dt">input=</span><span class="st">&quot;beta&quot;</span>, <span class="dt">plotBeta=</span><span class="ot">TRUE</span>, <span class="dt">vcf=</span><span class="ot">TRUE</span>, <span class="dt">R2_cutoff_up=</span><span class="fl">1.1</span>, <span class="dt">R2_cutoff_down=</span><span class="fl">0.7</span>, <span class="dt">MAF_cutoff=</span><span class="fl">0.01</span>)</span>
 <span id="cb6-5"><a href="#cb6-5"></a><span class="co"># Combine genotypes inferred from the three probe types</span></span>
 <span id="cb6-6"><a href="#cb6-6"></a>dosage &lt;-<span class="st"> </span><span class="kw">rbind</span>(dosage_snp, dosage_typeII)</span></code></pre></div>
 </div>
@@ -428,6 +430,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 </div>
 <div id="estimate-sample-contamination" class="section level3">
 <h3>Estimate sample contamination</h3>
+<p>Samples with inbreeding coefficients beyond 3 SDs of the mean are considered as contaminated.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>inbreed &lt;-<span class="st"> </span><span class="kw">getInbreed</span>(dosage)</span></code></pre></div>
 </div>
 </div>
