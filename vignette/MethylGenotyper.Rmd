@@ -44,6 +44,8 @@ library(foreach)
 library(doParallel)
 library(reshape)
 library(HardyWeinberg)
+library(multimode)
+library(rlist)
 ```
 
 ## Recommended workflow
@@ -91,13 +93,13 @@ dosage_typeII <- callGeno_typeII(rgData, input="raw", plotBeta=TRUE, vcf=TRUE, R
 dosage <- rbind(dosage_snp, dosage_ccs, dosage_typeII)
 ```
 
-As an alternative option, you can input a matrix of beta value or M value. This option only works for SNP probes and type-II probes. Here are the examples of calling genotypes from beta values. For input of M values, please specify `input="mval"`. Remember to conduct background correction and dye-bias correction before running the following code.
+As an alternative option, you can input a matrix of beta values or M values, with each row indicates a probe and each column indicates a sample. This option only works for SNP probes and type-II probes. Here are the examples of calling genotypes from beta values. For input of M values, please specify `input="mval"`. Remember to conduct background correction and dye-bias correction before running the following code.
 
 ```{r callGeno2, eval=FALSE, warning=FALSE, message=FALSE}
 # Call genotypes for SNP probes
-dosage_snp <- callGeno_snp(rgData, input="beta", plotBeta=TRUE, vcf=TRUE, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01)
+dosage_snp <- callGeno_snp(beta_matrix, input="beta", plotBeta=TRUE, vcf=TRUE, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01)
 # Call genotypes for type-II probes
-dosage_typeII <- callGeno_typeII(rgData, input="beta", plotBeta=TRUE, vcf=TRUE, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01)
+dosage_typeII <- callGeno_typeII(beta_matrix, input="beta", plotBeta=TRUE, vcf=TRUE, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01)
 # Combine genotypes inferred from the three probe types
 dosage <- rbind(dosage_snp, dosage_typeII)
 ```
@@ -117,6 +119,8 @@ kinship <- getKinship(dosage)
 ```
 
 ### Estimate sample contamination
+
+Samples with inbreeding coefficients beyond 3 SDs of the mean are considered as contaminated.
 
 ```{r getInbreed, eval=FALSE, warning=FALSE, message=FALSE}
 inbreed <- getInbreed(dosage)

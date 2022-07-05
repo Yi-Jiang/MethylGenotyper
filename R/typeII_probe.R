@@ -17,10 +17,14 @@ callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, R2_c
   if(input=="raw"){
     RAI <- getRAI_typeII(rgData, pop=pop)
   }else if(input=="beta"){
-    beta <- rgData
+    data(probeInfo_typeII)
+    tag_af <- paste0(pop, "_AF")
+    beta <- rgData[rownames(rgData) %in% probeInfo_typeII[probeInfo_typeII[,tag_af]>0.01 & probeInfo_typeII[,tag_af]<0.99, "CpG"], ]
     RAI <- 1 - beta
   }else if(input=="mval"){
-    beta <- mval2beta(rgData)
+    data(probeInfo_typeII)
+    tag_af <- paste0(pop, "_AF")
+    beta <- mval2beta(rgData[rownames(rgData) %in% probeInfo_typeII[probeInfo_typeII[,tag_af]>0.01 & probeInfo_typeII[,tag_af]<0.99, "CpG"], ])
     RAI <- 1 - beta
   }else{
     print("Error: Input data type must be one of raw, beta, and mval.")
@@ -58,8 +62,8 @@ getRAI_typeII = function(rgData, pop="ALL"){
   tag_af <- paste0(pop, "_AF")
   data(probeInfo_typeII)
   cg <- rownames(rgData[["AR"]])
-  cg_IIR <- cg[cg %in% probeInfo_typeII[probeInfo_typeII[,"Group"]=="IIR" & probeInfo_typeII[,tag_af]>0.01, "CpG"]] # Type II, Alt allele match Red
-  cg_IIG <- cg[cg %in% probeInfo_typeII[probeInfo_typeII[,"Group"]=="IIG" & probeInfo_typeII[,tag_af]>0.01, "CpG"]] # Type II, Alt allele match Grn
+  cg_IIR <- cg[cg %in% probeInfo_typeII[probeInfo_typeII[,"Group"]=="IIR" & probeInfo_typeII[,tag_af]>0.01 & probeInfo_typeII[,tag_af]<0.99, "CpG"]] # Type II, Alt allele match Red
+  #cg_IIG <- cg[cg %in% probeInfo_typeII[probeInfo_typeII[,"Group"]=="IIG" & probeInfo_typeII[,tag_af]>0.01 & probeInfo_typeII[,tag_af]<0.99, "CpG"]] # Type II, Alt allele match Grn
   RAI <- rbind(
     rgData[["AR"]][cg_IIR,] / (rgData[["AG"]][cg_IIR,] + rgData[["AR"]][cg_IIR,])
     #rgData[["AG"]][cg_IIG,] / (rgData[["AG"]][cg_IIG,] + rgData[["AR"]][cg_IIG,])

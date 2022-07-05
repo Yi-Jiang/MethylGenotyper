@@ -13,14 +13,16 @@ callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, R2_cuto
   if(input=="raw"){
     RAI <- getRAI_snp(rgData)
   }else if(input=="beta"){
-    beta <- rgData
-    RAI_typeI <- 1 - beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IAG", "IAR", "IBG", "IBR"), "CpG"], ]
-    RAI_typeII <- beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IIR", "IIG"), "CpG"], ]
+    data(probeInfo_snp)
+    beta <- rgData[rownames(rgData) %in% probeInfo_snp$CpG, ]
+    RAI_typeI <- 1 - beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IAG", "IAR", "IIR"), "CpG"], ] # alternative alleles match unmethylated probes.
+    RAI_typeII <- beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IBG", "IBR", "IIG"), "CpG"], ]
     RAI <- rbind(RAI_typeI, RAI_typeII)
   }else if(input=="mval"){
-    beta <- mval2beta(rgData)
-    RAI_typeI <- 1 - beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IAG", "IAR", "IBG", "IBR"), "CpG"], ]
-    RAI_typeII <- beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IIR", "IIG"), "CpG"], ]
+    data(probeInfo_snp)
+    beta <- mval2beta(rgData[rownames(rgData) %in% probeInfo_snp$CpG, ])
+    RAI_typeI <- 1 - beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IAG", "IAR", "IIR"), "CpG"], ]
+    RAI_typeII <- beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IBG", "IBR", "IIG"), "CpG"], ]
     RAI <- rbind(RAI_typeI, RAI_typeII)
   }else{
     print("Error: Input data type must be one of raw, beta, and mval.")

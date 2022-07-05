@@ -164,8 +164,8 @@ format_genotypes <- function(genotypes, vcf=FALSE, R2_cutoff_up=1.1, R2_cutoff_d
   filter_R2 <- sapply(R2, function(x) filter_by_R2(x, R2_cutoff_up, R2_cutoff_down))
   filter_HWE <- sapply(hwe_p, function(x) filter_by_HWE(x, 1e-6))
   filter <- paste(filter_AF, filter_R2, filter_HWE, sep=",")
-  filter[filter=="PASS,PASS,pASS"] <- "PASS"
-  filter[filter!="PASS,PASS,pASS"] <- gsub(",PASS", "", gsub("PASS,", "", filter[filter!="PASS,PASS,pASS"]))
+  filter[filter=="PASS,PASS,PASS"] <- "PASS"
+  filter[filter!="PASS,PASS,PASS"] <- gsub(",PASS", "", gsub("PASS,", "", filter[filter!="PASS,PASS,PASS"]))
   
   ## Mark probes failed the first iteration in callGeno.
   AF <- round(AF, 3)

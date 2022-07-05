@@ -28,8 +28,8 @@ getMod <- function(RAI, cpu=1){
   out3 <- out[filter(mod, nmod2==3)$Name]
   
   # Filter mode density height (>0.1)----
-  height2 <- as.data.frame(do.call(rbind, list.map(out2, fvalue))) %>% select(V1, V3)
-  height3 <- as.data.frame(do.call(rbind, list.map(out3, fvalue))) %>% select(V1, V3, V5)
+  height2 <- as.data.frame(do.call(rbind, list.map(out2, fvalue))) %>% dplyr::select(V1, V3)
+  height3 <- as.data.frame(do.call(rbind, list.map(out3, fvalue))) %>% dplyr::select(V1, V3, V5)
   height <- bind_rows(height2, height3)
   dat <- gather(height, `V1`,`V3`,`V5`, key="mode", value="h")
   hfilter <- rowSums(height>0.1, na.rm=T)>1
@@ -37,8 +37,8 @@ getMod <- function(RAI, cpu=1){
   mod <- left_join(mod, tibble(Name=names(hfilter), h_0.1=hfilter, nh_0.1=nhfilter))
   
   # Filter mode location ----
-  lo2 <- as.data.frame(do.call(rbind, list.map(out2, locations))) %>% select(V1, V3)
-  lo3 <- as.data.frame(do.call(rbind, list.map(out3, locations))) %>% select(V1, V3, V5)
+  lo2 <- as.data.frame(do.call(rbind, list.map(out2, locations))) %>% dplyr::select(V1, V3)
+  lo3 <- as.data.frame(do.call(rbind, list.map(out3, locations))) %>% dplyr::select(V1, V3, V5)
   k.lo2 <- filter(lo2, (V1<0.3&V3>0.3&V3<0.7)|(V1>0.3&V1<0.7&V3>0.7)) 
   k.lo3 <- filter(lo3, V1<0.3, V3>0.3, V3<0.7, V5>0.7) 
   k.lo <- bind_rows(k.lo2, k.lo3)

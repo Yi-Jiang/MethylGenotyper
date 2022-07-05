@@ -39,8 +39,8 @@ getRAI_ccs = function(rgData, pop="ALL"){
   }
   tag_af <- paste0(pop, "_AF")
   data(probeInfo_ccs)
-  dR <- filter(probeInfo_ccs, Color=="Red", .data[[tag_af]]>0.01)
-  dG <- filter(probeInfo_ccs, Color=="Grn", .data[[tag_af]]>0.01)
+  dR <- filter(probeInfo_ccs, Color=="Red", .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
+  dG <- filter(probeInfo_ccs, Color=="Grn", .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
   dR_AR <- rgData[["AR"]][dR$CpG,] # Red channel, ib
   dR_BR <- rgData[["BR"]][dR$CpG,] # Red channel, ib
   dR_AG <- rgData[["AG"]][dR$CpG,] # Red channel, oob
