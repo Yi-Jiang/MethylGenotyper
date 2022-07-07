@@ -4,6 +4,7 @@
 #' @param rgData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
 #' @param plotBeta If TRUE, plot beta distributions for reference homozygous, heterozygous, and alternative homozygous.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
+#' @param vcfName VCF file name. Only effective when vcf=TRUE.
 #' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned matrix, variants with R-square outside this range will be removed.
 #' @param MAF_cutoff A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
 #' @param train If TRUE, will fit the distribution of RAI (Ratio of Alternative allele Intensity) and filter probes by number of peaks. If FALSE, will use predefined probe list.
@@ -11,7 +12,7 @@
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
 #' @return A matrix of genotype calls.
 #' @export
-callGeno_ccs <- function(rgData, plotBeta=FALSE, vcf=FALSE, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, train=FALSE, cpu=1, pop="ALL"){
+callGeno_ccs <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.ccs_snp_probe.vcf", R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, train=FALSE, cpu=1, pop="ALL"){
   RAI <- getRAI_ccs(rgData, pop=pop)
   if(train){
     mod <- getMod(RAI, cpu=cpu)
@@ -23,7 +24,7 @@ callGeno_ccs <- function(rgData, plotBeta=FALSE, vcf=FALSE, R2_cutoff_up=1.1, R2
   if(plotBeta){
     plot_beta_distribution(genotypes, type="ccs_snp_probe")
   }
-  dosage <- format_genotypes(genotypes, vcf=vcf, R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, MAF_cutoff=MAF_cutoff, type="ccs_snp_probe")
+  dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, MAF_cutoff=MAF_cutoff, type="ccs_snp_probe")
   dosage
 }
 

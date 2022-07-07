@@ -142,12 +142,13 @@ dosage2hard <- function(genotypes){
 #' 
 #' @param genotypes Genotype calls.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
+#' @param vcfName VCF file name. Only effective when vcf=TRUE.
 #' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned matrix, variants with R-square outside this range will be removed.
 #' @param MAF_cutoff An MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
 #' @param type One of snp_probe, ccs_snp_probe, and typeII_probe.
 #' @return A matrix of genotype calls.
 #' @export
-format_genotypes <- function(genotypes, vcf=FALSE, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, type){
+format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, type){
   for(i in 1:3){
     colnames(genotypes$gamma[[i]]) <- colnames(genotypes$snps)
     rownames(genotypes$gamma[[i]]) <- rownames(genotypes$snps)
@@ -237,8 +238,8 @@ format_genotypes <- function(genotypes, vcf=FALSE, R2_cutoff_up=1.1, R2_cutoff_d
       tibble(QUAL=".", FILTER=filter, INFO=paste0("AF=", AF, ";R2=", R2_constrained), FORMAT="GT:DS:RAI:GP")
     ) %>% left_join(geno, by=c("CpG"))
     vcf <- vcf[, -6]
-    write.table(header, file=paste0("genotypes.", type, ".vcf"), sep="\t", row.names=F, quote=F, col.names=F)
-    write.table(vcf, file=paste0("genotypes.", type, ".vcf"), sep="\t", row.names=F, quote=F, col.names=F, append=T)
+    write.table(header, file=vcfName, sep="\t", row.names=F, quote=F, col.names=F)
+    write.table(vcf, file=vcfName, sep="\t", row.names=F, quote=F, col.names=F, append=T)
   }
   ## Filter dosage
   dosage <- apply(dosage[filter=="PASS",,drop=F], 1:2, as.numeric)
