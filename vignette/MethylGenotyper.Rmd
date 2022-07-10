@@ -120,7 +120,7 @@ kinship <- getKinship(dosage)
 
 ### Estimate sample contamination
 
-Samples with inbreeding coefficients beyond 3 SDs of the mean are considered as contaminated.
+We recommend to set samples with inbreeding coefficients beyond 3 SDs of the mean as contaminated.
 
 ```{r getInbreed, eval=FALSE, warning=FALSE, message=FALSE}
 inbreed <- getInbreed(dosage)
