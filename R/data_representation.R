@@ -170,9 +170,9 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
   
   ## Mark probes failed the first iteration in callGeno.
   AF <- round(AF, 3)
-  AF[probes %in% genotypes$fail_1st_probes] <- "."
-  R2_constrained[probes %in% genotypes$fail_1st_probes] <- "."
-  filter[probes %in% genotypes$fail_1st_probes] <- "GenoCall"
+  # AF[probes %in% genotypes$fail_1st_probes] <- "."
+  # R2_constrained[probes %in% genotypes$fail_1st_probes] <- "."
+  # filter[probes %in% genotypes$fail_1st_probes] <- "GenoCall"
   
   ## Write into a VCF file
   if(vcf){
@@ -186,7 +186,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
       paste0("##FILTER=<ID=R2_low,Description=\"R2 is below ", R2_cutoff_down, "\">"),
       paste0("##FILTER=<ID=R2_high,Description=\"R2 is above ", R2_cutoff_up, "\">"),
       paste0("##FILTER=<ID=HWE,Description=\"Deviation from Hardy-Weinberg Equilibrium (HWE)\">"),
-      paste0("##FILTER=<ID=GenoCall,Description=\"Failed at the first iteration of genotype calling\">"),
+      # paste0("##FILTER=<ID=GenoCall,Description=\"Failed at the first iteration of genotype calling\">"),
       "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
       "##FORMAT=<ID=DS,Number=1,Type=Float,Description=\"Genotype dosage.\">",
       "##FORMAT=<ID=RAI,Number=1,Type=Float,Description=\"RAI (Ratio of Alternative allele Intensity).\">",
@@ -201,11 +201,11 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
     genotypes$gamma[[1]] <- round(genotypes$gamma[[1]])
     genotypes$gamma[[2]] <- round(genotypes$gamma[[2]])
     genotypes$gamma[[3]] <- round(genotypes$gamma[[3]])
-    hardgeno[genotypes$fail_1st_probes,] <- "."
-    dosage[genotypes$fail_1st_probes,] <- "."
-    genotypes$gamma[[1]][genotypes$fail_1st_probes,] <- "."
-    genotypes$gamma[[2]][genotypes$fail_1st_probes,] <- "."
-    genotypes$gamma[[3]][genotypes$fail_1st_probes,] <- "."
+    # hardgeno[genotypes$fail_1st_probes,] <- "."
+    # dosage[genotypes$fail_1st_probes,] <- "."
+    # genotypes$gamma[[1]][genotypes$fail_1st_probes,] <- "."
+    # genotypes$gamma[[2]][genotypes$fail_1st_probes,] <- "."
+    # genotypes$gamma[[3]][genotypes$fail_1st_probes,] <- "."
     
     ## Genotype
     geno <- matrix(nrow=nrow(dosage), ncol=ncol(dosage))
