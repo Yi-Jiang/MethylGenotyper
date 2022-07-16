@@ -12,7 +12,7 @@
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
 #' @return A matrix of genotype calls.
 #' @export
-callGeno_ccs <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.ccs_snp_probe.vcf", R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, train=FALSE, cpu=1, pop="ALL"){
+callGeno_ccs <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.ccs_snp_probe.vcf", R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, train=FALSE, cpu=1, pop="EAS"){
   RAI <- getRAI_ccs(rgData, pop=pop)
   if(train){
     mod <- getMod(RAI, cpu=cpu)
@@ -34,7 +34,7 @@ callGeno_ccs <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.c
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
 #' @return RAI (Ratio of Alternative allele Intensity).
 #' @export
-getRAI_ccs = function(rgData, pop="ALL"){
+getRAI_ccs = function(rgData, pop="EAS"){
   if(!(pop %in% c("EAS", "AMR", "AFR", "EUR", "SAS", "ALL"))){
     stop("pop must be one of EAS, AMR, AFR, EUR, SAS, and ALL.")
   }

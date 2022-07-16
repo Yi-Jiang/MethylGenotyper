@@ -13,7 +13,7 @@
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
 #' @return A matrix of genotype calls.
 #' @export
-callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeII_probe.vcf", R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, train=FALSE, cpu=1, pop="ALL"){
+callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeII_probe.vcf", R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, train=FALSE, cpu=1, pop="EAS"){
   # calculate RAI
   if(input=="raw"){
     RAI <- getRAI_typeII(rgData, pop=pop)
@@ -56,7 +56,7 @@ callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
 #' @return RAI (Ratio of Alternative allele Intensity).
 #' @export
-getRAI_typeII = function(rgData, pop="ALL"){
+getRAI_typeII = function(rgData, pop="EAS"){
   if(!(pop %in% c("EAS", "AMR", "AFR", "EUR", "SAS", "ALL"))){
     stop("pop must be one of EAS, AMR, AFR, EUR, SAS, and ALL.")
   }
