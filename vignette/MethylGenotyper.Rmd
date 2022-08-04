@@ -24,7 +24,7 @@ The `MethylGenotyper` package provides functions to infer genotypes (produce a V
 - __CCS SNP probe:__ Training from our in-house data (Chinese population), we provide a list of 132 CCS SNP probes on EPIC array. It's opt to you to train their own models. These probes are type-I probes with SNPs at the extension bases resulting in CCS (A,T <-> C,G mutation). The signals for probes with CCS SNPs are called out-of-band signals. The RAI is defined as the proportion of out-of-band signals over total signals.
 - __Type-II probe:__ For this probe type, we only focus on probes with SNPs at the extension bases (CpG target sites). Training from our in-house data (Chinese population), we provide a list of 4853 Type-II probes. It's opt to you to train their own models. The RAI is defined as the proportion of signals supporting alternative alleles over total signals.
 
-We adapted the `ewastools::call_genotypes` function to call genotypes based on the RAI values. This function fit three beta distributions for three genotypes (reference homozygous, heterozygous, and alternative homozygous) and one uniform distribution for outliers. We used a "two-step" strategy to call genotypes, which is run by fitting the mixture model twice. For the first step, we fit the mixture model, call genotypes, and filter out the probes deviating Hardy-Weinberg Equilibrium (HWE, P < 1E-6). For the second step, we fit the model and call genotypes again, using the pre-filtered data. Genotype probabilities of the three genotypes ($P_0$, $P_1$, and $P_2$ for reference homozygous, heterozygous, and alternative homozygous, respectively) will be calculated for each probe and sample. Lastly, a VCF file containing allele frequency (AF), $R^2$, genotype probability, hard genotype, and dosage genotype (DS) will be produced:
+We used the `ewastools::call_genotypes` function to call genotypes based on the RAI values. This function fit three beta distributions for three genotypes (reference homozygous, heterozygous, and alternative homozygous) and one uniform distribution for outliers. Genotype probabilities of the three genotypes ($P_0$, $P_1$, and $P_2$ for reference homozygous, heterozygous, and alternative homozygous, respectively) will be calculated for each probe and sample. Lastly, a VCF file containing allele frequency (AF), $R^2$, genotype probability, hard genotype, and dosage genotype (DS) will be produced:
 
 - __DS:__ $G = P_1 + 2P_2$
 - __AF:__ $p = \frac{\sum G}{2N}$, where $N$ is the sample size
@@ -39,6 +39,7 @@ This document has the following dependencies
 ```{r dependencies, eval=TRUE, message=FALSE, warning=FALSE}
 library(MethylGenotyper)
 library(minfi)
+library(ewastools)
 library(tidyverse)
 library(foreach)
 library(doParallel)

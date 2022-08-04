@@ -138,7 +138,7 @@ dosage2hard <- function(genotypes){
   hardgeno
 }
 
-#' Format genotype calls produced by `callGeno` function
+#' Format genotype calls produced by `ewastools::call_genotypes` function
 #' 
 #' @param genotypes Genotype calls.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
@@ -190,7 +190,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
       "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
       "##FORMAT=<ID=DS,Number=1,Type=Float,Description=\"Genotype dosage.\">",
       "##FORMAT=<ID=RAI,Number=1,Type=Float,Description=\"RAI (Ratio of Alternative allele Intensity).\">",
-      "##FORMAT=<ID=GP,Number=1,Type=Float,Description=\"Genotype probability of reference homozygous, heterozygous, and alternative homozygous produced by using the callGeno function\">",
+      "##FORMAT=<ID=GP,Number=1,Type=Float,Description=\"Genotype probability of reference homozygous, heterozygous, and alternative homozygous\">",
       paste0("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t", samplelist),
       sep = "\n"
     )

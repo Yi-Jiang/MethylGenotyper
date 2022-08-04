@@ -29,7 +29,7 @@ callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName
     print("Error: Input data type must be one of raw, beta, and mval.")
     return(NA)
   }
-  genotypes = callGeno(RAI, learn=TRUE)
+  genotypes = ewastools::call_genotypes(RAI, learn=TRUE)
   if(plotBeta){
     plot_beta_distribution(genotypes, type="snp_probe")
   }

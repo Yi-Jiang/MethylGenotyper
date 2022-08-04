@@ -41,7 +41,7 @@ callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
   }
   
   # call genotypes
-  genotypes = callGeno(RAI, learn=TRUE)
+  genotypes = ewastools::call_genotypes(RAI, learn=TRUE)
   if(plotBeta){
     plot_beta_distribution(genotypes, type="typeII_probe")
   }

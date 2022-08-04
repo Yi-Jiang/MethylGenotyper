@@ -20,7 +20,7 @@ callGeno_ccs <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.c
   }else{
     RAI <- RAI[rownames(RAI) %in% filter(probeInfo_ccs, h_0.1==TRUE, loc_pass==TRUE)$CpG,]
   }
-  genotypes = callGeno(RAI, learn=TRUE)
+  genotypes = ewastools::call_genotypes(RAI, learn=TRUE)
   if(plotBeta){
     plot_beta_distribution(genotypes, type="ccs_snp_probe")
   }
