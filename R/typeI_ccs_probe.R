@@ -46,6 +46,7 @@ getRAI_typeI = function(rgData, pop="EAS"){
   dR <- filter(probeInfo_typeI, Color=="Red", .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
   dG <- filter(probeInfo_typeI, Color=="Grn", .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
   dR_AR <- rgData[["AR"]][dR$CpG,] # Red channel, ib
+  dR_BR <- rgData[["BR"]][dR$CpG,] # Red channel, ib
   dR_AG <- rgData[["AG"]][dR$CpG,] # Red channel, oob
   dR_BG <- rgData[["BG"]][dR$CpG,] # Red channel, oob
   dG_AR <- rgData[["AR"]][dG$CpG,] # Grn channel, oob
