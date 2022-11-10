@@ -34,11 +34,11 @@
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
 "probeInfo_snp"
 
-#' CCS SNP probe information
+#' Type I CCS probe information
 #' 
-#' A dataset containing CCS SNP probe information.
+#' A dataset containing Type I CCS probe information.
 #' 
-#' @usage data(probeInfo_ccs)
+#' @usage data(probeInfo_typeI)
 #' @format A data frame with 717 rows and 16 columns:
 #' \describe{
 #'  \item{Chr}{Chromosome ID}
@@ -59,11 +59,11 @@
 #'  \item{loc_pass}{Passed peak position test or not}
 #' }
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
-"probeInfo_ccs"
+"probeInfo_typeI"
 
-#' Type-II probe information
+#' Type II CCS probe information
 #' 
-#' A dataset containing information of Type-II probes with SNPs at the extension bases. We only consider the situation that the alternative allele is A/T and the reference allele is C/G.
+#' A dataset containing information of Type II CCS probes with SNPs at the extension bases. We only consider the situation that the alternative allele is A/T and the reference allele is C/G.
 #' 
 #' @usage data(probeInfo_typeII)
 #' @format A data frame with 26420 rows and 16 columns:
@@ -90,7 +90,7 @@
 
 #' Probe list
 #' 
-#' A dataset containing the list of 53 SNP probes on autosomes, 717 CCS SNP probes, and 27879 type-II probes.
+#' A dataset containing the list of 53 SNP probes on autosomes, 717 Type I CCS probes, and 27879 type II CCS probes.
 #' 
 #' @usage data(probelist)
 #' @format A data frame with 27190 rows and 2 columns:
@@ -98,6 +98,6 @@
 #'  \item{CpG}{CpG list}
 #'  \item{Type}{Probe types}
 #' }
-#' @seealso Probe informations: \code{\link{probeInfo_snp()}}, \code{\link{probeInfo_ccs()}}, and \code{\link{probeInfo_typeII()}}.
+#' @seealso Probe informations: \code{\link{probeInfo_snp()}}, \code{\link{probeInfo_typeI()}}, and \code{\link{probeInfo_typeII()}}.
 "probelist"
 

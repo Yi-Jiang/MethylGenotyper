@@ -1,5 +1,5 @@
 
-#' Call genotypes for Type-II probes
+#' Call genotypes for Type II CCS probes
 #' 
 #' @param rgData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
 #' @param input Input data types. One of "raw", "beta", and "mval". If input is "beta" or "mval", please use probes as rows and samples as columns.
@@ -13,7 +13,8 @@
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
 #' @return A matrix of genotype calls.
 #' @export
-callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeII_probe.vcf", R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, train=FALSE, cpu=1, pop="EAS"){
+callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeII_ccs_probe.vcf", 
+                            R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, train=FALSE, cpu=1, pop="EAS"){
   # calculate RAI
   if(input=="raw"){
     RAI <- getRAI_typeII(rgData, pop=pop)
@@ -43,14 +44,16 @@ callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
   # call genotypes
   genotypes = ewastools::call_genotypes(RAI, learn=TRUE)
   if(plotBeta){
-    plot_beta_distribution(genotypes, type="typeII_probe")
+    plot_beta_distribution(genotypes, type="typeII_ccs_probe")
   }
-  dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, MAF_cutoff=MAF_cutoff, type="typeII_probe")
+  dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 
+                             R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
+                             MAF_cutoff=MAF_cutoff, type="typeII_ccs_probe")
   dosage
 }
 
 
-#' Get RAI (Ratio of Alternative allele Intensity) for Type-II probes
+#' Get RAI (Ratio of Alternative allele Intensity) for Type II CCS probes
 #' 
 #' @param rgData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.

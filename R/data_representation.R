@@ -2,7 +2,7 @@
 #' Plot beta distributions for reference homozygous, heterozygous, and alternative homozygous
 #' 
 #' @param genotypes Genotype calls.
-#' @param type One of "snp_probe", "ccs_snp_probe", and "typeII_probe".
+#' @param type One of "snp_probe", "typeI_ccs_probe", and "typeII_ccs_probe".
 #' @export
 plot_beta_distribution <- function(genotypes, type){
   pdf(paste0("beta_distribution.", type, ".pdf"), width=500, height=500)
@@ -145,7 +145,7 @@ dosage2hard <- function(genotypes){
 #' @param vcfName VCF file name. Only effective when vcf=TRUE.
 #' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned matrix, variants with R-square outside this range will be removed.
 #' @param MAF_cutoff An MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
-#' @param type One of snp_probe, ccs_snp_probe, and typeII_probe.
+#' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
 #' @return A matrix of genotype calls.
 #' @export
 format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, type){
@@ -224,9 +224,9 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
     geno <- as.data.frame(cbind(CpG = rownames(dosage), geno))
     if(type=="snp_probe"){
       data(probeInfo_snp); probeInfo = probeInfo_snp
-    }else if(type=="ccs_snp_probe"){
-      data(probeInfo_ccs); probeInfo = probeInfo_ccs
-    }else if(type=="typeII_probe"){
+    }else if(type=="typeI_ccs_probe"){
+      data(probeInfo_typeI); probeInfo = probeInfo_typeI
+    }else if(type=="typeII_ccs_probe"){
       data(probeInfo_typeII); probeInfo = probeInfo_typeII
     }else{
       print("Error: misspecified probe types!")
