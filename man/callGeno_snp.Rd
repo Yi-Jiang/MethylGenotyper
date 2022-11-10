@@ -9,6 +9,7 @@ callGeno_snp(
   input = "raw",
   plotBeta = FALSE,
   vcf = FALSE,
+  vcfName = "genotypes.snp_probe.vcf",
   R2_cutoff_up = 1.1,
   R2_cutoff_down = 0.7,
   MAF_cutoff = 0.01
@@ -22,6 +23,8 @@ callGeno_snp(
 \item{plotBeta}{If TRUE, plot beta distributions for reference homozygous, heterozygous, and alternative homozygous.}
 
 \item{vcf}{If TRUE, will write a VCF file in the current directory.}
+
+\item{vcfName}{VCF file name. Only effective when vcf=TRUE.}
 
 \item{R2_cutoff_up, R2_cutoff_down}{R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the \code{FILTER} column. For the returned matrix, variants with R-square outside this range will be removed.}
 

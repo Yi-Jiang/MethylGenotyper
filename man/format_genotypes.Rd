@@ -2,11 +2,12 @@
 % Please edit documentation in R/data_representation.R
 \name{format_genotypes}
 \alias{format_genotypes}
-\title{Format genotype calls produced by \code{callGeno} function}
+\title{Format genotype calls produced by \code{ewastools::call_genotypes} function}
 \usage{
 format_genotypes(
   genotypes,
   vcf = FALSE,
+  vcfName,
   R2_cutoff_up = 1.1,
   R2_cutoff_down = 0.7,
   MAF_cutoff = 0.01,
@@ -18,15 +19,17 @@ format_genotypes(
 
 \item{vcf}{If TRUE, will write a VCF file in the current directory.}
 
+\item{vcfName}{VCF file name. Only effective when vcf=TRUE.}
+
 \item{R2_cutoff_up, R2_cutoff_down}{R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the \code{FILTER} column. For the returned matrix, variants with R-square outside this range will be removed.}
 
 \item{MAF_cutoff}{An MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with MAF below the cutoff will be removed.}
 
-\item{type}{One of snp_probe, ccs_snp_probe, and typeII_probe.}
+\item{type}{One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.}
 }
 \value{
 A matrix of genotype calls.
 }
 \description{
-Format genotype calls produced by \code{callGeno} function
+Format genotype calls produced by \code{ewastools::call_genotypes} function
 }

@@ -9,7 +9,7 @@ plot_beta_distribution(genotypes, type)
 \arguments{
 \item{genotypes}{Genotype calls.}
 
-\item{type}{One of "snp_probe", "ccs_snp_probe", and "typeII_probe".}
+\item{type}{One of "snp_probe", "typeI_ccs_probe", and "typeII_ccs_probe".}
 }
 \description{
 Plot beta distributions for reference homozygous, heterozygous, and alternative homozygous
