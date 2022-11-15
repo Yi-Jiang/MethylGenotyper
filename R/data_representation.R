@@ -5,7 +5,7 @@
 #' @param type One of "snp_probe", "typeI_ccs_probe", and "typeII_ccs_probe".
 #' @export
 plot_beta_distribution <- function(genotypes, type){
-  pdf(paste0("beta_distribution.", type, ".pdf"), width=500, height=500)
+  pdf(paste0("beta_distribution.", type, ".pdf"), width=5, height=5)
   plot(
     x=seq(0, 1, 0.01), 
     y=dbeta(seq(0, 1, 0.01), genotypes$par$shapes1[1], genotypes$par$shapes2[1]), 
@@ -176,27 +176,8 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
   
   ## Write into a VCF file
   if(vcf){
-    ## Header
-    samplelist <- paste(colnames(dosage), collapse="\t")
-    header <- paste(
-      "##fileformat=VCFv4.2",
-      "##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele frequency\">",
-      "##INFO=<ID=R2,Number=1,Type=Float,Description=\"R-square, encoded as var(G)/2p(1-p), where G is dosage genotype and p is allele frequency. Variants with 1<R2<=1.1 are constrained to 1. Variants with R2>1.1 (marked as .) are recommended to remove.\">",
-      paste0("##FILTER=<ID=MAF,Description=\"MAF is below ", MAF_cutoff, "\">"),
-      paste0("##FILTER=<ID=R2_low,Description=\"R2 is below ", R2_cutoff_down, "\">"),
-      paste0("##FILTER=<ID=R2_high,Description=\"R2 is above ", R2_cutoff_up, "\">"),
-      paste0("##FILTER=<ID=HWE,Description=\"Deviation from Hardy-Weinberg Equilibrium (HWE)\">"),
-      # paste0("##FILTER=<ID=GenoCall,Description=\"Failed at the first iteration of genotype calling\">"),
-      "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
-      "##FORMAT=<ID=DS,Number=1,Type=Float,Description=\"Genotype dosage.\">",
-      "##FORMAT=<ID=RAI,Number=1,Type=Float,Description=\"RAI (Ratio of Alternative allele Intensity).\">",
-      "##FORMAT=<ID=GP,Number=1,Type=Float,Description=\"Genotype probability of reference homozygous, heterozygous, and alternative homozygous\">",
-      paste0("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t", samplelist),
-      sep = "\n"
-    )
-    hardgeno <- dosage2hard(genotypes)
-    
     ## Mark probes failed the first iteration in callGeno.
+    hardgeno <- dosage2hard(genotypes)
     dosage <- round(dosage, 2)
     genotypes$gamma[[1]] <- round(genotypes$gamma[[1]])
     genotypes$gamma[[2]] <- round(genotypes$gamma[[2]])
@@ -238,6 +219,28 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
       tibble(QUAL=".", FILTER=filter, INFO=paste0("AF=", AF, ";R2=", R2_constrained), FORMAT="GT:DS:RAI:GP")
     ) %>% left_join(geno, by=c("CpG"))
     vcf <- vcf[, -6]
+    vcf$Chr <- factor(vcf$Chr, levels=c(paste0("chr", 1:22)))
+    vcf <- vcf[order(vcf$Chr, vcf$Pos),]
+    
+    ## Header
+    samplelist <- paste(colnames(dosage), collapse="\t")
+    header <- paste(
+      "##fileformat=VCFv4.2",
+      paste(paste0("##contig=<ID=chr", 1:22, ">"), collapse="\n"),
+      "##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele frequency\">",
+      "##INFO=<ID=R2,Number=1,Type=Float,Description=\"R-square, encoded as var(G)/2p(1-p), where G is dosage genotype and p is allele frequency. Variants with 1<R2<=1.1 are constrained to 1. Variants with R2>1.1 (marked as .) are recommended to remove.\">",
+      paste0("##FILTER=<ID=MAF,Description=\"MAF is below ", MAF_cutoff, "\">"),
+      paste0("##FILTER=<ID=R2_low,Description=\"R2 is below ", R2_cutoff_down, "\">"),
+      paste0("##FILTER=<ID=R2_high,Description=\"R2 is above ", R2_cutoff_up, "\">"),
+      paste0("##FILTER=<ID=HWE,Description=\"Deviation from Hardy-Weinberg Equilibrium (HWE)\">"),
+      # paste0("##FILTER=<ID=GenoCall,Description=\"Failed at the first iteration of genotype calling\">"),
+      "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
+      "##FORMAT=<ID=DS,Number=1,Type=Float,Description=\"Genotype dosage.\">",
+      "##FORMAT=<ID=RAI,Number=1,Type=Float,Description=\"RAI (Ratio of Alternative allele Intensity).\">",
+      "##FORMAT=<ID=GP,Number=1,Type=Float,Description=\"Genotype probability of reference homozygous, heterozygous, and alternative homozygous\">",
+      paste0("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t", samplelist),
+      sep = "\n"
+    )
     write.table(header, file=vcfName, sep="\t", row.names=F, quote=F, col.names=F)
     write.table(vcf, file=vcfName, sep="\t", row.names=F, quote=F, col.names=F, append=T)
   }
