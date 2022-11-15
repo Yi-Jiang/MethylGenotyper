@@ -17,9 +17,9 @@ callGeno_typeI <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes
   RAI <- getRAI_typeI(rgData, pop=pop)
   if(train){
     mod <- getMod(RAI, cpu=cpu)
-    RAI <- RAI[filter(mod, h_0.1==TRUE, loc_pass==TRUE)$Name,]
+    RAI <- RAI[dplyr::filter(mod, h_0.1==TRUE, loc_pass==TRUE)$Name,]
   }else{
-    RAI <- RAI[rownames(RAI) %in% filter(probeInfo_typeI, h_0.1==TRUE, loc_pass==TRUE)$CpG,]
+    RAI <- RAI[rownames(RAI) %in% dplyr::filter(probeInfo_typeI, h_0.1==TRUE, loc_pass==TRUE)$CpG,]
   }
   genotypes = ewastools::call_genotypes(RAI, learn=TRUE)
   if(plotBeta){
@@ -43,8 +43,8 @@ getRAI_typeI = function(rgData, pop="EAS"){
   }
   tag_af <- paste0(pop, "_AF")
   data(probeInfo_typeI)
-  dR <- filter(probeInfo_typeI, Color=="Red", .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
-  dG <- filter(probeInfo_typeI, Color=="Grn", .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
+  dR <- dplyr::filter(probeInfo_typeI, Color=="Red", .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
+  dG <- dplyr::filter(probeInfo_typeI, Color=="Grn", .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
   dR_AR <- rgData[["AR"]][dR$CpG,] # Red channel, ib
   dR_BR <- rgData[["BR"]][dR$CpG,] # Red channel, ib
   dR_AG <- rgData[["AG"]][dR$CpG,] # Red channel, oob

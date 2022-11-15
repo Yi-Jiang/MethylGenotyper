@@ -17,15 +17,15 @@ getMod <- function(RAI, cpu=1){
   registerDoParallel(cl) 
   out <- foreach(i=mod$Name, .packages=c("tidyverse","multimode")) %dopar% {
     tryCatch({
-      a <- locmodes(RAI[i, ], mod0=filter(mod, Name==i)$nmod2)
+      a <- locmodes(RAI[i, ], mod0=dplyr::filter(mod, Name==i)$nmod2)
       a
     }, error = function(e) return(paste0("The variable '", i, "'", " caused the error: '", e, "'")))
   }
   stopImplicitCluster()
   stopCluster(cl)
   names(out) <- mod$Name
-  out2 <- out[filter(mod, nmod2==2)$Name]
-  out3 <- out[filter(mod, nmod2==3)$Name]
+  out2 <- out[dplyr::filter(mod, nmod2==2)$Name]
+  out3 <- out[dplyr::filter(mod, nmod2==3)$Name]
   
   # Filter mode density height (>0.1)----
   height2 <- as.data.frame(do.call(rbind, list.map(out2, fvalue))) %>% dplyr::select(V1, V3)
@@ -39,8 +39,8 @@ getMod <- function(RAI, cpu=1){
   # Filter mode location ----
   lo2 <- as.data.frame(do.call(rbind, list.map(out2, locations))) %>% dplyr::select(V1, V3)
   lo3 <- as.data.frame(do.call(rbind, list.map(out3, locations))) %>% dplyr::select(V1, V3, V5)
-  k.lo2 <- filter(lo2, (V1<0.3&V3>0.3&V3<0.7)|(V1>0.3&V1<0.7&V3>0.7)) 
-  k.lo3 <- filter(lo3, V1<0.3, V3>0.3, V3<0.7, V5>0.7) 
+  k.lo2 <- dplyr::filter(lo2, (V1<0.3&V3>0.3&V3<0.7)|(V1>0.3&V1<0.7&V3>0.7)) 
+  k.lo3 <- dplyr::filter(lo3, V1<0.3, V3>0.3, V3<0.7, V5>0.7) 
   k.lo <- bind_rows(k.lo2, k.lo3)
   mod <- mutate(mod, loc_pass=(Name %in% rownames(k.lo)))
   

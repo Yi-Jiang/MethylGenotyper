@@ -26,9 +26,9 @@ correct_noob_dye <- function(target, mnfst, cpu=1){
             left_join(tibble(AR=red, AddressA_ID=as.integer(names(red))), by=c("AddressA_ID")) %>% 
             left_join(tibble(BG=green, AddressB_ID=as.integer(names(green))), by=c("AddressB_ID")) %>% 
             left_join(tibble(BR=red, AddressB_ID=as.integer(names(red))), by=c("AddressB_ID"))
-        dG <- filter(rgData0, Color_Channel=="Grn")
-        dR <- filter(rgData0, Color_Channel=="Red")
-        InfII <- filter(rgData0, Infinium_Design_Type=="II")
+        dG <- dplyr::filter(rgData0, Color_Channel=="Grn")
+        dR <- dplyr::filter(rgData0, Color_Channel=="Red")
+        InfII <- dplyr::filter(rgData0, Infinium_Design_Type=="II")
         
         ## foreground (in band, ib)
         ibG <- c(dG$BG, dG$AG, InfII$AG)
@@ -60,10 +60,10 @@ correct_noob_dye <- function(target, mnfst, cpu=1){
         controls <- as.data.frame(control_probes) %>% 
             left_join(tibble(G=green, Address=names(green))) %>% 
             left_join(tibble(R=red, Address=names(red)))
-        Ai = filter(controls, Type=="NORM_A") %>% arrange(ExtendedType) # 27
-        Ti = filter(controls, Type=="NORM_T") %>% arrange(ExtendedType) # 58
-        Gi = filter(controls, Type=="NORM_G") %>% arrange(ExtendedType) # 27
-        Ci = filter(controls, Type=="NORM_C") %>% arrange(ExtendedType) # 58
+        Ai = dplyr::filter(controls, Type=="NORM_A") %>% arrange(ExtendedType) # 27
+        Ti = dplyr::filter(controls, Type=="NORM_T") %>% arrange(ExtendedType) # 58
+        Gi = dplyr::filter(controls, Type=="NORM_G") %>% arrange(ExtendedType) # 27
+        Ci = dplyr::filter(controls, Type=="NORM_C") %>% arrange(ExtendedType) # 58
         x <- log(c(Gi$G, Ci$G)) # Green
         y <- log(c(Ai$R, Ti$R)) # Red
         keep = !is.na(y) & !is.na(x) & is.finite(x) & is.finite(y)
@@ -72,9 +72,9 @@ correct_noob_dye <- function(target, mnfst, cpu=1){
         m = mblm::mblm(y~x, repeated=FALSE)
         
         ## dye bias correction for green channel
-        dG.noob <- filter(rgData0, Color_Channel=="Grn")
-        dR.noob <- filter(rgData0, Color_Channel=="Red")
-        InfII.noob <- filter(rgData0, Infinium_Design_Type=="II")
+        dG.noob <- dplyr::filter(rgData0, Color_Channel=="Grn")
+        dR.noob <- dplyr::filter(rgData0, Color_Channel=="Red")
+        InfII.noob <- dplyr::filter(rgData0, Infinium_Design_Type=="II")
         dG.noob$BG_noob_dye = exp(coef(m)[1] + log(dG.noob$BG_noob) * coef(m)[2])
         dG.noob$AG_noob_dye = exp(coef(m)[1] + log(dG.noob$AG_noob) * coef(m)[2])
         dR.noob$BG_noob_dye = exp(coef(m)[1] + log(dR.noob$BG_noob) * coef(m)[2])  # oob
