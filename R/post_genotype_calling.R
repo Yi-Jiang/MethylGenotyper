@@ -28,13 +28,10 @@ getKinship <- function(dosage){
   norm <- sweep(dosage, 1, 2*AF, FUN="-")
   GRM <- t(norm) %*% norm / sum(2 * AF * (1 - AF) * R2^2)
   GRM[!(lower.tri(GRM))] <- NA
-  GRM <- as.data.frame(GRM) 
-  GRM$IID1 <- rownames(GRM)
-  GRM <- as.data.frame(melt(GRM))
-  colnames(GRM) <- c("IID1", "IID2", "Relatedness")
-  GRM <- GRM[!is.na(GRM$Relatedness),]
-  GRM$Phi <- GRM$Relatedness / 2
-  GRM$Relation <- getRelation(GRM$Phi)
+  GRM <- as.data.frame(GRM) %>% mutate(IID1=rownames(.)) %>%
+    tidyr::gather(key="IID2", value="Relatedness", -IID1) %>%
+    dplyr::filter(!is.na(Relatedness)) %>%
+    mutate(Phi=Relatedness/2, Relation=getRelation(Phi))
   GRM
 }
 
