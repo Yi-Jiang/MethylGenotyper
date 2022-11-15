@@ -43,3 +43,7 @@ vignettes/*.pdf
 
 # Other temporary files
 tmp.*
+
+# deprecated files
+*_deprecated.R
+
