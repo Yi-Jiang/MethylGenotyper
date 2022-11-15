@@ -16,12 +16,14 @@ callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName
   }else if(input=="beta"){
     data(probeInfo_snp)
     beta <- rgData[rownames(rgData) %in% probeInfo_snp$CpG, ]
+    if(nrow(beta)==0){print("No SNP probes found. Exit!"); return(NA)}
     RAI_typeI <- 1 - beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IAG", "IAR", "IIR"), "CpG"], ] # alternative alleles match unmethylated probes.
     RAI_typeII <- beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IBG", "IBR", "IIG"), "CpG"], ]
     RAI <- rbind(RAI_typeI, RAI_typeII)
   }else if(input=="mval"){
     data(probeInfo_snp)
     beta <- mval2beta(rgData[rownames(rgData) %in% probeInfo_snp$CpG, ])
+    if(nrow(beta)==0){print("No SNP probes found. Exit!"); return(NA)}
     RAI_typeI <- 1 - beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IAG", "IAR", "IIR"), "CpG"], ]
     RAI_typeII <- beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IBG", "IBR", "IIG"), "CpG"], ]
     RAI <- rbind(RAI_typeI, RAI_typeII)
