@@ -12,7 +12,8 @@ callGeno_snp(
   vcfName = "genotypes.snp_probe.vcf",
   R2_cutoff_up = 1.1,
   R2_cutoff_down = 0.7,
-  MAF_cutoff = 0.01
+  MAF_cutoff = 0.01,
+  pop = "EAS"
 )
 }
 \arguments{
@@ -29,9 +30,13 @@ callGeno_snp(
 \item{R2_cutoff_up, R2_cutoff_down}{R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the \code{FILTER} column. For the returned matrix, variants with R-square outside this range will be removed.}
 
 \item{MAF_cutoff}{A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with MAF below the cutoff will be removed.}
+
+\item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.}
 }
 \value{
-A matrix of genotype calls.
+A list containing
+\item{dosage}{A matrix of genotype calls}
+\item{genotypes}{A list containing RAI, fits, and Genotype probabilities}
 }
 \description{
 Call genotypes for SNP probes

@@ -84,24 +84,24 @@ We noted that in the example data, most of variants have $R^2$=0. This is becaus
 
 ```{r callGeno, eval=FALSE, warning=FALSE, message=FALSE}
 # Call genotypes for SNP probes
-dosage_snp <- callGeno_snp(rgData, input="raw", vcf=TRUE, pop="EAS")
+genotype_snp <- callGeno_snp(rgData, input="raw", vcf=TRUE, pop="EAS")
 # Call genotypes for Type I CCS probes
-dosage_typeI <- callGeno_typeI(rgData, vcf=TRUE, pop="EAS")
+genotype_typeI <- callGeno_typeI(rgData, vcf=TRUE, pop="EAS")
 # Call genotypes for Type II CCS probes
-dosage_typeII <- callGeno_typeII(rgData, input="raw", vcf=TRUE, pop="EAS")
+genotype_typeII <- callGeno_typeII(rgData, input="raw", vcf=TRUE, pop="EAS")
 # Combine genotypes inferred from the three probe types
-dosage <- rbind(dosage_snp, dosage_typeI, dosage_typeII)
+dosage <- rbind(genotype_snp$dosage, genotype_typeI$dosage, genotype_typeII$dosage)
 ```
 
 As an alternative option, you can input a matrix of beta values or M values, with each row indicates a probe and each column indicates a sample. This option only works for SNP probes and Type II CCS probes. Here are the examples of calling genotypes from beta values. For input of M values, please specify `input="mval"`. Remember to conduct background correction and dye-bias correction before running the following code.
 
 ```{r callGeno2, eval=FALSE, warning=FALSE, message=FALSE}
 # Call genotypes for SNP probes
-dosage_snp <- callGeno_snp(beta_matrix, input="beta", vcf=TRUE, pop="EAS")
+genotype_snp <- callGeno_snp(beta_matrix, input="beta", vcf=TRUE, pop="EAS")
 # Call genotypes for Type II CCS probes
-dosage_typeII <- callGeno_typeII(beta_matrix, input="beta", vcf=TRUE, pop="EAS")
+genotype_typeII <- callGeno_typeII(beta_matrix, input="beta", vcf=TRUE, pop="EAS")
 # Combine genotypes inferred from the three probe types
-dosage <- rbind(dosage_snp, dosage_typeII)
+dosage <- rbind(genotype_snp$dosage, genotype_typeII$dosage)
 ```
 
 ### Estimate sample relationships

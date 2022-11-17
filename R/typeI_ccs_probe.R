@@ -10,7 +10,9 @@
 #' @param train If TRUE, will fit the distribution of RAI (Ratio of Alternative allele Intensity) and filter probes by number of peaks. If FALSE, will use predefined probe list.
 #' @param cpu Number of CPU. Only effective when train=TRUE.
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
-#' @return A matrix of genotype calls.
+#' @return A list containing
+#' \item{dosage}{A matrix of genotype calls}
+#' \item{genotypes}{A list containing RAI, fits, and Genotype probabilities}
 #' @export
 callGeno_typeI <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeI_ccs_probe.vcf", 
                          R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, train=FALSE, cpu=1, pop="EAS"){
@@ -26,7 +28,7 @@ callGeno_typeI <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 
                              R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
                              MAF_cutoff=MAF_cutoff, type="typeI_ccs_probe", pop=pop, plotAF=F)
-  dosage
+  list(dosage=dosage, genotypes=genotypes)
 }
 
 #' Get RAI (Ratio of Alternative allele Intensity) for Type I CCS probes

@@ -8,10 +8,13 @@
 #' @param vcfName VCF file name. Only effective when vcf=TRUE.
 #' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned matrix, variants with R-square outside this range will be removed.
 #' @param MAF_cutoff A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
-#' @return A matrix of genotype calls.
+#' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
+#' @return A list containing
+#' \item{dosage}{A matrix of genotype calls}
+#' \item{genotypes}{A list containing RAI, fits, and Genotype probabilities}
 #' @export
 callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.snp_probe.vcf", 
-                         R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01){
+                         R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, pop="EAS"){
   if(input=="raw"){
     RAI <- getRAI_snp(rgData)
   }else if(input=="beta"){
@@ -37,7 +40,7 @@ callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, R2_cutoff_up=R2_cutoff_up, 
                              R2_cutoff_down=R2_cutoff_down, MAF_cutoff=MAF_cutoff, type="snp_probe",
                              pop=pop, plotAF=F)
-  dosage
+  list(dosage=dosage, genotypes=genotypes)
 }
 
 #' Convert M values to beta values

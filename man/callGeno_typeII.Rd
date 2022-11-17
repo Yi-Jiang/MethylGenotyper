@@ -40,7 +40,9 @@ callGeno_typeII(
 \item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.}
 }
 \value{
-A matrix of genotype calls.
+A list containing
+\item{dosage}{A matrix of genotype calls}
+\item{genotypes}{A list containing RAI, fits, and Genotype probabilities}
 }
 \description{
 Call genotypes for Type II CCS probes

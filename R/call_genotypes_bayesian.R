@@ -118,9 +118,6 @@ get_GP <- function(RAI, shapes, probe2af){
 #' \item{GP}{Posterior probabilities for the three genotypes}
 #' @export
 call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, plotIter=FALSE){
-  
-  #### deal with NAs
-  
   # Initialize: classify all RAIs into three clusters
   RAI_plain <- RAI %>% as.data.frame %>%
     mutate(Probe=rownames(.)) %>%
@@ -149,7 +146,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, plotIter=FALSE){
   GP <- get_GP(RAI, finalClusters$fits[, c("shape1", "shape2")], probe2af)
   
   # return
-  list(iterations=iterations, RAI=RAI, fits=finalClusters$fits, GP=GP)
+  list(RAI=RAI, fits=finalClusters$fits, GP=GP)
 }
 
 #' Plot distribution of RAIs for each iteration

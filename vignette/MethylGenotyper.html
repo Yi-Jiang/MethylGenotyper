@@ -463,13 +463,13 @@ cutoffs will be removed.</p>
 samples here. We strongly recommend to use a larger sample size to test
 the code, such as <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE112179">GSE112179</a>.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Call genotypes for SNP probes</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>dosage_snp <span class="ot">&lt;-</span> <span class="fu">callGeno_snp</span>(rgData, <span class="at">input=</span><span class="st">&quot;raw&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>genotype_snp <span class="ot">&lt;-</span> <span class="fu">callGeno_snp</span>(rgData, <span class="at">input=</span><span class="st">&quot;raw&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Call genotypes for Type I CCS probes</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>dosage_typeI <span class="ot">&lt;-</span> <span class="fu">callGeno_typeI</span>(rgData, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>genotype_typeI <span class="ot">&lt;-</span> <span class="fu">callGeno_typeI</span>(rgData, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>)</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Call genotypes for Type II CCS probes</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>dosage_typeII <span class="ot">&lt;-</span> <span class="fu">callGeno_typeII</span>(rgData, <span class="at">input=</span><span class="st">&quot;raw&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>genotype_typeII <span class="ot">&lt;-</span> <span class="fu">callGeno_typeII</span>(rgData, <span class="at">input=</span><span class="st">&quot;raw&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>)</span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine genotypes inferred from the three probe types</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>dosage <span class="ot">&lt;-</span> <span class="fu">rbind</span>(dosage_snp, dosage_typeI, dosage_typeII)</span></code></pre></div>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>dosage <span class="ot">&lt;-</span> <span class="fu">rbind</span>(genotype_snp<span class="sc">$</span>dosage, genotype_typeI<span class="sc">$</span>dosage, genotype_typeII<span class="sc">$</span>dosage)</span></code></pre></div>
 <p>As an alternative option, you can input a matrix of beta values or M
 values, with each row indicates a probe and each column indicates a
 sample. This option only works for SNP probes and Type II CCS probes.
@@ -478,11 +478,11 @@ of M values, please specify <code>input=&quot;mval&quot;</code>. Remember to
 conduct background correction and dye-bias correction before running the
 following code.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Call genotypes for SNP probes</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dosage_snp <span class="ot">&lt;-</span> <span class="fu">callGeno_snp</span>(beta_matrix, <span class="at">input=</span><span class="st">&quot;beta&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>genotype_snp <span class="ot">&lt;-</span> <span class="fu">callGeno_snp</span>(beta_matrix, <span class="at">input=</span><span class="st">&quot;beta&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Call genotypes for Type II CCS probes</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>dosage_typeII <span class="ot">&lt;-</span> <span class="fu">callGeno_typeII</span>(beta_matrix, <span class="at">input=</span><span class="st">&quot;beta&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>genotype_typeII <span class="ot">&lt;-</span> <span class="fu">callGeno_typeII</span>(beta_matrix, <span class="at">input=</span><span class="st">&quot;beta&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>)</span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine genotypes inferred from the three probe types</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>dosage <span class="ot">&lt;-</span> <span class="fu">rbind</span>(dosage_snp, dosage_typeII)</span></code></pre></div>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>dosage <span class="ot">&lt;-</span> <span class="fu">rbind</span>(genotype_snp<span class="sc">$</span>dosage, genotype_typeII<span class="sc">$</span>dosage)</span></code></pre></div>
 </div>
 <div id="estimate-sample-relationships" class="section level3">
 <h3>Estimate sample relationships</h3>
