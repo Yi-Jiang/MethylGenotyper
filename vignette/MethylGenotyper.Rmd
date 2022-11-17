@@ -24,7 +24,7 @@ The `MethylGenotyper` package provides functions to infer genotypes (produce a V
 - __Type I CCS probe:__ Training from our in-house data (Chinese population), we provide a list of 132 Type I CCS probes on EPIC array. It's opt to you to train your own models. These probes are type I probes with SNPs at the extension bases resulting in CCS (A,T <-> C,G mutation). The signals for probes with CCS SNPs are called out-of-band signals. The RAI is defined as the proportion of out-of-band signals over total signals.
 - __Type II CCS probe:__ For this probe type, we only focus on probes with SNPs at the extension bases (CpG target sites). Training from our in-house data (Chinese population), we provide a list of 4853 Type II CCS probes. It's opt to you to train your own models. The RAI is defined as the proportion of signals supporting alternative alleles over total signals.
 
-We used the `ewastools::call_genotypes` function to call genotypes based on the RAI values. This function fit three beta distributions for three genotypes (reference homozygous, heterozygous, and alternative homozygous) and one uniform distribution for outliers. Genotype probabilities of the three genotypes ($P_0$, $P_1$, and $P_2$ for reference homozygous, heterozygous, and alternative homozygous, respectively) will be calculated for each probe and sample. Lastly, a VCF file containing allele frequency (AF), $R^2$, genotype probability, hard genotype, and dosage genotype (DS) will be produced:
+The genotypes are called in two steps: 1) We fit a mixture of three beta distribution for the three genotypes (reference homozygous, heterozygous, and alternative homozygous) based on the Expectation–maximization (EM) algorithm; 2) We use the Bayesian approach to get the genotype probabilities ($P_0$, $P_1$, and $P_2$ for reference homozygous, heterozygous, and alternative homozygous, respectively), with AFs of the matched population (the 1000 Genomes Project, 1KGP) being used as priors. A VCF file containing allele frequency (AF), $R^2$, genotype probability, hard genotype, and dosage genotype (DS) will be produced:
 
 - __DS:__ $G = P_1 + 2P_2$
 - __AF:__ $p = \frac{\sum G}{2N}$, where $N$ is the sample size
@@ -39,13 +39,13 @@ This document has the following dependencies
 ```{r dependencies, eval=TRUE, message=FALSE, warning=FALSE}
 library(MethylGenotyper)
 library(minfi)
-library(ewastools)
 library(tidyverse)
 library(foreach)
 library(doParallel)
 library(HardyWeinberg)
 library(multimode)
 library(rlist)
+library(stats4)
 ```
 
 ## Recommended workflow
@@ -76,7 +76,7 @@ rgData <- correct_noob_dye(target, mnfst, cpu=3)
 
 ### Call genotypes
 
-As shown below, you can call genotypes for SNP probes, Type I CCS probes, and Type II CCS probes. For each probe and each sample, an RAI will be calculated, which indicates the proportion of signals supporting the alternative allele. The RAI values can be fitted with three beta distribution denoting the three genotypes (reference homozygous, heterozygous, and alternative homozygous) and one uniform distribution denoting outliers. We used `ewastools` to call genotypes based on the RAI values. In addition, you can plot the fitted distribution of the RAI values and produce a VCF file of the inferred genotypes by specifying `plotBeta=TRUE` and `vcf=TRUE`.
+As shown below, you can call genotypes for SNP probes, Type I CCS probes, and Type II CCS probes. For each probe and each sample, an RAI will be calculated, which indicates the proportion of signals supporting the alternative allele. The RAI values can be classified into three clusters by fitting a mixture of three beta distributions. Genotype probabilities can be calculated by using a Bayesian approach. In addition, you can plot the distribution of the RAI values and produce a VCF file of the inferred genotypes by specifying `plotBeta=TRUE` and `vcf=TRUE`.
 
 You can also specify $R^2$ and MAF cutoffs to filter variants. Note that for VCF output, variants with $R^2$ or MAF below the cutoffs will be marked in the `FILTER` column. For the returned matrix, variants with $R^2$ or MAF below the cutoffs will be removed.
 
@@ -84,11 +84,11 @@ We noted that in the example data, most of variants have $R^2$=0. This is becaus
 
 ```{r callGeno, eval=FALSE, warning=FALSE, message=FALSE}
 # Call genotypes for SNP probes
-dosage_snp <- callGeno_snp(rgData, input="raw", plotBeta=TRUE, vcf=TRUE, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01)
+dosage_snp <- callGeno_snp(rgData, input="raw", vcf=TRUE, pop="EAS")
 # Call genotypes for Type I CCS probes
-dosage_typeI <- callGeno_typeI(rgData, plotBeta=TRUE, vcf=TRUE, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01)
+dosage_typeI <- callGeno_typeI(rgData, vcf=TRUE, pop="EAS")
 # Call genotypes for Type II CCS probes
-dosage_typeII <- callGeno_typeII(rgData, input="raw", plotBeta=TRUE, vcf=TRUE, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01)
+dosage_typeII <- callGeno_typeII(rgData, input="raw", vcf=TRUE, pop="EAS")
 # Combine genotypes inferred from the three probe types
 dosage <- rbind(dosage_snp, dosage_typeI, dosage_typeII)
 ```
@@ -97,9 +97,9 @@ As an alternative option, you can input a matrix of beta values or M values, wit
 
 ```{r callGeno2, eval=FALSE, warning=FALSE, message=FALSE}
 # Call genotypes for SNP probes
-dosage_snp <- callGeno_snp(beta_matrix, input="beta", plotBeta=TRUE, vcf=TRUE, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01)
+dosage_snp <- callGeno_snp(beta_matrix, input="beta", vcf=TRUE, pop="EAS")
 # Call genotypes for Type II CCS probes
-dosage_typeII <- callGeno_typeII(beta_matrix, input="beta", plotBeta=TRUE, vcf=TRUE, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01)
+dosage_typeII <- callGeno_typeII(beta_matrix, input="beta", vcf=TRUE, pop="EAS")
 # Combine genotypes inferred from the three probe types
 dosage <- rbind(dosage_snp, dosage_typeII)
 ```

@@ -10,7 +10,8 @@
 #' @param MAF_cutoff A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
 #' @return A matrix of genotype calls.
 #' @export
-callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.snp_probe.vcf", R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01){
+callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.snp_probe.vcf", 
+                         R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01){
   if(input=="raw"){
     RAI <- getRAI_snp(rgData)
   }else if(input=="beta"){
@@ -31,11 +32,11 @@ callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName
     print("Error: Input data type must be one of raw, beta, and mval.")
     return(NA)
   }
-  genotypes = ewastools::call_genotypes(RAI, learn=TRUE)
-  if(plotBeta){
-    plot_beta_distribution(genotypes, type="snp_probe")
-  }
-  dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, MAF_cutoff=MAF_cutoff, type="snp_probe")
+  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="snp_probe", maxiter=50, plotIter=T)
+  if(plotBeta){plot_beta_distribution(genotypes, type="snp_probe")}
+  dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, R2_cutoff_up=R2_cutoff_up, 
+                             R2_cutoff_down=R2_cutoff_down, MAF_cutoff=MAF_cutoff, type="snp_probe",
+                             pop=pop, plotAF=F)
   dosage
 }
 

@@ -42,13 +42,11 @@ callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
   }
   
   # call genotypes
-  genotypes = ewastools::call_genotypes(RAI, learn=TRUE)
-  if(plotBeta){
-    plot_beta_distribution(genotypes, type="typeII_ccs_probe")
-  }
+  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeII_ccs_probe", maxiter=50, plotIter=T)
+  if(plotBeta){plot_beta_distribution(genotypes, type="typeII_ccs_probe")}
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 
                              R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
-                             MAF_cutoff=MAF_cutoff, type="typeII_ccs_probe")
+                             MAF_cutoff=MAF_cutoff, type="typeII_ccs_probe", pop=pop, plotAF=F)
   dosage
 }
 

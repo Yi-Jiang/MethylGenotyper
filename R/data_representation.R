@@ -5,15 +5,16 @@
 #' @param type One of "snp_probe", "typeI_ccs_probe", and "typeII_ccs_probe".
 #' @export
 plot_beta_distribution <- function(genotypes, type){
+  shapes = as.matrix(genotypes$fits[, c("shape1", "shape2")])
   pdf(paste0("beta_distribution.", type, ".pdf"), width=5, height=5)
   plot(
     x=seq(0, 1, 0.01), 
-    y=dbeta(seq(0, 1, 0.01), genotypes$par$shapes1[1], genotypes$par$shapes2[1]), 
+    y=dbeta(seq(0, 1, 0.01), shapes[1, "shape1"], shapes[1, "shape2"]), 
     type="l", main="Fitting model", xlab="Beta", ylab="Density", 
     cex.lab=1.8, cex.axis=1.5, xlim=c(0,1), ylim=c(0,30)
   )
-  lines(x=seq(0, 1, 0.01), y=dbeta(seq(0, 1, 0.01), genotypes$par$shapes1[2], genotypes$par$shapes2[2]))
-  lines(x=seq(0, 1, 0.01), y=dbeta(seq(0, 1, 0.01), genotypes$par$shapes1[3], genotypes$par$shapes2[3]))
+  lines(x=seq(0, 1, 0.01), y=dbeta(seq(0, 1, 0.01), shapes[2, "shape1"], shapes[2, "shape2"]))
+  lines(x=seq(0, 1, 0.01), y=dbeta(seq(0, 1, 0.01), shapes[3, "shape1"], shapes[3, "shape2"]))
   dev.off()
 }
 
@@ -121,39 +122,37 @@ filter_by_HWE <- function(hwe_p, hwe_p_cutoff){
 #' @return A matrix of hard genotypes.
 #' @export
 dosage2hard <- function(genotypes){
-  hardgeno <- t(sapply(1:nrow(genotypes$snps), function(i){
-    sapply(1:ncol(genotypes$snps), function(j){
-      if(is.na(genotypes$gamma[[1]][i,j])){
+  hardgeno <- t(sapply(1:nrow(genotypes$RAI), function(i){
+    sapply(1:ncol(genotypes$RAI), function(j){
+      if(is.na(genotypes$GP$pAA[i,j])){
         NA
       }else{
         names(which.max(c(
-          "0/0"=genotypes$gamma[[1]][i,j], 
-          "0/1"=genotypes$gamma[[2]][i,j], 
-          "1/1"=genotypes$gamma[[3]][i,j]
+          "0/0"=genotypes$GP$pAA[i,j], 
+          "0/1"=genotypes$GP$pAB[i,j], 
+          "1/1"=genotypes$GP$pBB[i,j]
         )))
       }
     })
   }))
-  dimnames(hardgeno) <- dimnames(genotypes$snps)
+  dimnames(hardgeno) <- dimnames(genotypes$RAI)
   hardgeno
 }
 
-#' Format genotype calls produced by `ewastools::call_genotypes` function
+#' Format genotype calls
 #' 
 #' @param genotypes Genotype calls.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
 #' @param vcfName VCF file name. Only effective when vcf=TRUE.
 #' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned matrix, variants with R-square outside this range will be removed.
 #' @param MAF_cutoff An MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
+#' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
+#' @param plotAF To plot the distribution of AFs in 1KGP and input data.
 #' @return A matrix of genotype calls.
 #' @export
-format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, type){
-  for(i in 1:3){
-    colnames(genotypes$gamma[[i]]) <- colnames(genotypes$snps)
-    rownames(genotypes$gamma[[i]]) <- rownames(genotypes$snps)
-  }
-  dosage <- genotypes$gamma[[2]] + 2 * genotypes$gamma[[3]]
+format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, pop, type, plotAF=FALSE){
+  dosage <- genotypes$GP$pAB + 2 * genotypes$GP$pBB
   probes <- rownames(dosage)
   AF <- rowMeans(dosage) / 2
   AF[is.na(AF)] <- 0
@@ -179,14 +178,14 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
     ## Mark probes failed the first iteration in callGeno.
     hardgeno <- dosage2hard(genotypes)
     dosage <- round(dosage, 2)
-    genotypes$gamma[[1]] <- round(genotypes$gamma[[1]])
-    genotypes$gamma[[2]] <- round(genotypes$gamma[[2]])
-    genotypes$gamma[[3]] <- round(genotypes$gamma[[3]])
+    genotypes$GP$pAA <- round(genotypes$GP$pAA)
+    genotypes$GP$pAB <- round(genotypes$GP$pAB)
+    genotypes$GP$pBB <- round(genotypes$GP$pBB)
     # hardgeno[genotypes$fail_1st_probes,] <- "."
     # dosage[genotypes$fail_1st_probes,] <- "."
-    # genotypes$gamma[[1]][genotypes$fail_1st_probes,] <- "."
-    # genotypes$gamma[[2]][genotypes$fail_1st_probes,] <- "."
-    # genotypes$gamma[[3]][genotypes$fail_1st_probes,] <- "."
+    # genotypes$GP$pAA[genotypes$fail_1st_probes,] <- "."
+    # genotypes$GP$pAB[genotypes$fail_1st_probes,] <- "."
+    # genotypes$GP$pBB[genotypes$fail_1st_probes,] <- "."
     
     ## Genotype
     geno <- matrix(nrow=nrow(dosage), ncol=ncol(dosage))
@@ -196,10 +195,10 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
         geno[i,j] <- paste0(
           hardgeno[i,j], ":",
           dosage[i,j], ":", 
-          round(genotypes$snps[i,j], 2), ":", 
-          genotypes$gamma[[1]][i,j], ",", 
-          genotypes$gamma[[2]][i,j], ",", 
-          genotypes$gamma[[3]][i,j])
+          round(genotypes$RAI[i,j], 2), ":", 
+          genotypes$GP$pAA[i,j], ",", 
+          genotypes$GP$pAB[i,j], ",", 
+          genotypes$GP$pBB[i,j])
       }
     }
     geno <- as.data.frame(cbind(CpG = rownames(dosage), geno))
@@ -244,7 +243,30 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
     write.table(header, file=vcfName, sep="\t", row.names=F, quote=F, col.names=F)
     write.table(vcf, file=vcfName, sep="\t", row.names=F, quote=F, col.names=F, append=T)
   }
+  
   ## Filter dosage
   dosage <- apply(dosage[filter=="PASS",,drop=F], 1:2, as.numeric)
+  
+  ## Plots
+  probe2af <- get_AF(genotypes$RAI, pop, type)
+  if(plotAF){plotAF_func(AF_input=AF[rownames(dosage)], AF_1KGP=probe2af, pop=pop, type=type)}
+  
   dosage
+}
+
+#' Plot the distribution of AFs in 1KGP and input data.
+#'
+#' @param AF_input A vector.
+#' @param AF_1KGP A vector.
+#' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL.
+#' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
+#' @export
+plotAF_func <- function(AF_input, AF_1KGP, pop, type){
+  probes <- intersect(names(AF_input), names(AF_1KGP))
+  d <- data.frame(AF_input=AF_input[probes], AF_1KGP=AF_1KGP[probes])
+  p <- ggplot(d) + 
+    geom_point(aes(x=AF_input, y=AF_1KGP), alpha=.5) + 
+    coord_cartesian(xlim=c(0,1), ylim=c(0,1)) +
+    theme_bw() + labs(x="AF (input)", y=paste0("AF (1KGP ", pop, ")"), title=type)
+  ggsave(filename=paste0("AF.", type, ".pdf"), plot=p, width=5, height=5, units="in", scale=2)
 }
