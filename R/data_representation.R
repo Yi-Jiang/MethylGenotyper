@@ -166,27 +166,16 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
   filter <- paste(filter_AF, filter_R2, filter_HWE, sep=";")
   filter[filter=="PASS;PASS;PASS"] <- "PASS"
   filter[filter!="PASS;PASS;PASS"] <- gsub(";PASS", "", gsub("PASS;", "", filter[filter!="PASS;PASS;PASS"]))
-  
-  ## Mark probes failed the first iteration in callGeno.
   AF <- round(AF, 3)
-  # AF[probes %in% genotypes$fail_1st_probes] <- "."
-  # R2_constrained[probes %in% genotypes$fail_1st_probes] <- "."
-  # filter[probes %in% genotypes$fail_1st_probes] <- "GenoCall"
-  
+
   ## Write into a VCF file
   if(vcf){
-    ## Mark probes failed the first iteration in callGeno.
     hardgeno <- dosage2hard(genotypes)
     dosage <- round(dosage, 2)
-    genotypes$GP$pAA <- round(genotypes$GP$pAA)
-    genotypes$GP$pAB <- round(genotypes$GP$pAB)
-    genotypes$GP$pBB <- round(genotypes$GP$pBB)
-    # hardgeno[genotypes$fail_1st_probes,] <- "."
-    # dosage[genotypes$fail_1st_probes,] <- "."
-    # genotypes$GP$pAA[genotypes$fail_1st_probes,] <- "."
-    # genotypes$GP$pAB[genotypes$fail_1st_probes,] <- "."
-    # genotypes$GP$pBB[genotypes$fail_1st_probes,] <- "."
-    
+    genotypes$GP$pAA <- round(genotypes$GP$pAA, 2)
+    genotypes$GP$pAB <- round(genotypes$GP$pAB, 2)
+    genotypes$GP$pBB <- round(genotypes$GP$pBB, 2)
+
     ## Genotype
     geno <- matrix(nrow=nrow(dosage), ncol=ncol(dosage))
     colnames(geno) <- colnames(dosage)
@@ -232,7 +221,6 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
       paste0("##FILTER=<ID=R2_low,Description=\"R2 is below ", R2_cutoff_down, "\">"),
       paste0("##FILTER=<ID=R2_high,Description=\"R2 is above ", R2_cutoff_up, "\">"),
       paste0("##FILTER=<ID=HWE,Description=\"Deviation from Hardy-Weinberg Equilibrium (HWE)\">"),
-      # paste0("##FILTER=<ID=GenoCall,Description=\"Failed at the first iteration of genotype calling\">"),
       "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
       "##FORMAT=<ID=DS,Number=1,Type=Float,Description=\"Genotype dosage.\">",
       "##FORMAT=<ID=RAI,Number=1,Type=Float,Description=\"RAI (Ratio of Alternative allele Intensity).\">",
