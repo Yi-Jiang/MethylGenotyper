@@ -23,11 +23,11 @@ callGeno_typeI <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes
   }else{
     RAI <- RAI[rownames(RAI) %in% dplyr::filter(probeInfo_typeI, h_0.1==TRUE, loc_pass==TRUE)$CpG,]
   }
-  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeI_ccs_probe", maxiter=50, plotIter=T)
+  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeI_ccs_probe", maxiter=50, plotIter=FALSE)
   if(plotBeta){plot_beta_distribution(genotypes, type="typeI_ccs_probe")}
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 
                              R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
-                             MAF_cutoff=MAF_cutoff, type="typeI_ccs_probe", pop=pop, plotAF=F)
+                             MAF_cutoff=MAF_cutoff, type="typeI_ccs_probe", pop=pop, plotAF=FALSE)
   list(dosage=dosage, genotypes=genotypes)
 }
 
