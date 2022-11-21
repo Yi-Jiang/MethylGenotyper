@@ -40,14 +40,14 @@ constrain_R2 <- function(R2){
 
 #' Filter by R2
 #' 
-#' Variants with R2>1.1 (marked as .) or R2<0.7 are recommended to remove.
+#' Variants with R2>1.1 (marked as .) or R2<0.75 are recommended to remove.
 #' 
 #' @param R2 R-square
 #' @param R2_cutoff_up Variants with R-square greater than this cutoff should be removed.
 #' @param R2_cutoff_down Variants with R-square less than this cutoff should be removed.
 #' @return Whether the variant passed filtering.
 #' @export
-filter_by_R2 <- function(R2, R2_cutoff_up=1.1, R2_cutoff_down=0.7){
+filter_by_R2 <- function(R2, R2_cutoff_up=1.1, R2_cutoff_down=0.75){
   if(R2>R2_cutoff_up){
     #filter=paste0("R2>", R2_cutoff_up)
     filter="R2_high"
@@ -151,7 +151,7 @@ dosage2hard <- function(genotypes){
 #' @param plotAF To plot the distribution of AFs in 1KGP and input data.
 #' @return A matrix of genotype calls.
 #' @export
-format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, pop, type, plotAF=FALSE){
+format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, pop, type, plotAF=FALSE){
   dosage <- genotypes$GP$pAB + 2 * genotypes$GP$pBB
   probes <- rownames(dosage)
   AF <- rowMeans(dosage) / 2

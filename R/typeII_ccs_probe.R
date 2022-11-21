@@ -16,7 +16,7 @@
 #' \item{genotypes}{A list containing RAI, fits, and Genotype probabilities}
 #' @export
 callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeII_ccs_probe.vcf", 
-                            R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, train=FALSE, cpu=1, pop="EAS"){
+                            R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, train=TRUE, cpu=1, pop="EAS"){
   # calculate RAI
   if(input=="raw"){
     RAI <- getRAI_typeII(rgData, pop=pop)

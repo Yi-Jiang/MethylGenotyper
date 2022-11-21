@@ -15,7 +15,7 @@
 #' \item{genotypes}{A list containing RAI, fits, and Genotype probabilities}
 #' @export
 callGeno_typeI <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeI_ccs_probe.vcf", 
-                         R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, train=FALSE, cpu=1, pop="EAS"){
+                         R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, train=TRUE, cpu=1, pop="EAS"){
   RAI <- getRAI_typeI(rgData, pop=pop)
   if(train){
     mod <- getMod(RAI, cpu=cpu)

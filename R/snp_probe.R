@@ -14,7 +14,7 @@
 #' \item{genotypes}{A list containing RAI, fits, and Genotype probabilities}
 #' @export
 callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.snp_probe.vcf", 
-                         R2_cutoff_up=1.1, R2_cutoff_down=0.7, MAF_cutoff=0.01, pop="EAS"){
+                         R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, pop="EAS"){
   if(input=="raw"){
     RAI <- getRAI_snp(rgData)
   }else if(input=="beta"){
