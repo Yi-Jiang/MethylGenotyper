@@ -11,7 +11,7 @@ callGeno_snp(
   vcf = FALSE,
   vcfName = "genotypes.snp_probe.vcf",
   R2_cutoff_up = 1.1,
-  R2_cutoff_down = 0.7,
+  R2_cutoff_down = 0.75,
   MAF_cutoff = 0.01,
   pop = "EAS"
 )

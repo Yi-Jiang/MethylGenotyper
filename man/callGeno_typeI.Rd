@@ -10,9 +10,9 @@ callGeno_typeI(
   vcf = FALSE,
   vcfName = "genotypes.typeI_ccs_probe.vcf",
   R2_cutoff_up = 1.1,
-  R2_cutoff_down = 0.7,
+  R2_cutoff_down = 0.75,
   MAF_cutoff = 0.01,
-  train = FALSE,
+  train = TRUE,
   cpu = 1,
   pop = "EAS"
 )

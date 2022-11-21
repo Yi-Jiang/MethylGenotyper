@@ -5,9 +5,9 @@
 \alias{filter_by_R2}
 \title{Filter by R2}
 \usage{
-filter_by_R2(R2, R2_cutoff_up = 1.1, R2_cutoff_down = 0.7)
+filter_by_R2(R2, R2_cutoff_up = 1.1, R2_cutoff_down = 0.75)
 
-filter_by_R2(R2, R2_cutoff_up = 1.1, R2_cutoff_down = 0.7)
+filter_by_R2(R2, R2_cutoff_up = 1.1, R2_cutoff_down = 0.75)
 }
 \arguments{
 \item{R2}{R-square}
@@ -22,7 +22,7 @@ Whether the variant passed filtering.
 Whether the variant passed filtering.
 }
 \description{
-Variants with R2>1.1 (marked as .) or R2<0.7 are recommended to remove.
+Variants with R2>1.1 (marked as .) or R2<0.75 are recommended to remove.
 
-Variants with R2>1.1 (marked as .) or R2<0.7 are recommended to remove.
+Variants with R2>1.1 (marked as .) or R2<0.75 are recommended to remove.
 }

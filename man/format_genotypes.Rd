@@ -10,7 +10,7 @@ format_genotypes(
   vcf = FALSE,
   vcfName,
   R2_cutoff_up = 1.1,
-  R2_cutoff_down = 0.7,
+  R2_cutoff_down = 0.75,
   MAF_cutoff = 0.01,
   type
 )
@@ -20,7 +20,7 @@ format_genotypes(
   vcf = FALSE,
   vcfName,
   R2_cutoff_up = 1.1,
-  R2_cutoff_down = 0.7,
+  R2_cutoff_down = 0.75,
   MAF_cutoff = 0.01,
   type
 )
