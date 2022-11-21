@@ -66,7 +66,7 @@ get_AF <- function(RAI, pop="EAS", type){
     probe2af <- probeInfo_typeII[, paste0(pop, "_AF")]
     names(probe2af) <- probeInfo_typeII$CpG
   }else{
-    print("ERROR: get_GP: Wrong pop value supplied!"); return(NA)
+    print("ERROR: get_AF: Wrong pop value supplied!"); return(NA)
   }
   probe2af <- probe2af[rownames(RAI)]
   probe2af
@@ -74,23 +74,24 @@ get_AF <- function(RAI, pop="EAS", type){
 
 #' Infer posterior genotype probabilities based on the Bayesian approach
 #'
-#' Prior genotype probabilities were inferred from AFs of matching population in the 1000 Genomes Project (1KGP).
+#' Prior genotype probabilities were inferred from AFs. The AFs can be in population level or individual-specific level. For population level AFs, they can be extracted from the matched population in the 1000 Genomes Project (1KGP). For individual-specific AFs, they can be calculated according to the top four PCs.
 #'
-#' @param RAI A matrix of RAI (Ratio of Alternative allele Intensity) for probes. Provide probes as rows and samples as columns.
+#' @param RAI A MxN matrix of RAI (Ratio of Alternative allele Intensity). Provide probes as rows and samples as columns.
 #' @param shapes A data frame (3x2) containing the two shapes for beta distributions of the three clusters. 
-#' @param probe2af A vector of AFs extracted from matching population in 1KGP.
+#' @param AF A MxN matrix of AFs. Provide SNPs as rows and samples as columns.
 #' @return  A list containing
 #' \item{pAA}{Posterior genotype probability of AA}
 #' \item{pAB}{Posterior genotype probability of AB}
 #' \item{pBB}{Posterior genotype probability of BB}
 #' @export
-get_GP <- function(RAI, shapes, probe2af){
-  pAA_prior <- (1 - probe2af) ^2 # Prior genotype probability of AA
-  pAB_prior <- 2 * probe2af * (1 - probe2af)
-  pBB_prior <- probe2af ^2
-  pAA_prior <- matrix(rep(pAA_prior, ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
-  pAB_prior <- matrix(rep(pAB_prior, ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
-  pBB_prior <- matrix(rep(pBB_prior, ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
+get_GP <- function(RAI, shapes, AF){
+  probes <- intersect(rownames(RAI), rownames(AF))
+  samples <- intersect(colnames(RAI), colnames(AF))
+  RAI <- RAI[probes, samples]
+  AF <- AF[probes, samples]
+  pAA_prior <- (1 - AF) ^2 # Prior genotype probability of AA
+  pAB_prior <- 2 * AF * (1 - AF)
+  pBB_prior <- AF ^2
   shapes$mean <- shapes$shape1 / (shapes$shape1 + shapes$shape2)
   shapes <- as.matrix(shapes[order(shapes$mean),]) # row1 to row3: AA, AB, BB
   pD_AA <- apply(RAI, 1:2, function(x) dbeta(x, shapes[1, 1], shapes[1, 2])) # probability of data given genotype AA
@@ -105,7 +106,7 @@ get_GP <- function(RAI, shapes, probe2af){
 
 #' Call genotypes based on EM algorithm and Bayesian approach
 #' 
-#' The Expectation–maximization (EM) algorithm is used to fit a mixture of three beta distributions representing the three genotypes (AA, AB, and BB). Then, the Bayesian approach is used to get the genotype probabilities, with AFs of the matched population (the 1000 Genomes Project, 1KGP) being used as priors.
+#' The Expectation–maximization (EM) algorithm is used to fit a mixture of three beta distributions representing the three genotypes (AA, AB, and BB). Then, the Bayesian approach is used to get the genotype probabilities, with AFs of the matched population (the 1000 Genomes Project, 1KGP) being used to infer priors.
 #'
 #' @param RAI A matrix of RAI (Ratio of Alternative allele Intensity) for probes. Provide probes as rows and samples as columns.
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
@@ -139,11 +140,12 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, plotIter=FALSE){
   finalClusters <- iterations[[i-1]]
   
   # Plots
-  probe2af <- get_AF(RAI, pop, type)
   if(plotIter){plotIter_func(iterations, type)}
 
   # Get posterior genotype probabilities
-  GP <- get_GP(RAI, finalClusters$fits[, c("shape1", "shape2")], probe2af)
+  probe2af <- get_AF(RAI, pop, type)
+  AF <- matrix(rep(probe2af, ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
+  GP <- get_GP(RAI, finalClusters$fits[, c("shape1", "shape2")], AF)
   
   # return
   list(RAI=RAI, fits=finalClusters$fits, GP=GP)
