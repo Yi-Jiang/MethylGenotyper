@@ -4,14 +4,14 @@
 \alias{get_GP}
 \title{Infer posterior genotype probabilities based on the Bayesian approach}
 \usage{
-get_GP(RAI, shapes, probe2af)
+get_GP(RAI, shapes, AF)
 }
 \arguments{
-\item{RAI}{A matrix of RAI (Ratio of Alternative allele Intensity) for probes. Provide probes as rows and samples as columns.}
+\item{RAI}{A MxN matrix of RAI (Ratio of Alternative allele Intensity). Provide probes as rows and samples as columns.}
 
 \item{shapes}{A data frame (3x2) containing the two shapes for beta distributions of the three clusters.}
 
-\item{probe2af}{A vector of AFs extracted from matching population in 1KGP.}
+\item{AF}{A MxN matrix of AFs. Provide SNPs as rows and samples as columns.}
 }
 \value{
 A list containing
@@ -20,5 +20,5 @@ A list containing
 \item{pBB}{Posterior genotype probability of BB}
 }
 \description{
-Prior genotype probabilities were inferred from AFs of matching population in the 1000 Genomes Project (1KGP).
+Prior genotype probabilities were inferred from AFs. The AFs can be in population level or individual-specific level. For population level AFs, they can be extracted from the matched population in the 1000 Genomes Project (1KGP). For individual-specific AFs, they can be calculated according to the top four PCs.
 }
