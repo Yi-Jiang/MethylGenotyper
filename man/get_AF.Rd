@@ -4,11 +4,9 @@
 \alias{get_AF}
 \title{Extract AFs from matching population in the 1000 Genomes Project (1KGP)}
 \usage{
-get_AF(RAI, pop = "EAS", type)
+get_AF(pop = "EAS", type)
 }
 \arguments{
-\item{RAI}{A matrix of RAI (Ratio of Alternative allele Intensity) for probes. Provide probes as rows and samples as columns.}
-
 \item{pop}{Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.}
 
 \item{type}{One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.}
