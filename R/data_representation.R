@@ -220,7 +220,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
       paste0("##FILTER=<ID=MAF,Description=\"MAF is below ", MAF_cutoff, "\">"),
       paste0("##FILTER=<ID=R2_low,Description=\"R2 is below ", R2_cutoff_down, "\">"),
       paste0("##FILTER=<ID=R2_high,Description=\"R2 is above ", R2_cutoff_up, "\">"),
-      paste0("##FILTER=<ID=HWE,Description=\"Deviation from Hardy-Weinberg Equilibrium (HWE)\">"),
+      paste0("##FILTER=<ID=HWE,Description=\"Deviation from Hardy-Weinberg Equilibrium (HWE, p < 1E-6)\">"),
       "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
       "##FORMAT=<ID=DS,Number=1,Type=Float,Description=\"Genotype dosage.\">",
       "##FORMAT=<ID=RAI,Number=1,Type=Float,Description=\"RAI (Ratio of Alternative allele Intensity).\">",
@@ -236,8 +236,8 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
   dosage <- apply(dosage[filter=="PASS",,drop=F], 1:2, as.numeric)
   
   ## Plots
-  probe2af <- get_AF(genotypes$RAI, pop, type)
-  if(plotAF){plotAF_func(AF_input=AF[rownames(dosage)], AF_1KGP=probe2af, pop=pop, type=type)}
+  probe2af <- get_AF(pop, type)
+  if(plotAF){plotAF_func(AF_input=AF[rownames(dosage)], AF_1KGP=probe2af[rownames(genotypes$RAI)], pop=pop, type=type)}
   
   dosage
 }
