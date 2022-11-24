@@ -47,12 +47,14 @@ iterate_em <- function(assignments){
 
 #' Extract AFs from matching population in the 1000 Genomes Project (1KGP)
 #'
-#' @param RAI A matrix of RAI (Ratio of Alternative allele Intensity) for probes. Provide probes as rows and samples as columns.
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
 #' @return A vector of AFs
 #' @export
-get_AF <- function(RAI, pop="EAS", type){
+get_AF <- function(pop="EAS", type){
+  if(!(pop %in% c("EAS", "AMR", "AFR", "EUR", "SAS", "ALL"))){
+    print("ERROR: get_AF: Wrong pop value supplied!"); return(NA)
+  }
   if(type=="snp_probe"){
     data(probeInfo_snp)
     probe2af <- probeInfo_snp[, paste0(pop, "_AF")]
@@ -66,9 +68,8 @@ get_AF <- function(RAI, pop="EAS", type){
     probe2af <- probeInfo_typeII[, paste0(pop, "_AF")]
     names(probe2af) <- probeInfo_typeII$CpG
   }else{
-    print("ERROR: get_AF: Wrong pop value supplied!"); return(NA)
+    print("ERROR: get_AF: Wrong type value supplied!"); return(NA)
   }
-  probe2af <- probe2af[rownames(RAI)]
   probe2af
 }
 
@@ -143,8 +144,8 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, plotIter=FALSE){
   if(plotIter){plotIter_func(iterations, type)}
 
   # Get posterior genotype probabilities
-  probe2af <- get_AF(RAI, pop, type)
-  AF <- matrix(rep(probe2af, ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
+  probe2af <- get_AF(pop, type)
+  AF <- matrix(rep(probe2af[rownames(RAI)], ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
   GP <- get_GP(RAI, finalClusters$fits[, c("shape1", "shape2")], AF)
   
   # return
