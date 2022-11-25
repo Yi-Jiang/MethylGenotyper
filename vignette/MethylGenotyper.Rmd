@@ -32,23 +32,15 @@ The genotypes are called in two steps: 1) We fit a mixture of three beta distrib
 
 As an option, we also provided several convenient tools for estimating kinships and sample contamination.
 
-## Dependencies
-
-This document has the following dependencies
-
-```{r dependencies, eval=TRUE, message=FALSE, warning=FALSE}
-# library(MethylGenotyper)
-# library(minfi)
-# library(tidyverse)
-# library(foreach)
-# library(doParallel)
-# library(HardyWeinberg)
-# library(multimode)
-# library(rlist)
-# library(stats4)
-```
-
 ## Recommended workflow
+
+### Load the MethylGenotyper package
+
+This package has the following dependencies: `minfi`, `tidyverse`, `foreach`, `doParallel`, `HardyWeinberg`, `multimode`, `rlist`, `stats4`.
+
+```{r MethylGenotyper, eval=TRUE, message=FALSE, warning=FALSE}
+library(MethylGenotyper)
+```
 
 ### Read manifest file and IDAT file list
 
@@ -76,7 +68,7 @@ rgData <- correct_noob_dye(target, mnfst, cpu=3)
 
 ### Call genotypes
 
-As shown below, you can call genotypes for SNP probes, Type I CCS probes, and Type II CCS probes. For each probe and each sample, an RAI will be calculated, which indicates the proportion of signals supporting the alternative allele. The RAI values can be classified into three clusters by fitting a mixture of three beta distributions. Genotype probabilities can be calculated by using a Bayesian approach. In addition, you can plot the distribution of the RAI values and produce a VCF file of the inferred genotypes by specifying `plotBeta=TRUE` and `vcf=TRUE`.
+As shown below, you can call genotypes for SNP probes, Type I CCS probes, and Type II CCS probes. For each probe and each sample, an RAI will be calculated, which indicates the proportion of signals supporting the alternative allele. The RAI values can be classified into three clusters by fitting a mixture of three beta distributions. Genotype probabilities can be calculated by using a Bayesian approach, with the genotype probabilities inferred from AFs of matched population being used as priors. If you have samples of mixed population, please specify the population with the largest sample size. In the next section, we also provided an option to adjust for genotype probabilities based on individual-specific AFs for mixed population. In addition, you can plot the distribution of the RAI values and produce a VCF file of the inferred genotypes by specifying `plotBeta=TRUE` and `vcf=TRUE`.
 
 You can also specify $R^2$ and MAF cutoffs to filter variants. Note that for VCF output, variants with $R^2$ or MAF below the cutoffs will be marked in the `FILTER` column. For the returned matrix, variants with $R^2$ or MAF below the cutoffs will be removed.
 
