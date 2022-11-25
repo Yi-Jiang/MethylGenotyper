@@ -37,15 +37,15 @@ As an option, we also provided several convenient tools for estimating kinships 
 This document has the following dependencies
 
 ```{r dependencies, eval=TRUE, message=FALSE, warning=FALSE}
-library(MethylGenotyper)
-library(minfi)
-library(tidyverse)
-library(foreach)
-library(doParallel)
-library(HardyWeinberg)
-library(multimode)
-library(rlist)
-library(stats4)
+# library(MethylGenotyper)
+# library(minfi)
+# library(tidyverse)
+# library(foreach)
+# library(doParallel)
+# library(HardyWeinberg)
+# library(multimode)
+# library(rlist)
+# library(stats4)
 ```
 
 ## Recommended workflow
