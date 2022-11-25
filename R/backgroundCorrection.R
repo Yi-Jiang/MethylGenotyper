@@ -1,5 +1,3 @@
-#' @import minfi
-NULL
 
 #' Noob and dye-bias correction
 #' 
