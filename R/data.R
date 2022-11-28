@@ -101,3 +101,27 @@
 #' @seealso Probe informations: \code{\link{probeInfo_snp()}}, \code{\link{probeInfo_typeI()}}, and \code{\link{probeInfo_typeII()}}.
 "probelist"
 
+#' Reference genotypes in the 1000 Genomes Project
+#' 
+#' A matrix of reference genotypes in the 1000 Genomes Project (1KGP). It contains 2504 samples and 28,619 SNPs overlapping the methylation probes.
+#' 
+#' @usage data(refGeno_1KGP3)
+#' @format A matrix with 2504 rows and 28,619 columns:
+#' \describe{
+#'  \item{Row}{Samples}
+#'  \item{Column}{SNPs overlapping the methylation probes}
+#' }
+"refGeno_1KGP3"
+
+#' Population information for the 1KGP samples
+#' 
+#' A vector of population information for the 2504 samples in 1KGP.
+#' 
+#' @usage data(sam2pop)
+#' @format A vector with 2504 items:
+#' \describe{
+#'  \item{Name}{Sample ID}
+#'  \item{Value}{Population}
+#' }
+"sam2pop"
+

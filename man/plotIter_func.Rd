@@ -7,6 +7,8 @@
 plotIter_func(iterations, type)
 }
 \arguments{
+\item{iterations}{EM iteration results}
+
 \item{type}{One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.}
 }
 \description{

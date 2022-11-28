@@ -11,10 +11,12 @@
 #' \item{BG}{ - A matrix of probeB signals in Green channel}
 #' @export
 correct_noob_dye <- function(target, mnfst, cpu=1){
+    data(mnfst)
     data(probelist)
     cl <- makeCluster(cpu)
     registerDoParallel(cl)
-    rgData_list <- foreach (sp=c(1:nrow(target)), .packages="tidyverse", .export=c("probelist", "backgroundCorrectionNoobFit", "normExpSignal")) %dopar% {
+    rgData_list <- foreach (sp=c(1:nrow(target)), .packages="tidyverse", 
+                            .export=c("backgroundCorrectionNoobFit", "normExpSignal")) %dopar% {
         rgSet = minfi::read.metharray.exp(targets=target[sp,])
         green <- minfi::getGreen(rgSet)[,1] # vector: IBG IAG IIG
         red <- minfi::getRed(rgSet)[,1]   # vector: IBR IAR IIR

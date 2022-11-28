@@ -154,7 +154,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, plotIter=FALSE){
 
 #' Plot distribution of RAIs for each iteration
 #'
-#' @param iterations
+#' @param iterations EM iteration results
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
 #' @export
 plotIter_func <- function(iterations, type){

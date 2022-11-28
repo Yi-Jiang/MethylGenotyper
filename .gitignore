@@ -43,7 +43,7 @@ vignettes/*.pdf
 
 # Other temporary files
 tmp.*
+data/1KGP3_b38.candidate.rda
 
 # deprecated files
 *_deprecated.R
-
