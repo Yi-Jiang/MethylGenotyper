@@ -1,4 +1,4 @@
-# MethylGenotyper: To infer genotypes for specific probes on Illumina's array
+# MethylGenotyper: To infer genotypes for specific probes on Illumina methylation array
 
 ## Installation:
 ```R

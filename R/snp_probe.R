@@ -10,8 +10,8 @@
 #' @param MAF_cutoff A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
 #' @return A list containing
-#' \item{dosage}{A matrix of genotype calls}
-#' \item{genotypes}{A list containing RAI, fits, and Genotype probabilities}
+#' \item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed.}
+#' \item{genotypes}{A list containing RAI, fits, and Genotype probabilities.}
 #' @export
 callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.snp_probe.vcf", 
                          R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, pop="EAS"){

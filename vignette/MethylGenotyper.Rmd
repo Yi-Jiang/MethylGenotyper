@@ -18,17 +18,17 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-The `MethylGenotyper` package provides functions to infer genotypes (produce a VCF file) for specific probes and on Illumina's Infinium MethylationEPIC (EPIC) array. The probes include SNP probes, Type I CCS (color-channel-switching) probes, and Type II CCS probes. We defined RAI as the Ratio of Alternative allele Intensity to total intensity and calculated RAI for each probe and sample. 
+The `MethylGenotyper` package provides functions to infer genotypes (produce a VCF file) for specific probes and on Illumina methylation array. The probes include SNP probes, Type I CCS (color-channel-switching) probes, and Type II CCS probes. We defined RAI as the Ratio of Alternative allele Intensity to total intensity and calculated RAI for each probe and sample.
 
-- __SNP probe:__ There are 59 SNP probes (started with "rs") on EPIC array. Six of them on sex chromosomes were removed. We aligned each probe sequence to reference genome and calculated RAI, which is defined as the proportion of probe signals supporting alternative allele.
-- __Type I CCS probe:__ Training from our in-house data (Chinese population), we provide a list of 132 Type I CCS probes on EPIC array. It's opt to you to train your own models. These probes are type I probes with SNPs at the extension bases resulting in CCS (A,T <-> C,G mutation). The signals for probes with CCS SNPs are called out-of-band signals. The RAI is defined as the proportion of out-of-band signals over total signals.
-- __Type II CCS probe:__ For this probe type, we only focus on probes with SNPs at the extension bases (CpG target sites). Training from our in-house data (Chinese population), we provide a list of 4853 Type II CCS probes. It's opt to you to train your own models. The RAI is defined as the proportion of signals supporting alternative alleles over total signals.
+-   **SNP probe:** There are 59 SNP probes (started with "rs") on EPIC array and 65 SNP probes on 450K array. Probes on sex chromosomes (six in EPIC and eight on 450K) were removed. We aligned each probe sequence to reference genome and calculated RAI, which is defined as the proportion of probe signals supporting alternative allele.
+-   **Type I CCS probe:** Training from our in-house data, we provide a list of 132 Type I CCS probes on EPIC array. It's recommended to train your own models. These probes are type I probes with SNPs at the extension bases resulting in CCS (A,T \<-\> C,G mutation). The signals for probes with CCS SNPs are called out-of-band signals. The RAI is defined as the proportion of out-of-band signals over total signals.
+-   **Type II CCS probe:** For this probe type, we only focus on probes with SNPs at the extension bases (CpG target sites), the reference alleles for the SNPs are C/G, and the alternative alleles are A/T. Training from our in-house data, we provide a list of 4853 Type II CCS probes. It's recommended to train your own models. The RAI is defined as the proportion of signals supporting alternative alleles over total signals.
 
-The genotypes are called in two steps: 1) We fit a mixture of three beta distribution for the three genotypes (reference homozygous, heterozygous, and alternative homozygous) based on the Expectation–maximization (EM) algorithm; 2) We use the Bayesian approach to get the genotype probabilities ($P_0$, $P_1$, and $P_2$ for reference homozygous, heterozygous, and alternative homozygous, respectively), with AFs of the matched population (the 1000 Genomes Project, 1KGP) being used as priors. A VCF file containing allele frequency (AF), $R^2$, genotype probability, hard genotype, and dosage genotype (DS) will be produced:
+The genotypes are called in two steps: 1) We fit a mixture of three beta distribution for the three genotypes (reference homozygous, heterozygous, and alternative homozygous) based on the Expectation--maximization (EM) algorithm; 2) We use the Bayesian approach to get the genotype probabilities ($P_0$, $P_1$, and $P_2$ for reference homozygous, heterozygous, and alternative homozygous, respectively), with AFs of the matched population (the 1000 Genomes Project, 1KGP) being used as priors. For samples of mixed population, we provided an option to recalibrate genotype probabilities based on individual-specific AFs. A VCF file containing allele frequency (AF), $R^2$, genotype probability, hard genotype, and dosage genotype (DS) will be produced:
 
-- __DS:__ $G = P_1 + 2P_2$
-- __AF:__ $q = \frac{\sum G}{2N}$, where $N$ is the sample size
-- __$R^2$:__ $R^2 = \frac{\sigma^2}{2q(1-q)}$, where $\sigma^2$ is the variance of dosage genotypes
+-   **DS:** $G = P_1 + 2P_2$
+-   **AF:** $q = \frac{\sum G}{2N}$, where $N$ is the sample size
+-   $R^2$: $R^2 = \frac{\sigma^2}{2q(1-q)}$, where $\sigma^2$ is the variance of dosage genotypes
 
 As an option, we also provided several convenient tools for estimating kinships and sample contamination.
 
@@ -36,7 +36,7 @@ As an option, we also provided several convenient tools for estimating kinships 
 
 ### Load the MethylGenotyper package
 
-This package has the following dependencies: `minfi`, `tidyverse`, `foreach`, `doParallel`, `HardyWeinberg`, `multimode`, `rlist`, `stats4`.
+This package has the following dependencies: `minfi`, `tidyverse`, `foreach`, `doParallel`, `HardyWeinberg`, `multimode`, `rlist`, `stats4`, `ggplot2`, `ggpubr`.
 
 ```{r MethylGenotyper, eval=TRUE, message=FALSE, warning=FALSE}
 library(MethylGenotyper)
@@ -54,13 +54,13 @@ head(mnfst)
 Read IDAT file list. Here is an example of processing three IDAT files from `minfiDataEPIC`. Note that this is just an exemplification of how this tool works. We strongly recommend to use a larger sample size to test the code, such as [GSE112179](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE112179). Your may process your own data by specifying your target file list. Required collumns: Sample_Name, Basename.
 
 ```{r rgSet, eval=TRUE, warning=FALSE, message=TRUE}
-target <- get_target("EPIC")
+target <- get_target(array="EPIC")
 head(target)
 ```
 
 ### Read IDAT files and noob and dye-bias correction
 
-With the following code, the IDAT files listed in the variable `target` will be read one-by-one. For each sample, a noob background correction and dye-bias correction will be done. You can specify the number of CPUs to enable parallel processing. After that, a list of four elements will be returned, including corrected signals of probe A and probe B for the two color channels.
+With the following code, the IDAT files listed in `target` will be read one-by-one. For each sample, a noob background correction and dye-bias correction will be conducted. You can specify the number of CPUs to enable parallel processing. After that, a list of four elements will be returned, including corrected signals of probe A and probe B for the two color channels.
 
 ```{r correct_noob_dye, eval=FALSE, warning=FALSE, message=FALSE}
 rgData <- correct_noob_dye(target, mnfst, cpu=3)
@@ -74,7 +74,7 @@ If you have samples of mixed population, please specify the population with the 
 
 You can plot the distribution of the RAI values and produce a VCF file of the inferred genotypes by specifying `plotBeta=TRUE` and `vcf=TRUE`.
 
-You can also specify $R^2$ and MAF cutoffs to filter variants. Note that for VCF output, variants with $R^2$ or MAF below the cutoffs will be marked in the `FILTER` column. For the returned matrix, variants with $R^2$ or MAF below the cutoffs will be removed.
+You can also specify $R^2$ and MAF cutoffs to filter variants. Note that for VCF output, variants with $R^2$ or MAF beyond the cutoffs will be marked in the `FILTER` column.
 
 We noted that in the example data, most of variants have $R^2$=0. This is because we only used three samples here. We strongly recommend to use a larger sample size to test the code, such as [GSE112179](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE112179).
 
@@ -101,22 +101,22 @@ dosage <- rbind(genotype_snp$dosage, genotype_typeII$dosage)
 
 ### Recalibrate genotypes for samples of mixed population
 
-For samples from a mixed population, we recommended to recalibrate the genotype calls based on individual-specific AFs. This process can be done in three steps: 1) Project the study samples to reference ancestry space; 2) Estimate individual-specific AFs; 3) Re-calculate the posterior genotype probabilities based on the individual-specific AFs. Here are the detailed description of the three steps.
+For samples from a mixed population, we recommended to recalibrate the genotype calls based on individual-specific AFs. This process can be done in three steps: 1) Project the study samples to reference ancestry space; 2) Estimate individual-specific AFs; 3) Recalibrate the posterior genotype probabilities based on the individual-specific AFs. Here are the detailed description of the three steps.
 
-* __step 1:__ Principal Components Analyses (PCA) are conducted in 1KGP individuals and a combination of 1KGP individuals and each study sample. Then, Projection Procrustes analyses are conducted to project each study sample to reference ancestry space. This step was implemented by the TRACE software ([Wang et al. Nat Genet 2014](https://www.nature.com/articles/ng.2924), [Wang et al. Am J Hum Genet 2015](http://dx.doi.org/10.1016/j.ajhg.2015.04.018)).
+-   **step 1:** Principal Components Analyses (PCA) are conducted in 1KGP individuals and a combination of 1KGP individuals and each study sample. Then, Projection Procrustes analyses are conducted to project each study sample to reference ancestry space. This step was originally implemented by the TRACE software and we have adapted it in R ([Wang et al. Nat Genet 2014](https://www.nature.com/articles/ng.2924), [Wang et al. Am J Hum Genet 2015](http://dx.doi.org/10.1016/j.ajhg.2015.04.018)).
 
-* __Step 2:__ For each SNP, we model genotypes of the reference individuals as a linear function of top four PCs ($v$): $G\sim\beta_0+\beta_1v_1+\beta_2v_2+\beta_3v_3+\beta_4v_4$. Then, the AF ($q$) for each SNP can be obtained by: $\hat{q}=\frac{1}{2}(\hat{\beta_0}+\hat{\beta_1}\hat{v_1}+\hat{\beta_2}\hat{v_2}+\hat{\beta_3}\hat{v_3}+\hat{\beta_4}\hat{v_4})$. ([Dou et al. PLoS Genet 2017](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021))
+-   **Step 2:** For each SNP, we model genotypes of the reference individuals as a linear function of top four PCs ($v$): $G\sim\beta_0+\beta_1v_1+\beta_2v_2+\beta_3v_3+\beta_4v_4$. Then, the AF ($q$) for each SNP can be obtained by: $\hat{q}=\frac{1}{2}(\hat{\beta_0}+\hat{\beta_1}\hat{v_1}+\hat{\beta_2}\hat{v_2}+\hat{\beta_3}\hat{v_3}+\hat{\beta_4}\hat{v_4})$. ([Dou et al. PLoS Genet 2017](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021))
 
-* __Step 3:__ This step is based on the Bayesian approach, which can be implemented by re-run the `get_GP` function.
+-   **Step 3:** This step is based on the Bayesian approach, which can be implemented by re-run the `get_GP` function.
 
 ```{r recal_geno, eval=FALSE, warning=FALSE, message=FALSE}
 # PCA and Procrustes analysis, based on genotypes of all probes passing QC
-pc <- projection(dosage, plotPCA=TRUE, cpu=10)
+pc <- projection(dosage, plotPCA=TRUE, cpu=3)
 
 # Recalibrate genotypes for SNP probes, Type I CCS probes, and Type II CCS probes
 genotype_snp_recal <- recal_Geno(genotype_snp, type="snp_probe", refPC=pc$refPC, studyPC=pc$studyPC)
-genotype_typeI_recal <- recal_Geno(genotype_snp, type="typeI_ccs_probe", refPC=pc$refPC, studyPC=pc$studyPC)
-genotype_typeII_recal <- recal_Geno(genotype_snp, type="typeII_ccs_probe", refPC=pc$refPC, studyPC=pc$studyPC)
+genotype_typeI_recal <- recal_Geno(genotype_typeI, type="typeI_ccs_probe", refPC=pc$refPC, studyPC=pc$studyPC)
+genotype_typeII_recal <- recal_Geno(genotype_typeII, type="typeII_ccs_probe", refPC=pc$refPC, studyPC=pc$studyPC)
 
 # Combine genotypes inferred from the three probe types
 dosage_recal <- rbind(genotype_snp_recal$dosage, genotype_typeI_recal$dosage, genotype_typeII_recal$dosage)
@@ -126,11 +126,9 @@ dosage_recal <- rbind(genotype_snp_recal$dosage, genotype_typeI_recal$dosage, ge
 
 With the inferred genotypes, you can estimate sample relationships using the `getKinship` function. It produces a data frame containing kinship coefficient ($\phi$) and sample relationships between each two samples.
 
-Kinship coefficient is calculated according to the SEEKIN software (Dou et al. Plos Genetics 2017):
-$$2\phi_{ij} = \frac{\sum_m(G_{im}-2p_m)(G_{jm}-2p_m)}{2p_m(1-p_m)(R^2)^2}$$,
-where $\phi_{ij}$ denotes the kinship coefficient between $i$-th and $j$-th sample. $G_{im}$ and $G_{jm}$ denotes genotypes of $m$-th SNP for $i$-th and $j$-th sample. $p_m$ denotes allele frequency of $m$-th SNP. $R^2$ is calculated as $R^2 = \frac{\sigma^2}{2q(1-q)}$, where $\sigma^2$ is the variance of genotype.
+Kinship coefficient is calculated according to the SEEKIN software ([Dou et al. PLoS Genet 2017](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021)): $$2\phi_{ij} = \frac{\sum_m(G_{im}-2p_m)(G_{jm}-2p_m)}{2p_m(1-p_m)(R^2)^2}$$, where $\phi_{ij}$ denotes the kinship coefficient between $i$-th and $j$-th sample. $G_{im}$ and $G_{jm}$ denotes genotypes of $m$-th SNP for $i$-th and $j$-th sample. $p_m$ denotes allele frequency of $m$-th SNP. $R^2$ is calculated as $R^2 = \frac{\sigma^2}{2q(1-q)}$, where $\sigma^2$ is the variance of genotype.
 
-Sample relationships can be inferred according to kinship coefficients (Manichaikul et al. Bioinformatics 2010). Sample pairs with $\phi \ge \frac{1}{2^\frac{3}{2}}$ are duplicate samples or monozygotic twin. Sample pairs with $\phi < \frac{1}{2^\frac{3}{2}}$ and $\phi \ge \frac{1}{2^\frac{5}{2}}$ are first-degree relatives. Sample pairs with $\phi < \frac{1}{2^\frac{5}{2}}$ and $\phi \ge \frac{1}{2^\frac{7}{2}}$ are second-degree relatives. Sample pairs with $\phi < \frac{1}{2^\frac{7}{2}}$ and $\phi \ge \frac{1}{2^\frac{9}{2}}$ are third-degree relatives. Sample pairs with $\phi < \frac{1}{2^\frac{9}{2}}$ are unrelated. 
+Sample relationships can be inferred according to kinship coefficients ([Manichaikul et al. Bioinformatics 2010](https://academic.oup.com/bioinformatics/article/26/22/2867/228512)). Sample pairs with $\phi \ge \frac{1}{2^\frac{3}{2}}$ are duplicate samples or monozygotic twin. Sample pairs with $\phi < \frac{1}{2^\frac{3}{2}}$ and $\phi \ge \frac{1}{2^\frac{5}{2}}$ are first-degree relatives. Sample pairs with $\phi < \frac{1}{2^\frac{5}{2}}$ and $\phi \ge \frac{1}{2^\frac{7}{2}}$ are second-degree relatives. Sample pairs with $\phi < \frac{1}{2^\frac{7}{2}}$ and $\phi \ge \frac{1}{2^\frac{9}{2}}$ are third-degree relatives. Sample pairs with $\phi < \frac{1}{2^\frac{9}{2}}$ are unrelated.
 
 ```{r getKinship, eval=FALSE, warning=FALSE, message=FALSE}
 kinship <- getKinship(dosage) # or input "dosage_recal" if available
@@ -138,9 +136,8 @@ kinship <- getKinship(dosage) # or input "dosage_recal" if available
 
 ### Estimate sample contamination
 
-We recommend to set samples with inbreeding coefficients beyond 3 SDs of the mean as contaminated.
+We provided a function to calculate inbreeding coefficients, which reflects sample contaminations.
 
 ```{r getInbreed, eval=FALSE, warning=FALSE, message=FALSE}
 inbreed <- getInbreed(dosage) # or input "dosage_recal" if available
 ```
-

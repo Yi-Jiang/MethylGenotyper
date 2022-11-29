@@ -39,6 +39,8 @@ projection <- function(studyGeno, plotPCA=TRUE, cpu=1){
 #' \item{genotypes}{A list containing RAI, fits, and Genotype probabilities}
 #' @export
 recal_Geno <- function(genotypes, type, refPC, studyPC){
+  data(cpg2snp)
+  data(snp2cpg)
   ## Model genotypes of the reference individuals as a linear function of PCs
   betas <- list()
   for(snp in cpg2snp[rownames(genotypes$genotypes$RAI)]){
@@ -52,10 +54,11 @@ recal_Geno <- function(genotypes, type, refPC, studyPC){
   indAF <- betas %*% t(studyPC) / 2
   indAF[indAF<0.001] <- 0.001 # constrain AFs to avoid out of boundary values
   indAF[indAF>0.999] <- 0.999
+  rownames(indAF) <- snp2cpg[rownames(indAF)]
   
   ## Recalibrate posterior genotype probabilities
   GP <- get_GP(genotypes$genotypes$RAI, genotypes$genotypes$fits[, c("shape1", "shape2")], indAF)
-  genotypes_recal$genotypes <- genotypes$genotypes
+  genotypes_recal <- list(genotypes = genotypes$genotypes)
   genotypes_recal$genotypes$GP <- GP
   genotypes_recal$genotypes$RAI <- genotypes_recal$genotypes$RAI[rownames(GP$pAA), colnames(GP$pAA)]
   genotypes_recal$dosage <- format_genotypes(genotypes_recal$genotypes, vcf=T, 
@@ -72,8 +75,8 @@ recal_Geno <- function(genotypes, type, refPC, studyPC){
 #' @export
 plotPCA <- function(refPC, studyPC){
   data(sam2pop)
-  refPC <- cbind(refPC, popID=sam2pop[rownames(refPC)])
-  studyPC <- cbind(studyPC, popID="Study")
+  refPC <- data.frame(refPC, popID=sam2pop[rownames(refPC)])
+  studyPC <- data.frame(studyPC, popID="Study")
   p1 <- ggplot(refPC) +
     geom_point(aes(x=PC1, y=PC2, color=popID), size=3, alpha=0.6) +
     scale_color_brewer(palette="Set2")+

@@ -64,6 +64,7 @@ trace <- function(refGeno, studyGeno, MIN_LOCI=100, DIM=4, DIM_HIGH=20, MAX_ITER
   stopCluster(cl)
   
   studyPC <- do.call(rbind, studyPC_list)
+  colnames(studyPC) <- paste0("PC", 1:DIM)
   list(refPC=refPC, studyPC=studyPC)
 }
 

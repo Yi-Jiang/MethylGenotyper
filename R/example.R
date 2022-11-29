@@ -1,18 +1,18 @@
 
 #' Get example IDAT file list
 #' 
-#' @param type. One of "EPIC" and "450K"
+#' @param array One of "EPIC" and "450K"
 #' @return A data frame of the IDAT file list
 #' @export
-get_target <- function(type="EPIC"){
-  if(type=="EPIC"){
+get_target <- function(array="EPIC"){
+  if(grepl("EPIC", array, ignore.case=TRUE)){
     suppressMessages(library(minfiDataEPIC))
     baseDir <- system.file("extdata", package = "minfiDataEPIC")
-  }else if(type=="450K" | type=="450k"){
+  }else if(grepl("450", array, ignore.case=TRUE)){
     suppressMessages(library(minfiData))
     baseDir <- system.file("extdata", package = "minfiData")
   }else{
-    print("Please specify one of EPIC and 450K.")
+    print("Please specify the array type: EPIC or 450K.")
     return
   }
   target <- list()

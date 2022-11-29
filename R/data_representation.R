@@ -151,7 +151,8 @@ dosage2hard <- function(genotypes){
 #' @param plotAF To plot the distribution of AFs in 1KGP and input data.
 #' @return A matrix of genotype calls.
 #' @export
-format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, pop, type, plotAF=FALSE){
+format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2_cutoff_down=0.75, 
+                             MAF_cutoff=0.01, pop="ALL", type, plotAF=FALSE){
   dosage <- genotypes$GP$pAB + 2 * genotypes$GP$pBB
   probes <- rownames(dosage)
   AF <- rowMeans(dosage) / 2
