@@ -4,10 +4,10 @@
 \alias{get_target}
 \title{Get example IDAT file list}
 \usage{
-get_target(type = "EPIC")
+get_target(array = "EPIC")
 }
 \arguments{
-\item{type.}{One of "EPIC" and "450K"}
+\item{array}{One of "EPIC" and "450K"}
 }
 \value{
 A data frame of the IDAT file list

@@ -54,7 +54,7 @@ head(mnfst)
 Read IDAT file list. Here is an example of processing three IDAT files from `minfiDataEPIC`. Note that this is just an exemplification of how this tool works. We strongly recommend to use a larger sample size to test the code, such as [GSE112179](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE112179). Your may process your own data by specifying your target file list. Required collumns: Sample_Name, Basename.
 
 ```{r rgSet, eval=TRUE, warning=FALSE, message=TRUE}
-target <- get_target(array="EPIC")
+target <- get_target("EPIC")
 head(target)
 ```
 

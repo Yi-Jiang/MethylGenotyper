@@ -38,8 +38,8 @@ callGeno_typeI(
 }
 \value{
 A list containing
-\item{dosage}{A matrix of genotype calls}
-\item{genotypes}{A list containing RAI, fits, and Genotype probabilities}
+\item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed.}
+\item{genotypes}{A list containing RAI, fits, and Genotype probabilities.}
 }
 \description{
 Call genotypes for Type I CCS probes
