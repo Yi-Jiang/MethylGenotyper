@@ -504,8 +504,8 @@ originally implemented by the TRACE software and we have adapted it in R
 al. Am J Hum Genet 2015</a>).</p></li>
 <li><p><strong>Step 2:</strong> For each SNP, we model genotypes of the
 reference individuals as a linear function of top four PCs (<span class="math inline">\(v\)</span>): <span class="math inline">\(G\sim\beta_0+\beta_1v_1+\beta_2v_2+\beta_3v_3+\beta_4v_4\)</span>.
-Then, the AF (<span class="math inline">\(q\)</span>) for each SNP can
-be obtained by: <span class="math inline">\(\hat{q}=\frac{1}{2}(\hat{\beta_0}+\hat{\beta_1}\hat{v_1}+\hat{\beta_2}\hat{v_2}+\hat{\beta_3}\hat{v_3}+\hat{\beta_4}\hat{v_4})\)</span>.
+Then, the individual AF (<span class="math inline">\(q\)</span>) for
+each SNP and each sample can be obtained by: <span class="math inline">\(\hat{q}=\frac{1}{2}(\hat{\beta_0}+\hat{\beta_1}\hat{v_1}+\hat{\beta_2}\hat{v_2}+\hat{\beta_3}\hat{v_3}+\hat{\beta_4}\hat{v_4})\)</span>.
 (<a href="https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021">Dou
 et al. PLoS Genet 2017</a>)</p></li>
 <li><p><strong>Step 3:</strong> This step is based on the Bayesian

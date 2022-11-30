@@ -12,7 +12,7 @@ projection <- function(studyGeno, plotPCA=TRUE, cpu=1){
   ## Filter SNPs for PCA: MAF>0.1 and R2>0.9
   data(cpg2snp)
   AF <- rowMeans(studyGeno) / 2
-  R2 <- apply(dosage, 1, var) / (2 * AF * (1 - AF))
+  R2 <- apply(studyGeno, 1, var) / (2 * AF * (1 - AF))
   studyGeno <- studyGeno[AF>0.1 & R2>0.9,]
   rownames(studyGeno) <- cpg2snp[rownames(studyGeno)]
   

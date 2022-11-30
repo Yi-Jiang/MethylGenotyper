@@ -105,7 +105,7 @@ For samples from a mixed population, we recommended to recalibrate the genotype 
 
 -   **step 1:** Principal Components Analyses (PCA) are conducted in 1KGP individuals and a combination of 1KGP individuals and each study sample. Then, Projection Procrustes analyses are conducted to project each study sample to reference ancestry space. This step was originally implemented by the TRACE software and we have adapted it in R ([Wang et al. Nat Genet 2014](https://www.nature.com/articles/ng.2924), [Wang et al. Am J Hum Genet 2015](http://dx.doi.org/10.1016/j.ajhg.2015.04.018)).
 
--   **Step 2:** For each SNP, we model genotypes of the reference individuals as a linear function of top four PCs ($v$): $G\sim\beta_0+\beta_1v_1+\beta_2v_2+\beta_3v_3+\beta_4v_4$. Then, the AF ($q$) for each SNP can be obtained by: $\hat{q}=\frac{1}{2}(\hat{\beta_0}+\hat{\beta_1}\hat{v_1}+\hat{\beta_2}\hat{v_2}+\hat{\beta_3}\hat{v_3}+\hat{\beta_4}\hat{v_4})$. ([Dou et al. PLoS Genet 2017](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021))
+-   **Step 2:** For each SNP, we model genotypes of the reference individuals as a linear function of top four PCs ($v$): $G\sim\beta_0+\beta_1v_1+\beta_2v_2+\beta_3v_3+\beta_4v_4$. Then, the individual AF ($q$) for each SNP and each sample can be obtained by: $\hat{q}=\frac{1}{2}(\hat{\beta_0}+\hat{\beta_1}\hat{v_1}+\hat{\beta_2}\hat{v_2}+\hat{\beta_3}\hat{v_3}+\hat{\beta_4}\hat{v_4})$. ([Dou et al. PLoS Genet 2017](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021))
 
 -   **Step 3:** This step is based on the Bayesian approach, which can be implemented by re-run the `get_GP` function.
 
