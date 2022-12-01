@@ -106,12 +106,23 @@
 #' A matrix of reference genotypes in the 1000 Genomes Project (1KGP). It contains 2504 samples and 28,619 SNPs overlapping the methylation probes.
 #' 
 #' @usage data(refGeno_1KGP3)
-#' @format A matrix with 2504 rows and 28,619 columns:
+#' @format A matrix with 28,619 rows and 2504 columns:
 #' \describe{
-#'  \item{Row}{Samples}
-#'  \item{Column}{SNPs overlapping the methylation probes}
+#'  \item{Row}{SNPs overlapping the methylation probes}
+#'  \item{Column}{Samples}
 #' }
 "refGeno_1KGP3"
+
+#' SNPs in 1KGP with HWE<1e-20 or F_MISSING>=0.05
+#' 
+#' SNPs to be removed in TRACE PCA
+#' 
+#' @usage data(refGeno_1KGP3_SNP_failQC)
+#' @format A vector with 491 items:
+#' \describe{
+#'  \item{Value}{SNP rs ID}
+#' }
+"refGeno_1KGP3_SNP_failQC"
 
 #' Population information for the 1KGP samples
 #' 

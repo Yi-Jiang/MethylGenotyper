@@ -5,10 +5,10 @@
 \alias{refGeno_1KGP3}
 \title{Reference genotypes in the 1000 Genomes Project}
 \format{
-A matrix with 2504 rows and 28,619 columns:
+A matrix with 28,619 rows and 2504 columns:
 \describe{
-\item{Row}{Samples}
-\item{Column}{SNPs overlapping the methylation probes}
+\item{Row}{SNPs overlapping the methylation probes}
+\item{Column}{Samples}
 }
 }
 \usage{

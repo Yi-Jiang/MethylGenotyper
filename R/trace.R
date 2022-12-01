@@ -18,6 +18,8 @@
 trace <- function(refGeno, studyGeno, MIN_LOCI=100, DIM=4, DIM_HIGH=20, MAX_ITER=10000, THRESHOLD=0.000001, cpu=1){
   ## Get intersected probes
   probes <- intersect(rownames(refGeno), rownames(studyGeno))
+  data(refGeno_1KGP3_SNP_failQC)
+  probes <- probes[!(probes %in% refGeno_1KGP3_SNP_failQC)] # rm probes with HWE<1e-20 or F_MISSING>=0.05 in 1KGP
   refGeno <- refGeno[probes,]
   studyGeno <- studyGeno[probes,]
   if(length(probes) < MIN_LOCI){

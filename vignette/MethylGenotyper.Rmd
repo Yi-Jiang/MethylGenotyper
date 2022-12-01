@@ -99,9 +99,9 @@ genotype_typeII <- callGeno_typeII(beta_matrix, input="beta", vcf=TRUE, pop="EAS
 dosage <- rbind(genotype_snp$dosage, genotype_typeII$dosage)
 ```
 
-### Recalibrate genotypes for samples of mixed population
+### Recalibrate genotypes for mixed population
 
-For samples from a mixed population, we recommended to recalibrate the genotype calls based on individual-specific AFs. This process can be done in three steps: 1) Project the study samples to reference ancestry space; 2) Estimate individual-specific AFs; 3) Recalibrate the posterior genotype probabilities based on the individual-specific AFs. Here are the detailed description of the three steps.
+For samples from a mixed population, we recommend to recalibrate the genotype calls based on individual-specific AFs. This process can be done in three steps: 1) Project the study samples to reference ancestry space; 2) Estimate individual-specific AFs; 3) Recalibrate the posterior genotype probabilities based on the individual-specific AFs. Here are the detailed description of the three steps.
 
 -   **step 1:** Principal Components Analyses (PCA) are conducted in 1KGP individuals and a combination of 1KGP individuals and each study sample. Then, Projection Procrustes analyses are conducted to project each study sample to reference ancestry space. This step was originally implemented by the TRACE software and we have adapted it in R ([Wang et al. Nat Genet 2014](https://www.nature.com/articles/ng.2924), [Wang et al. Am J Hum Genet 2015](http://dx.doi.org/10.1016/j.ajhg.2015.04.018)).
 
