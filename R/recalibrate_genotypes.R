@@ -35,8 +35,9 @@ projection <- function(studyGeno, plotPCA=TRUE, cpu=1){
 #' @param refPC Top PCs in the reference
 #' @param studyPC Top PCs in study samples
 #' @return A list of recalibrated genotypes containing
-#' \item{dosage}{A matrix of genotype calls}
-#' \item{genotypes}{A list containing RAI, fits, and Genotype probabilities}
+#' \item{dosage}{A matrix of genotype calls. Provide probes as rows and samples as columns.}
+#' \item{genotypes}{A list containing RAI, fits, and Genotype probabilities.}
+#' \item{indAF}{A matrix of individual-specific AFs. Provide probes as rows and samples as columns.}
 #' @export
 recal_Geno <- function(genotypes, type, refPC, studyPC){
   data(cpg2snp)
@@ -58,7 +59,7 @@ recal_Geno <- function(genotypes, type, refPC, studyPC){
   
   ## Recalibrate posterior genotype probabilities
   GP <- get_GP(genotypes$genotypes$RAI, genotypes$genotypes$fits[, c("shape1", "shape2")], indAF)
-  genotypes_recal <- list(genotypes = genotypes$genotypes)
+  genotypes_recal <- list(genotypes = genotypes$genotypes, indAF=indAF)
   genotypes_recal$genotypes$GP <- GP
   genotypes_recal$genotypes$RAI <- genotypes_recal$genotypes$RAI[rownames(GP$pAA), colnames(GP$pAA)]
   genotypes_recal$dosage <- format_genotypes(genotypes_recal$genotypes, vcf=T, 

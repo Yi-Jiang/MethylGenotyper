@@ -126,7 +126,9 @@ dosage_recal <- rbind(genotype_snp_recal$dosage, genotype_typeI_recal$dosage, ge
 
 With the inferred genotypes, you can estimate sample relationships using the `getKinship` function. It produces a data frame containing kinship coefficient ($\phi$) and sample relationships between each two samples.
 
-Kinship coefficient is calculated according to the SEEKIN software ([Dou et al. PLoS Genet 2017](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021)): $$2\phi_{ij} = \frac{\sum_m(G_{im}-2p_m)(G_{jm}-2p_m)}{2p_m(1-p_m)(R^2)^2}$$, where $\phi_{ij}$ denotes the kinship coefficient between $i$-th and $j$-th sample. $G_{im}$ and $G_{jm}$ denotes genotypes of $m$-th SNP for $i$-th and $j$-th sample. $p_m$ denotes allele frequency of $m$-th SNP. $R^2$ is calculated as $R^2 = \frac{\sigma^2}{2q(1-q)}$, where $\sigma^2$ is the variance of genotype.
+Kinship coefficient is calculated according to the SEEKIN software ([Dou et al. PLoS Genet 2017](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021)):
+$$2\phi_{ij} = \frac{\sum_m(G_{im}-2p_m)(G_{jm}-2p_m)}{2p_m(1-p_m)(R^2)^2}$$
+where $\phi_{ij}$ denotes the kinship coefficient between $i$-th and $j$-th sample. $G_{im}$ and $G_{jm}$ denotes genotypes of $m$-th SNP for $i$-th and $j$-th sample. $p_m$ denotes allele frequency of $m$-th SNP. $R^2$ is calculated as $R^2 = \frac{\sigma^2}{2q(1-q)}$, where $\sigma^2$ is the variance of genotype.
 
 Sample relationships can be inferred according to kinship coefficients ([Manichaikul et al. Bioinformatics 2010](https://academic.oup.com/bioinformatics/article/26/22/2867/228512)). Sample pairs with $\phi \ge \frac{1}{2^\frac{3}{2}}$ are duplicate samples or monozygotic twin. Sample pairs with $\phi < \frac{1}{2^\frac{3}{2}}$ and $\phi \ge \frac{1}{2^\frac{5}{2}}$ are first-degree relatives. Sample pairs with $\phi < \frac{1}{2^\frac{5}{2}}$ and $\phi \ge \frac{1}{2^\frac{7}{2}}$ are second-degree relatives. Sample pairs with $\phi < \frac{1}{2^\frac{7}{2}}$ and $\phi \ge \frac{1}{2^\frac{9}{2}}$ are third-degree relatives. Sample pairs with $\phi < \frac{1}{2^\frac{9}{2}}$ are unrelated.
 

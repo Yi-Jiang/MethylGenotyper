@@ -16,7 +16,9 @@ getRelation <- function(phi) {
   a
 }
 
-#' Get kinship coefficients and sample relationships
+#' Get kinship coefficients using the SEEKIN estimator
+#' 
+#' For homogeneous samples.
 #' 
 #' @param dosage Dosage genotypes.
 #' @return A data frame containing kinship coefficient (Phi) and sample relationships between each two samples.
@@ -35,6 +37,36 @@ getKinship <- function(dosage){
   GRM
 }
 
+#' Get kinship coefficients using the SEEKIN-het estimator
+#' 
+#' For heterogeneous samples.
+#' 
+#' @param dosage A matrix of genotype calls. Provide probes as rows and samples as columns.
+#' @param indAF A matrix of individual-specific AFs. Provide probes as rows and samples as columns.
+#' @return A data frame containing kinship coefficient (Phi) and sample relationships between each two samples.
+#' @export
+getKinship_het <- function(dosage, indAF){
+  probes <- intersect(rownames(dosage), rownames(indAF))
+  samples <- intersect(colnames(dosage), colnames(indAF))
+  dosage <- dosage[probes, samples]
+  indAF <- indAF[probes, samples]
+  AF <- rowMeans(dosage)/2
+  R2 <- apply(dosage, 1, var)/(2 * AF * (1 - AF))
+  R2[R2 > 1] <- 1
+  mu <- AF+R2*(indAF-rowMeans(indAF))
+  norm <- dosage-2*mu
+  phat <- sqrt(2*indAF*(1-indAF)*R2^2)
+  GRM <- t(norm)%*%norm/(t(phat) %*% phat)
+  GRM[!(lower.tri(GRM))] <- NA
+  GRM <- as.data.frame(GRM)
+  GRM$IID1 <- rownames(GRM)
+  GRM <- as.data.frame(melt(GRM))
+  colnames(GRM) <- c("IID1", "IID2", "Relatedness")
+  GRM <- GRM[!is.na(GRM$Relatedness), ]
+  GRM$Phi <- GRM$Relatedness/2
+  GRM$Relation <- getRelation(GRM$Phi)
+  GRM
+}
 
 #' Predict sample contamination according to inbreeding coefficients
 #' 

@@ -15,6 +15,22 @@
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
 "mnfst"
 
+#' 450K manifest file
+#' 
+#' A dataset containing all 450K probes information.
+#' 
+#' @usage data(mnfst_450K)
+#' @format A data frame with 486428 rows and 5 columns:
+#' \describe{
+#'  \item{Name}
+#'  \item{AddressA_ID}
+#'  \item{AddressB_ID}
+#'  \item{Infinium_Design_Type}
+#'  \item{Color_Channel}
+#' }
+#' @source \url{https://webdata.illumina.com/downloads/productfiles/humanmethylation450/humanmethylation450_15017482_v1-2.csv}
+"mnfst_450K"
+
 #' SNP probe information
 #' 
 #' A dataset containing SNP probe information. Only autosome probes are included.

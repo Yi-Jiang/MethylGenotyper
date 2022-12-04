@@ -1,48 +1,69 @@
 
-#' Fit beta distribution based on Maximum likelihood estimation
-#' 
-#' @param x A vector of RAI values.
-#' @return A data frame with one row and four columns:
-#' \item{shape1}{The first parameter for beta distribution}
-#' \item{shape2}{The second parameter for beta distribution}
-#' \item{mLL}{Minus log-likelihood scaled by number of data points}
-#' \item{number}{The length of x}
-#' @export
-fit_beta_mle <- function(x){
-  minuslogL <- function(shape1, shape2){-sum(dbeta(x, shape1, shape2, log=T))}
-  m <- stats4::mle(minuslogL, start=list(shape1=3, shape2=3), method="L-BFGS-B", lower=c(0.001, 0.001))
-  shape <- stats4::coef(m)
-  params <- tibble(shape1=shape[1], shape2=shape[2], mLL=m@min/length(x), number=length(x))
-  params
-}
-
-#' Get clusters based on the Expectation–maximization (EM) algorithm
+#' The Expectation–maximization (EM) algorithm: M step
 #' 
 #' @param assignments A data frame containing:
 #' \item{Probe}{Probe ID}
 #' \item{Sample}{Sample ID}
 #' \item{RAI}{Ratio of Alternative allele Intensity}
-#' \item{Cluster}{Randomly assigned three clusters indicating the three genotypes}
+#' \item{Cluster}{Cluster IDs}
 #' @return A list of two elements:
-#' \item{assignments}{A data frame with re-assigned clusters}
-#' \item{fits}{A data frame containing the two shape parameters for the three re-assigned clusters}
+#' \item{parameters}{A data frame of: 1) cluster ID, 2) shape1, 3) shape2, 4) probability of being an outlier, and 5) prior probabilitiy of the genotype being AA,AB,or BB}
+#' \item{mLL_norm}{Minus log-likelihood scaled by number of data points}
 #' @export
-iterate_em <- function(assignments){
-  fits <- assignments %>%
-    group_by(Cluster) %>%
-    do(mutate(fit_beta_mle(.$RAI))) %>%
-    ungroup() %>%
-    mutate(prior = number / sum(number))
-  
+m_step <- function(x){
+  N <- nrow(x)
+  priors <- table(x$Cluster) / N
+  minuslogL <- function(shape1_1, shape2_1, shape1_2, shape2_2, shape1_3, shape2_3, U){
+    #write.table(paste(c(shape1_1, shape2_1, shape1_2, shape2_2, shape1_3, shape2_3, U), collapse="\t"), file="tmp", append=T, quote=F, row.names=F, col.names=F)
+    -sum(
+      log(U + (1-U) * rowSums(cbind(
+        priors["Cluster1"] * dbeta(x$RAI, shape1_1, shape2_1, log=F),
+        priors["Cluster2"] * dbeta(x$RAI, shape1_2, shape2_2, log=F),
+        priors["Cluster3"] * dbeta(x$RAI, shape1_3, shape2_3, log=F)
+      )))
+    )
+  }
+  m <- stats4::mle(
+    minuslogL, 
+    start=list(
+      shape1_1=5,  shape2_1=60,
+      shape1_2=30, shape2_2=30,
+      shape1_3=60, shape2_3=5, U=0.01), 
+    method="L-BFGS-B", 
+    lower = c(rep(0.1, 6), 0.001),
+    upper = c(rep(150, 6), 0.3), 
+    control = list(ndeps = c(rep(0.1, 6), 0.001), trace=0)
+  )
+  s <- stats4::coef(m)
+  parameters <- tibble(
+    Cluster = paste0("Cluster", 1:3),
+    shape1 = c(s["shape1_1"], s["shape1_2"], s["shape1_3"]),
+    shape2 = c(s["shape2_1"], s["shape2_2"], s["shape2_3"]),
+    U = s["U"],
+    prior = priors
+  )
+  list(parameters = parameters, mLL_norm = m@min/N)
+}
+
+#' The Expectation–maximization (EM) algorithm: E step
+#' 
+#' @param assignments A data frame containing:
+#' \item{Probe}{Probe ID}
+#' \item{Sample}{Sample ID}
+#' \item{RAI}{Ratio of Alternative allele Intensity}
+#' \item{Cluster}{Cluster IDs}
+#' @param fits A list produced in m_step
+#' @return A data frame with re-assigned cluster IDs
+#' @export
+e_step <- function(assignments, fits){
   assignments <- assignments %>%
     dplyr::select(Probe:RAI) %>%
-    crossing(fits) %>%
+    crossing(fits$parameters) %>%
     mutate(likelihood = prior * dbeta(RAI, shape1, shape2)) %>%
     group_by(Probe, Sample) %>%
     top_n(1, likelihood) %>%
     ungroup()
-  
-  list(assignments = assignments, fits = fits)
+  assignments
 }
 
 #' Extract AFs from matching population in the 1000 Genomes Project (1KGP)
@@ -121,21 +142,25 @@ get_GP <- function(RAI, shapes, AF){
 #' @export
 call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, plotIter=FALSE){
   # Initialize: classify all RAIs into three clusters
-  RAI_plain <- RAI %>% as.data.frame %>%
+  assignments <- RAI %>% as.data.frame %>%
     mutate(Probe=rownames(.)) %>%
     tidyr::gather(key="Sample", value="RAI", -Probe) %>% tibble
-  RAI_plain$Cluster <- sapply(RAI_plain$RAI, function(x){if(x<.3){"Cluster1"}else if(x<.7){"Cluster2"}else{"Cluster3"}})
+  #assignments <- assignments[sample(1:nrow(assignments), 100000),]
+  assignments$Cluster <- sapply(assignments$RAI, function(x){if(x<.3){"Cluster1"}else if(x<.7){"Cluster2"}else{"Cluster3"}})
   
   # EM
   iterations <- list()
-  iterations[[1]] <- iterate_em(RAI_plain)
-  print(paste0("Iteration 1, -log(L) scaled by number of data points: ", paste(round(iterations[[1]]$fits$mLL, 3), collapse=" ")))
-  i <- 2
   maxDiff <- Inf
-  while(i<maxiter & maxDiff>0.1){
-    iterations[[i]] <- iterate_em(iterations[[i-1]]$assignments)
-    maxDiff = max(abs(iterations[[i]]$fits$mLL - iterations[[i-1]]$fits$mLL))
-    print(paste0("Iteration ", i, ", -log(L) scaled by number of data points: ", paste(round(iterations[[i]]$fits$mLL, 3), collapse=" ")))
+  i <- 1
+  while(i < maxiter & maxDiff > 1e-4){
+    fits <- m_step(assignments)
+    assignments <- e_step(assignments, fits)
+    iterations[[i]] <- fits
+    #iterations[[i]]$assignments <- assignments
+    print(paste0("Iteration ", i, ", -log(L) scaled by number of data points: ", round(fits$mLL_norm, 6)))
+    if(i>1){
+      maxDiff = abs(iterations[[i]]$mLL_norm - iterations[[i-1]]$mLL_norm)
+    }
     i=i+1
   }
   finalClusters <- iterations[[i-1]]
@@ -149,7 +174,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, plotIter=FALSE){
   GP <- get_GP(RAI, finalClusters$fits[, c("shape1", "shape2")], AF)
   
   # return
-  list(RAI=RAI, fits=finalClusters$fits, GP=GP)
+  list(RAI=RAI, fits=finalClusters$fits, iterations=iterations, GP=GP)
 }
 
 #' Plot distribution of RAIs for each iteration

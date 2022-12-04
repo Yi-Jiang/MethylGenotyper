@@ -12,7 +12,7 @@
 
 <meta name="author" content="Minghan Qu, Yi Jiang, Chaolong Wang" />
 
-<meta name="date" content="2022-11-29" />
+<meta name="date" content="2022-12-01" />
 
 <title>MethylGenotyper</title>
 
@@ -332,7 +332,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">MethylGenotyper</h1>
 <h4 class="author">Minghan Qu, Yi Jiang, Chaolong Wang</h4>
-<h4 class="date">2022-11-29</h4>
+<h4 class="date">2022-12-01</h4>
 
 
 
@@ -485,10 +485,10 @@ following code.</p>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine genotypes inferred from the three probe types</span></span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>dosage <span class="ot">&lt;-</span> <span class="fu">rbind</span>(genotype_snp<span class="sc">$</span>dosage, genotype_typeII<span class="sc">$</span>dosage)</span></code></pre></div>
 </div>
-<div id="recalibrate-genotypes-for-samples-of-mixed-population" class="section level3">
-<h3>Recalibrate genotypes for samples of mixed population</h3>
-<p>For samples from a mixed population, we recommended to recalibrate
-the genotype calls based on individual-specific AFs. This process can be
+<div id="recalibrate-genotypes-for-mixed-population" class="section level3">
+<h3>Recalibrate genotypes for mixed population</h3>
+<p>For samples from a mixed population, we recommend to recalibrate the
+genotype calls based on individual-specific AFs. This process can be
 done in three steps: 1) Project the study samples to reference ancestry
 space; 2) Estimate individual-specific AFs; 3) Recalibrate the posterior
 genotype probabilities based on the individual-specific AFs. Here are
@@ -532,7 +532,7 @@ each two samples.</p>
 <p>Kinship coefficient is calculated according to the SEEKIN software
 (<a href="https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021">Dou
 et al. PLoS Genet 2017</a>): <span class="math display">\[2\phi_{ij} =
-\frac{\sum_m(G_{im}-2p_m)(G_{jm}-2p_m)}{2p_m(1-p_m)(R^2)^2}\]</span>,
+\frac{\sum_m(G_{im}-2p_m)(G_{jm}-2p_m)}{2p_m(1-p_m)(R^2)^2}\]</span>
 where <span class="math inline">\(\phi_{ij}\)</span> denotes the kinship
 coefficient between <span class="math inline">\(i\)</span>-th and <span class="math inline">\(j\)</span>-th sample. <span class="math inline">\(G_{im}\)</span> and <span class="math inline">\(G_{jm}\)</span> denotes genotypes of <span class="math inline">\(m\)</span>-th SNP for <span class="math inline">\(i\)</span>-th and <span class="math inline">\(j\)</span>-th sample. <span class="math inline">\(p_m\)</span> denotes allele frequency of <span class="math inline">\(m\)</span>-th SNP. <span class="math inline">\(R^2\)</span> is calculated as <span class="math inline">\(R^2 = \frac{\sigma^2}{2q(1-q)}\)</span>, where
 <span class="math inline">\(\sigma^2\)</span> is the variance of
