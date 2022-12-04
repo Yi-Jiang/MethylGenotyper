@@ -17,8 +17,9 @@ recal_Geno(genotypes, type, refPC, studyPC)
 }
 \value{
 A list of recalibrated genotypes containing
-\item{dosage}{A matrix of genotype calls}
-\item{genotypes}{A list containing RAI, fits, and Genotype probabilities}
+\item{dosage}{A matrix of genotype calls. Provide probes as rows and samples as columns.}
+\item{genotypes}{A list containing RAI, fits, and Genotype probabilities.}
+\item{indAF}{A matrix of individual-specific AFs. Provide probes as rows and samples as columns.}
 }
 \description{
 Recalibrate genotypes for samples of mixed population

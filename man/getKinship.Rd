@@ -2,7 +2,7 @@
 % Please edit documentation in R/post_genotype_calling.R
 \name{getKinship}
 \alias{getKinship}
-\title{Get kinship coefficients and sample relationships}
+\title{Get kinship coefficients using the SEEKIN estimator}
 \usage{
 getKinship(dosage)
 }
@@ -13,5 +13,5 @@ getKinship(dosage)
 A data frame containing kinship coefficient (Phi) and sample relationships between each two samples.
 }
 \description{
-Get kinship coefficients and sample relationships
+For homogeneous samples.
 }

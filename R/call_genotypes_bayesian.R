@@ -10,16 +10,16 @@
 #' \item{parameters}{A data frame of: 1) cluster ID, 2) shape1, 3) shape2, 4) probability of being an outlier, and 5) prior probabilitiy of the genotype being AA,AB,or BB}
 #' \item{mLL_norm}{Minus log-likelihood scaled by number of data points}
 #' @export
-m_step <- function(x){
-  N <- nrow(x)
-  priors <- table(x$Cluster) / N
+m_step <- function(assignments){
+  N <- nrow(assignments)
+  priors <- table(assignments$Cluster) / N
   minuslogL <- function(shape1_1, shape2_1, shape1_2, shape2_2, shape1_3, shape2_3, U){
     #write.table(paste(c(shape1_1, shape2_1, shape1_2, shape2_2, shape1_3, shape2_3, U), collapse="\t"), file="tmp", append=T, quote=F, row.names=F, col.names=F)
     -sum(
       log(U + (1-U) * rowSums(cbind(
-        priors["Cluster1"] * dbeta(x$RAI, shape1_1, shape2_1, log=F),
-        priors["Cluster2"] * dbeta(x$RAI, shape1_2, shape2_2, log=F),
-        priors["Cluster3"] * dbeta(x$RAI, shape1_3, shape2_3, log=F)
+        priors["Cluster1"] * dbeta(assignments$RAI, shape1_1, shape2_1, log=F),
+        priors["Cluster2"] * dbeta(assignments$RAI, shape1_2, shape2_2, log=F),
+        priors["Cluster3"] * dbeta(assignments$RAI, shape1_3, shape2_3, log=F)
       )))
     )
   }
@@ -153,8 +153,8 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, plotIter=FALSE){
   maxDiff <- Inf
   i <- 1
   while(i < maxiter & maxDiff > 1e-4){
-    fits <- m_step(assignments)
-    assignments <- e_step(assignments, fits)
+    fits <- MethylGenotyper::m_step(assignments)
+    assignments <- MethylGenotyper::e_step(assignments, fits)
     iterations[[i]] <- fits
     #iterations[[i]]$assignments <- assignments
     print(paste0("Iteration ", i, ", -log(L) scaled by number of data points: ", round(fits$mLL_norm, 6)))
