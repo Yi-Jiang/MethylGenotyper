@@ -20,7 +20,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
     mutate(Probe=rownames(.)) %>%
     tidyr::gather(key="Sample", value="RAI", -Probe) %>% tibble
   if(nrow(assignments) > 100000){
-    assignments <- assignments[sample(1:nrow(assignments), 10000),]
+    assignments <- assignments[sample(1:nrow(assignments), 100000),]
   }
   N <- nrow(assignments)
   
@@ -105,7 +105,12 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
   GP <- get_GP(RAI, finalClusters$shapes[, c("shape1", "shape2")], AF)
   
   # return
-  list(RAI=RAI, shapes=finalClusters$shapes, iterations=iterations, GP=GP)
+  list(RAI=RAI, 
+       shapes=finalClusters$shapes, 
+       priors=finalClusters$priors, 
+       outlier=finalClusters$U, 
+       iterations=iterations, 
+       GP=GP)
 }
 
 #' Extract AFs from matching population in the 1000 Genomes Project (1KGP)
