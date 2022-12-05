@@ -35,7 +35,7 @@ callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName
     print("Error: Input data type must be one of raw, beta, and mval.")
     return(NA)
   }
-  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="snp_probe", maxiter=50, plotIter=FALSE)
+  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="snp_probe", maxiter=50)
   if(plotBeta){plot_beta_distribution(genotypes, type="snp_probe")}
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, R2_cutoff_up=R2_cutoff_up, 
                              R2_cutoff_down=R2_cutoff_down, MAF_cutoff=MAF_cutoff, type="snp_probe",
