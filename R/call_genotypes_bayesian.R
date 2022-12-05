@@ -20,7 +20,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
     mutate(Probe=rownames(.)) %>%
     tidyr::gather(key="Sample", value="RAI", -Probe) %>% tibble
   if(nrow(assignments) > 100000){
-    assignments <- assignments[sample(1:nrow(assignments), 100000),]
+    assignments <- assignments[sample(1:nrow(assignments), 10000),]
   }
   N <- nrow(assignments)
   
@@ -102,7 +102,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
   print(paste(Sys.time(), "Running the Bayesian approach to get posterior genotype probabilities."))
   probe2af <- get_AF(pop, type)
   AF <- matrix(rep(probe2af[rownames(RAI)], ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
-  GP <- get_GP(RAI, finalClusters$fits[, c("shape1", "shape2")], AF)
+  GP <- get_GP(RAI, finalClusters$shapes[, c("shape1", "shape2")], AF)
   
   # return
   list(RAI=RAI, shapes=finalClusters$shapes, iterations=iterations, GP=GP)
