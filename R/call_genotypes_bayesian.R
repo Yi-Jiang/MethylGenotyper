@@ -59,7 +59,7 @@ m_step <- function(assignments){
 e_step <- function(assignments, fits){
   assignments <- assignments %>%
     dplyr::select(Probe:RAI) %>%
-    crossing(fits$parameters) %>%
+    crossing(fits$fits) %>%
     mutate(likelihood = prior * dbeta(RAI, shape1, shape2)) %>%
     group_by(Probe, Sample) %>%
     top_n(1, likelihood) %>%
