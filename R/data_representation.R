@@ -5,7 +5,7 @@
 #' @param type One of "snp_probe", "typeI_ccs_probe", and "typeII_ccs_probe".
 #' @export
 plot_beta_distribution <- function(genotypes, type){
-  shapes = as.matrix(genotypes$fits[, c("shape1", "shape2")])
+  shapes = as.matrix(genotypes$shapes[, c("shape1", "shape2")])
   pdf(paste0("beta_distribution.", type, ".pdf"), width=5, height=5)
   plot(
     x=seq(0, 1, 0.01), 

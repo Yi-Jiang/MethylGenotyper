@@ -9,6 +9,7 @@
 #' \item{studyPC}{Top PCs in study samples}
 #' @export
 projection <- function(studyGeno, plotPCA=TRUE, cpu=1){
+  print(paste(Sys.time(), "Running projection."))
   ## Filter SNPs for PCA: MAF>0.1 and R2>0.9
   AF <- rowMeans(studyGeno) / 2
   R2 <- apply(studyGeno, 1, var) / (2 * AF * (1 - AF))
@@ -43,6 +44,7 @@ recal_Geno <- function(genotypes, type, refPC, studyPC){
   data(cpg2snp)
   data(snp2cpg)
   ## Model genotypes of the reference individuals as a linear function of PCs
+  print(paste(Sys.time(), "Modeling genotypes and PCs on reference samples."))
   betas <- list()
   for(snp in cpg2snp[rownames(genotypes$genotypes$RAI)]){
     betas[[snp]] <- coefficients(lm(refGeno_1KGP3[snp,] ~ refPC))
@@ -51,6 +53,7 @@ recal_Geno <- function(genotypes, type, refPC, studyPC){
   colnames(betas) <- c("Intercept", paste0("RefPC", 1:4))
   
   ## Calculate individual-specific AFs
+  print(paste(Sys.time(), "Calculating individual-specific AFs."))
   studyPC <- cbind(Intercept=1, studyPC)
   indAF <- betas %*% t(studyPC) / 2
   indAF[indAF<0.001] <- 0.001 # constrain AFs to avoid out of boundary values
@@ -58,6 +61,7 @@ recal_Geno <- function(genotypes, type, refPC, studyPC){
   rownames(indAF) <- snp2cpg[rownames(indAF)]
   
   ## Recalibrate posterior genotype probabilities
+  print(paste(Sys.time(), "Recalibrating posterior genotype probabilities."))
   GP <- get_GP(genotypes$genotypes$RAI, genotypes$genotypes$fits[, c("shape1", "shape2")], indAF)
   genotypes_recal <- list(genotypes = genotypes$genotypes, indAF=indAF)
   genotypes_recal$genotypes$GP <- GP

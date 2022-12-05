@@ -4,7 +4,7 @@
 \alias{call_genotypes_bayesian}
 \title{Call genotypes based on EM algorithm and Bayesian approach}
 \usage{
-call_genotypes_bayesian(RAI, pop, type, maxiter = 50, plotIter = FALSE)
+call_genotypes_bayesian(RAI, pop, type, maxiter = 50)
 }
 \arguments{
 \item{RAI}{A matrix of RAI (Ratio of Alternative allele Intensity) for probes. Provide probes as rows and samples as columns.}
@@ -14,15 +14,14 @@ call_genotypes_bayesian(RAI, pop, type, maxiter = 50, plotIter = FALSE)
 \item{type}{One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.}
 
 \item{maxiter}{Maximal number of iterations for the EM algorithm.}
-
-\item{plotIter}{To plot the distribution of RAIs for each iteration.}
 }
 \value{
 A list containing
 \item{RAI}{Ratio of Alternative allele Intensity}
-\item{fits}{Parameters of the mixture model}
+\item{shapes}{Shapes of the mixed beta distributions}
+\item{iterations}{Iterations}
 \item{GP}{Posterior probabilities for the three genotypes}
 }
 \description{
-The Expectation–maximization (EM) algorithm is used to fit a mixture of three beta distributions representing the three genotypes (AA, AB, and BB). Then, the Bayesian approach is used to get the genotype probabilities, with AFs of the matched population (the 1000 Genomes Project, 1KGP) being used to infer priors.
+The Expectation–maximization (EM) algorithm is used to fit a mixture of three beta distributions representing the three genotypes (AA, AB, and BB) and one uniform distribution representing the outliers. Then, the Bayesian approach is used to get the genotype probabilities, with AFs of the matched population (the 1000 Genomes Project, 1KGP) being used to infer priors.
 }

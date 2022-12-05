@@ -28,6 +28,7 @@ trace <- function(refGeno, studyGeno, MIN_LOCI=100, DIM=4, DIM_HIGH=20, MAX_ITER
   }
   
   ## PCA on reference individuals
+  print(paste(Sys.time(), "Running PCA on reference samples."))
   refMeans <- rowMeans(refGeno)
   refSDs <- apply(refGeno, 1, sd)
   refGeno_scale <- (refGeno - matrix(rep(refMeans, ncol(refGeno)), ncol=ncol(refGeno))) / 
@@ -39,6 +40,7 @@ trace <- function(refGeno, studyGeno, MIN_LOCI=100, DIM=4, DIM_HIGH=20, MAX_ITER
   refPC <- refPC[, 1:DIM]
   
   ## PCA and Procrustes analysis for each study individuals (one-by-one)
+  print(paste(Sys.time(), "Running PCA and Procrustes analysis."))
   cl <- makeCluster(cpu)
   registerDoParallel(cl)
   studyPC_list <- foreach(sp=1:ncol(studyGeno), .export=c("procrustes", "pprocrustes")) %dopar% {

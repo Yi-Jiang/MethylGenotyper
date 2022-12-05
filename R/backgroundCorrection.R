@@ -11,6 +11,7 @@
 #' \item{BG}{ - A matrix of probeB signals in Green channel}
 #' @export
 correct_noob_dye <- function(target, mnfst, cpu=1){
+    print(paste(Sys.time(), "Running background correction."))
     data(mnfst)
     data(probelist)
     cl <- makeCluster(cpu)

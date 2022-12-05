@@ -6,6 +6,7 @@
 #' @return Probe filtering results
 #' @export
 getMod <- function(RAI, cpu=1){
+  print(paste(Sys.time(), "Running mod test."))
   # Estimate number of modes for each probe
   n <- apply(RAI, 1, function(x) (nmodes(x, 0.05, lowsup=0, uppsup=1)))
   mod <- tibble(Name=names(n), nmod=n)
