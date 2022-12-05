@@ -15,6 +15,7 @@ m_step <- function(assignments){
   priors <- table(assignments$Cluster) / N
   minuslogL <- function(shape1_1, shape2_1, shape1_2, shape2_2, shape1_3, shape2_3, U){
     #write.table(paste(c(shape1_1, shape2_1, shape1_2, shape2_2, shape1_3, shape2_3, U), collapse="\t"), file="tmp", append=T, quote=F, row.names=F, col.names=F)
+    #print(paste(c(shape1_1, shape2_1, shape1_2, shape2_2, shape1_3, shape2_3, U)))
     -sum(
       log(U + (1-U) * rowSums(cbind(
         priors["Cluster1"] * dbeta(assignments$RAI, shape1_1, shape2_1, log=F),
@@ -35,14 +36,14 @@ m_step <- function(assignments){
     control = list(ndeps = c(rep(0.1, 6), 0.001), trace=0)
   )
   s <- stats4::coef(m)
-  parameters <- tibble(
+  fits <- tibble(
     Cluster = paste0("Cluster", 1:3),
     shape1 = c(s["shape1_1"], s["shape1_2"], s["shape1_3"]),
     shape2 = c(s["shape2_1"], s["shape2_2"], s["shape2_3"]),
     U = s["U"],
     prior = priors
   )
-  list(parameters = parameters, mLL_norm = m@min/N)
+  list(fits = fits, mLL_norm = m@min/N)
 }
 
 #' The Expectation–maximization (EM) algorithm: E step
@@ -145,7 +146,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, plotIter=FALSE){
   assignments <- RAI %>% as.data.frame %>%
     mutate(Probe=rownames(.)) %>%
     tidyr::gather(key="Sample", value="RAI", -Probe) %>% tibble
-  #assignments <- assignments[sample(1:nrow(assignments), 100000),]
+  assignments <- assignments[sample(1:nrow(assignments), 100000),]
   assignments$Cluster <- sapply(assignments$RAI, function(x){if(x<.3){"Cluster1"}else if(x<.7){"Cluster2"}else{"Cluster3"}})
   
   # EM
