@@ -62,7 +62,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
         shape1_3=shape1_3, shape2_3=shape2_3, U=U),
       method="L-BFGS-B",
       lower = c(rep(0.1, 6), 0.001),
-      upper = c(rep(150, 6), 0.3),
+      #upper = c(rep(150, 6), 0.3),
       control = list(ndeps = c(rep(0.1, 6), 0.001), trace=0)
     )
     s <- stats4::coef(m)
