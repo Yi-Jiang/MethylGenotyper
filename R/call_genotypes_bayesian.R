@@ -26,9 +26,9 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
   
   # EM
   priors <- rep(1/3, 3)
-  shape1_1 <- 10; shape2_1 <- 80
-  shape1_2 <- 80; shape2_2 <- 80
-  shape1_3 <- 80; shape2_3 <- 10
+  shape1_1 <- 5; shape2_1 <- 60
+  shape1_2 <- 30; shape2_2 <- 30
+  shape1_3 <- 60; shape2_3 <- 5
   U <- 0.01
 
   e_step <- function(){
@@ -91,6 +91,12 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
       mLL = mLL
     )
     print(paste0("Iteration ", i, ", Minus log-likelihood: ", round(mLL, 6)))
+    print("Prior probabilities of the three genotypes: ")
+    print(priors)
+    print("Shapes:")
+    print(shapes)
+    print("Outlier:")
+    print(U)
     if(i>1){
       gain = iterations[[i-1]]$mLL - mLL
     }
