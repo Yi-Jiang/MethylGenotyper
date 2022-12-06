@@ -19,8 +19,8 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
   assignments <- RAI %>% as.data.frame %>%
     mutate(Probe=rownames(.)) %>%
     tidyr::gather(key="Sample", value="RAI", -Probe) %>% tibble
-  if(nrow(assignments) > 200000){
-    assignments <- assignments[sample(1:nrow(assignments), 200000),]
+  if(nrow(assignments) > 100000){
+    assignments <- assignments[sample(1:nrow(assignments), 100000),]
   }
   N <- nrow(assignments)
   
