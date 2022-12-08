@@ -1,7 +1,7 @@
 
 #' Call genotypes based on EM algorithm and Bayesian approach
 #' 
-#' The Expectation–maximization (EM) algorithm is used to fit a mixture of three beta distributions representing the three genotypes (AA, AB, and BB) and one uniform distribution representing the outliers. Then, the Bayesian approach is used to get the genotype probabilities, with AFs of the matched population (the 1000 Genomes Project, 1KGP) being used to infer priors.
+#' The Expectation–maximization (EM) algorithm is used to fit a mixture of three beta distributions representing the three genotypes (AA, AB, and BB) and one uniform distribution representing the outliers (adapted from ewastools). Then, the Bayesian approach is used to get the genotype probabilities, with AFs of the matched population (the 1000 Genomes Project, 1KGP) being used to infer priors.
 #'
 #' @param RAI A matrix of RAI (Ratio of Alternative allele Intensity) for probes. Provide probes as rows and samples as columns.
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
@@ -14,14 +14,11 @@
 #' \item{GP}{Posterior probabilities for the three genotypes}
 #' @export
 call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
-  print(paste(Sys.time(), "Running EM to fit RAI."))
+  print(paste(Sys.time(), "Running EM to fit beta distributions for RAI values."))
   # Initialize
   assignments <- RAI %>% as.data.frame %>%
     mutate(Probe=rownames(.)) %>%
     tidyr::gather(key="Sample", value="RAI", -Probe) %>% tibble
-  if(nrow(assignments) > 100000){
-    assignments <- assignments[sample(1:nrow(assignments), 100000),]
-  }
   N <- nrow(assignments)
   
   # EM
@@ -30,6 +27,8 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
   shape1_2 <- 30; shape2_2 <- 30
   shape1_3 <- 60; shape2_3 <- 5
   U <- 0.01
+  outliers <- rep(U, N)
+  GP <- NA
 
   e_step <- function(){
     GP <- (1 - U) * cbind(
@@ -38,47 +37,32 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
       priors[3] * dbeta(assignments$RAI, shape1_3, shape2_3, log=F)
     )
     tmp <- rowSums(GP)
-    GP <- GP / tmp
-    outliers <- U / (U + tmp)
-    GP <- GP * (1 - outliers)
-    priors <<- colSums(GP) / sum(GP)
+    GP <<- GP / tmp
+    outliers <<- U / (U + tmp)
+    logLik <- sum(log(U + tmp))
+    return(logLik)
   }
   
   m_step <- function(){
-    minuslogL <- function(shape1_1, shape2_1, shape1_2, shape2_2, shape1_3, shape2_3, U){
-      -sum(
-        log(U + (1-U) * rowSums(cbind(
-          priors[1] * dbeta(assignments$RAI, shape1_1, shape2_1, log=F),
-          priors[2] * dbeta(assignments$RAI, shape1_2, shape2_2, log=F),
-          priors[3] * dbeta(assignments$RAI, shape1_3, shape2_3, log=F)
-        )))
-      )
-    }
-    m <- stats4::mle(
-      minuslogL,
-      start=list(
-        shape1_1=shape1_1, shape2_1=shape2_1,
-        shape1_2=shape1_2, shape2_2=shape2_2,
-        shape1_3=shape1_3, shape2_3=shape2_3, U=U),
-      method="L-BFGS-B",
-      lower = c(rep(0.1, 6), 0.001),
-      upper = c(rep(300, 6), 0.3),
-      control = list(ndeps = c(rep(0.1, 6), 0.001), trace=0)
-    )
-    s <- stats4::coef(m)
-    shape1_1 <<- s["shape1_1"]; shape1_2 <<- s["shape1_2"]; shape1_3 <<- s["shape1_3"]
-    shape2_1 <<- s["shape2_1"]; shape2_2 <<- s["shape2_2"]; shape2_3 <<- s["shape2_3"]
-    U <<- s["U"]
-    mLL <- m@min
-    mLL
+    GP <- GP * (1 - outliers)
+    priors <- colSums(GP)
+    priors <<- priors / sum(priors)
+    U <<- sum(outliers) / N
+    # Moments estimator
+    s1 <- eBeta(assignments$RAI, GP[,1])
+    s2 <- eBeta(assignments$RAI, GP[,2])
+    s3 <- eBeta(assignments$RAI, GP[,3])
+    shape1_1 <<- s1$shape1; shape1_2 <<- s2$shape1; shape1_3 <<- s3$shape1
+    shape2_1 <<- s1$shape2; shape2_2 <<- s2$shape2; shape2_3 <<- s3$shape2
+    return(NA)
   }
   
   iterations <- list()
   gain <- Inf
   i <- 1
   while(i < maxiter & gain > 1e-4){
-    e_step()
-    mLL <- m_step()
+    logLik <- e_step()
+    m_step()
     shapes <- as.data.frame(matrix(
       c(shape1_1, shape1_2, shape1_3, shape2_1, shape2_2, shape2_3),
       nrow=3,
@@ -88,17 +72,17 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
       priors = priors,
       shapes = shapes,
       U = U,
-      mLL = mLL
+      logLik = logLik
     )
-    print(paste0("Iteration ", i, ", Minus log-likelihood: ", round(mLL, 6)))
-    print("Prior probabilities of the three genotypes: ")
-    print(priors)
-    print("Shapes:")
-    print(shapes)
-    print("Outlier:")
-    print(U)
+    print(paste0("EM: Iteration ", i, ", Minus log-likelihood: ", round(logLik, 6)))
+    # print("Prior probabilities of the three genotypes: ")
+    # print(priors)
+    # print("Shapes:")
+    # print(shapes)
+    # print("Outlier:")
+    # print(U)
     if(i>1){
-      gain = iterations[[i-1]]$mLL - mLL
+      gain = logLik - iterations[[i-1]]$logLik
     }
     i=i+1
   }
@@ -117,6 +101,24 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
        outlier=finalClusters$U, 
        iterations=iterations, 
        GP=GP)
+}
+
+#' Moments estimator for beta distribution (adapted from ewastools)
+#' @export
+eBeta = function(x,w){
+  n = length(w)
+  w = n*w/sum(w)
+  sample.mean =  mean(w*x)
+  sample.var  = (mean(w*x^2)-sample.mean^2) * n/(n-1)
+  v = sample.mean * (1-sample.mean)
+  if (sample.var < v){
+    shape1 = sample.mean * (v/sample.var - 1)
+    shape2 = (1 - sample.mean) * (v/sample.var - 1)
+  } else {
+    shape2 = sample.mean * (v/sample.var - 1)
+    shape1 = (1 - sample.mean) * (v/sample.var - 1)
+  }
+  list(shape1 = shape1, shape2 = shape2)
 }
 
 #' Extract AFs from matching population in the 1000 Genomes Project (1KGP)
