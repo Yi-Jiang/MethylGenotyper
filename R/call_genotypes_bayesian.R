@@ -108,7 +108,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
   print(paste(Sys.time(), "Running the Bayesian approach to get posterior genotype probabilities."))
   probe2af <- get_AF(pop, type)
   AF <- matrix(rep(probe2af[rownames(RAI)], ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
-  GP <- get_GP(RAI, finalClusters$shapes[, c("shape1", "shape2")], AF)
+  GP <- get_GP(RAI, finalClusters$shapes[, c("shape1", "shape2")], bayesian=TRUE, AF)
   
   # return
   list(RAI=RAI, 
@@ -153,30 +153,38 @@ get_AF <- function(pop="EAS", type){
 #'
 #' @param RAI A MxN matrix of RAI (Ratio of Alternative allele Intensity). Provide probes as rows and samples as columns.
 #' @param shapes A data frame (3x2) containing the two shapes for beta distributions of the three clusters. 
+#' @param bayesian Use the Bayesian approach or not.
 #' @param AF A MxN matrix of AFs. Provide SNPs as rows and samples as columns.
 #' @return  A list containing
 #' \item{pAA}{Posterior genotype probability of AA}
 #' \item{pAB}{Posterior genotype probability of AB}
 #' \item{pBB}{Posterior genotype probability of BB}
 #' @export
-get_GP <- function(RAI, shapes, AF){
+get_GP <- function(RAI, shapes, bayesian=TRUE, AF){
   probes <- intersect(rownames(RAI), rownames(AF))
   samples <- intersect(colnames(RAI), colnames(AF))
   RAI <- RAI[probes, samples]
-  AF <- AF[probes, samples]
-  pAA_prior <- (1 - AF) ^2 # Prior genotype probability of AA
-  pAB_prior <- 2 * AF * (1 - AF)
-  pBB_prior <- AF ^2
   shapes$mean <- shapes$shape1 / (shapes$shape1 + shapes$shape2)
   shapes <- as.matrix(shapes[order(shapes$mean),]) # row1 to row3: AA, AB, BB
   pD_AA <- apply(RAI, 1:2, function(x) dbeta(x, shapes[1, 1], shapes[1, 2])) # probability of data given genotype AA
   pD_AB <- apply(RAI, 1:2, function(x) dbeta(x, shapes[2, 1], shapes[2, 2]))
   pD_BB <- apply(RAI, 1:2, function(x) dbeta(x, shapes[3, 1], shapes[3, 2]))
-  pD <- pD_AA * pAA_prior + pD_AB * pAB_prior + pD_BB * pBB_prior
-  pAA <- pD_AA * pAA_prior / pD
-  pAB <- pD_AB * pAB_prior / pD
-  pBB <- pD_BB * pBB_prior / pD
-  list(pAA=pAA, pAB=pAB, pBB=pBB)
+  if(bayesian==TRUE){
+    AF <- AF[probes, samples]
+    pAA_prior <- (1 - AF) ^2 # Prior genotype probability of AA
+    pAB_prior <- 2 * AF * (1 - AF)
+    pBB_prior <- AF ^2
+    pD <- pD_AA * pAA_prior + pD_AB * pAB_prior + pD_BB * pBB_prior
+    pAA <- pD_AA * pAA_prior / pD
+    pAB <- pD_AB * pAB_prior / pD
+    pBB <- pD_BB * pBB_prior / pD
+  }else{
+    pD <- pD_AA + pD_AB + pD_BB
+    pAA <- pD_AA / pD
+    pAB <- pD_AB / pD
+    pBB <- pD_BB / pD
+  }
+  return(list(pAA=pAA, pAB=pAB, pBB=pBB))
 }
 
 
