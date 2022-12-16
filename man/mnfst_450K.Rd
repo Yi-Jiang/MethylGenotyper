@@ -7,11 +7,11 @@
 \format{
 A data frame with 486428 rows and 5 columns:
 \describe{
-\item{Name}
-\item{AddressA_ID}
-\item{AddressB_ID}
-\item{Infinium_Design_Type}
-\item{Color_Channel}
+\item{Name}{CpG name}
+\item{AddressA_ID}{AdressA ID}
+\item{AddressB_ID}{AdressB ID}
+\item{Infinium_Design_Type}{Infinium design type}
+\item{Color_Channel}{Color channel}
 }
 }
 \source{

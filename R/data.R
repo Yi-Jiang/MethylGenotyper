@@ -6,11 +6,11 @@
 #' @usage data(mnfst)
 #' @format A data frame with 866554 rows and 5 columns:
 #' \describe{
-#'  \item{Name}
-#'  \item{AddressA_ID}
-#'  \item{AddressB_ID}
-#'  \item{Infinium_Design_Type}
-#'  \item{Color_Channel}
+#'  \item{Name}{CpG name}
+#'  \item{AddressA_ID}{AdressA ID}
+#'  \item{AddressB_ID}{AdressB ID}
+#'  \item{Infinium_Design_Type}{Infinium design type}
+#'  \item{Color_Channel}{Color channel}
 #' }
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
 "mnfst"
@@ -22,11 +22,11 @@
 #' @usage data(mnfst_450K)
 #' @format A data frame with 486428 rows and 5 columns:
 #' \describe{
-#'  \item{Name}
-#'  \item{AddressA_ID}
-#'  \item{AddressB_ID}
-#'  \item{Infinium_Design_Type}
-#'  \item{Color_Channel}
+#'  \item{Name}{CpG name}
+#'  \item{AddressA_ID}{AdressA ID}
+#'  \item{AddressB_ID}{AdressB ID}
+#'  \item{Infinium_Design_Type}{Infinium design type}
+#'  \item{Color_Channel}{Color channel}
 #' }
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/humanmethylation450/humanmethylation450_15017482_v1-2.csv}
 "mnfst_450K"
