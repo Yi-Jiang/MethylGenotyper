@@ -60,7 +60,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
   iterations <- list()
   gain <- Inf
   i <- 1
-  while(i < maxiter & gain > 1e-4){
+  while(i <= maxiter & gain > 1e-4){
     logLik <- e_step()
     m_step()
     shapes <- as.data.frame(matrix(
@@ -74,7 +74,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
       U = U,
       logLik = logLik
     )
-    print(paste0("EM: Iteration ", i, ", Minus log-likelihood: ", round(logLik, 6)))
+    print(paste0("EM: Iteration ", i, ", log-likelihood: ", round(logLik, 6)))
     # print("Prior probabilities of the three genotypes: ")
     # print(priors)
     # print("Shapes:")
