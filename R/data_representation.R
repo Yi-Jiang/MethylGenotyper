@@ -153,6 +153,7 @@ dosage2hard <- function(genotypes){
 #' @export
 format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2_cutoff_down=0.75, 
                              MAF_cutoff=0.01, pop="ALL", type, plotAF=FALSE){
+  print(paste(Sys.time(), "Calculating AF, R2, and HWE."))
   dosage <- genotypes$GP$pAB + 2 * genotypes$GP$pBB
   probes <- rownames(dosage)
   AF <- rowMeans(dosage) / 2
@@ -171,6 +172,36 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
 
   ## Write into a VCF file
   if(vcf){
+    ## PL
+    print(paste(Sys.time(), "Calculating Phred-scaled genotype likelihood (PL)."))
+    genotypes$GP$pAA[genotypes$GP$pAA < 1e-200] <- 1e-200
+    genotypes$GP$pAB[genotypes$GP$pAB < 1e-200] <- 1e-200
+    genotypes$GP$pBB[genotypes$GP$pBB < 1e-200] <- 1e-200
+    PL_AA <- -10 * log10(genotypes$GP$pAA)
+    PL_AB <- -10 * log10(genotypes$GP$pAB)
+    PL_BB <- -10 * log10(genotypes$GP$pBB)
+    PL_min <- base::pmin(PL_AA, PL_AB, PL_BB)
+    PL_AA <- PL_AA - PL_min
+    PL_AB <- PL_AB - PL_min
+    PL_BB <- PL_BB - PL_min
+    
+    ## GQ
+    print(paste(Sys.time(), "Calculating genotype quality (GQ)."))
+    PL_AA_tmp <- PL_AA
+    PL_AB_tmp <- PL_AB
+    PL_BB_tmp <- PL_BB
+    PL_AA_tmp[PL_AA_tmp==0] <- NA_real_
+    PL_AB_tmp[PL_AB_tmp==0] <- NA_real_
+    PL_BB_tmp[PL_BB_tmp==0] <- NA_real_
+    nNA <- matrix(
+      mapply(function(x,y,z){sum(is.na(c(x,y,z)))}, PL_AA_tmp, PL_AB_tmp, PL_BB_tmp), 
+      nrow=nrow(PL_AA), ncol=ncol(PL_AA), dimnames = dimnames(PL_AA)
+    )
+    GQ <- base::pmin(PL_AA_tmp, PL_AB_tmp, PL_BB_tmp, na.rm=T)
+    GQ[nNA>1] <- 0
+    GQ[GQ>99] <- 99
+    
+    ## hard genotypes
     hardgeno <- dosage2hard(genotypes)
     dosage <- round(dosage, 2)
     genotypes$GP$pAA <- round(genotypes$GP$pAA, 2)
@@ -178,6 +209,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
     genotypes$GP$pBB <- round(genotypes$GP$pBB, 2)
 
     ## Genotype
+    print(paste(Sys.time(), "Preparing and writing VCF file."))
     geno <- matrix(nrow=nrow(dosage), ncol=ncol(dosage))
     colnames(geno) <- colnames(dosage)
     for(i in 1:nrow(geno)){
@@ -188,7 +220,11 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
           round(genotypes$RAI[i,j], 2), ":", 
           genotypes$GP$pAA[i,j], ",", 
           genotypes$GP$pAB[i,j], ",", 
-          genotypes$GP$pBB[i,j])
+          genotypes$GP$pBB[i,j], ":",
+          round(PL_AA[i,j]), ",",
+          round(PL_AB[i,j]), ",",
+          round(PL_BB[i,j]), ":",
+          round(GQ[i,j]))
       }
     }
     geno <- as.data.frame(cbind(CpG = rownames(dosage), geno))
@@ -205,7 +241,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
     rownames(probeInfo) <- probeInfo$CpG
     vcf <- cbind(
       probeInfo[probes, 1:6], 
-      tibble(QUAL=".", FILTER=filter, INFO=paste0("AF=", AF, ";R2=", R2_constrained), FORMAT="GT:DS:RAI:GP")
+      tibble(QUAL=".", FILTER=filter, INFO=paste0("AF=", AF, ";R2=", R2_constrained), FORMAT="GT:DS:RAI:GP:PL:GQ")
     ) %>% left_join(geno, by=c("CpG"))
     vcf <- vcf[, -6]
     vcf$Chr <- factor(vcf$Chr, levels=c(paste0("chr", 1:22)))
@@ -223,9 +259,11 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
       paste0("##FILTER=<ID=R2_high,Description=\"R2 is above ", R2_cutoff_up, "\">"),
       paste0("##FILTER=<ID=HWE,Description=\"Deviation from Hardy-Weinberg Equilibrium (HWE, p < 1E-6)\">"),
       "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
-      "##FORMAT=<ID=DS,Number=1,Type=Float,Description=\"Genotype dosage.\">",
-      "##FORMAT=<ID=RAI,Number=1,Type=Float,Description=\"RAI (Ratio of Alternative allele Intensity).\">",
-      "##FORMAT=<ID=GP,Number=1,Type=Float,Description=\"Genotype probability of reference homozygous, heterozygous, and alternative homozygous\">",
+      "##FORMAT=<ID=DS,Number=1,Type=Float,Description=\"Genotype dosage\">",
+      "##FORMAT=<ID=RAI,Number=1,Type=Float,Description=\"RAI (Ratio of Alternative allele Intensity)\">",
+      "##FORMAT=<ID=GP,Number=G,Type=Float,Description=\"Genotype probability of reference homozygous, heterozygous, and alternative homozygous\">",
+      "##FORMAT=<ID=PL,Number=G,Type=Integer,Description=\"Phred-scaled genotype likelihood\">",
+      "##FORMAT=<ID=GQ,Number=1,Type=Integer,Description=\"Genotype quality\">",
       paste0("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t", samplelist),
       sep = "\n"
     )
@@ -234,6 +272,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
   }
   
   ## Filter dosage
+  dosage[GQ < 20] <- NA
   dosage <- apply(dosage[filter=="PASS",,drop=F], 1:2, as.numeric)
   
   ## Plots
