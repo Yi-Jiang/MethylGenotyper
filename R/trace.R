@@ -45,8 +45,9 @@ trace <- function(refGeno, studyGeno, MIN_LOCI=100, DIM=4, DIM_HIGH=20, MAX_ITER
   registerDoParallel(cl)
   studyPC_list <- foreach(sp=1:ncol(studyGeno), .export=c("procrustes", "pprocrustes")) %dopar% {
     ## PCA on reference and study individuals
-    X_scale <- (studyGeno[,sp] - refMeans) / refSDs
-    svd <- svd(t(cbind(refGeno_scale, Study=X_scale))) # "d" "u" "v"
+    pn <- !is.na(studyGeno[,sp]) # non-missing probe indexes
+    X_scale <- (studyGeno[pn, sp] - refMeans[pn]) / refSDs[pn]
+    svd <- svd(t(cbind(refGeno_scale[pn,], Study=X_scale))) # "d" "u" "v"
     pc <- svd$u * matrix(rep(svd$d, each=nrow(svd$u)), nrow=nrow(svd$u))
     rownames(pc) <- c(colnames(refGeno), colnames(studyGeno)[sp])
     colnames(pc) <- paste0("PC", 1:ncol(pc))
