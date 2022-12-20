@@ -14,7 +14,8 @@ callGeno_typeI(
   MAF_cutoff = 0.01,
   train = TRUE,
   cpu = 1,
-  pop = "EAS"
+  pop = "EAS",
+  bayesian = TRUE
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ callGeno_typeI(
 \item{cpu}{Number of CPU. Only effective when train=TRUE.}
 
 \item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.}
+
+\item{bayesian}{Use the Bayesian approach to calculate posterior genotype probabilities.}
 }
 \value{
 A list containing
