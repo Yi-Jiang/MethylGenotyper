@@ -241,7 +241,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
     rownames(probeInfo) <- probeInfo$CpG
     vcf <- cbind(
       probeInfo[probes, 1:6], 
-      tibble(QUAL=".", FILTER=filter, INFO=paste0("AF=", AF, ";R2=", R2_constrained), FORMAT="GT:DS:RAI:GP:PL:GQ")
+      tibble(QUAL=".", FILTER=filter, INFO=paste0("AF=", AF, ";R2=", R2_constrained, ";HWE=", hwe_p), FORMAT="GT:DS:RAI:GP:PL:GQ")
     ) %>% left_join(geno, by=c("CpG"))
     vcf <- vcf[, -6]
     vcf$Chr <- factor(vcf$Chr, levels=c(paste0("chr", 1:22)))
@@ -254,6 +254,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
       paste(paste0("##contig=<ID=chr", 1:22, ">"), collapse="\n"),
       "##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele frequency\">",
       "##INFO=<ID=R2,Number=1,Type=Float,Description=\"R-square, encoded as var(G)/2p(1-p), where G is dosage genotype and p is allele frequency. Variants with 1<R2<=1.1 are constrained to 1. Variants with R2>1.1 (marked as .) are recommended to remove.\">",
+      "##INFO=<ID=HWE,Number=1,Type=Float,Description=\"Hardy-Weinberg Equilibrium p-value\">",
       paste0("##FILTER=<ID=MAF,Description=\"MAF is below ", MAF_cutoff, "\">"),
       paste0("##FILTER=<ID=R2_low,Description=\"R2 is below ", R2_cutoff_down, "\">"),
       paste0("##FILTER=<ID=R2_high,Description=\"R2 is above ", R2_cutoff_up, "\">"),
@@ -272,7 +273,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
   }
   
   ## Filter dosage
-  dosage[GQ < 20] <- NA
+  dosage[GQ < 19.5] <- NA # in VCF output, GQ=19.5 will be rounded to 20
   dosage <- apply(dosage[filter=="PASS",,drop=F], 1:2, as.numeric)
   
   ## Plots
