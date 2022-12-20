@@ -41,8 +41,8 @@ callGeno_typeII(
 }
 \value{
 A list containing
-\item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed.}
-\item{genotypes}{A list containing RAI, fits, and Genotype probabilities.}
+\item{dosage}{A matrix of dosage genotypes. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with GQ<20 will be marked as NA.}
+\item{genotypes}{A list containing RAI, model parameters, Genotype probabilities (GP), Phred-scaled genotype likelihood (PL), and Genotype quality (GQ).}
 }
 \description{
 Call genotypes for Type II CCS probes

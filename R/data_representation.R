@@ -172,35 +172,6 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
 
   ## Write into a VCF file
   if(vcf){
-    ## PL
-    print(paste(Sys.time(), "Calculating Phred-scaled genotype likelihood (PL)."))
-    genotypes$GP$pAA[genotypes$GP$pAA < 1e-200] <- 1e-200
-    genotypes$GP$pAB[genotypes$GP$pAB < 1e-200] <- 1e-200
-    genotypes$GP$pBB[genotypes$GP$pBB < 1e-200] <- 1e-200
-    PL_AA <- -10 * log10(genotypes$GP$pAA)
-    PL_AB <- -10 * log10(genotypes$GP$pAB)
-    PL_BB <- -10 * log10(genotypes$GP$pBB)
-    PL_min <- base::pmin(PL_AA, PL_AB, PL_BB)
-    PL_AA <- PL_AA - PL_min
-    PL_AB <- PL_AB - PL_min
-    PL_BB <- PL_BB - PL_min
-    
-    ## GQ
-    print(paste(Sys.time(), "Calculating genotype quality (GQ)."))
-    PL_AA_tmp <- PL_AA
-    PL_AB_tmp <- PL_AB
-    PL_BB_tmp <- PL_BB
-    PL_AA_tmp[PL_AA_tmp==0] <- NA_real_
-    PL_AB_tmp[PL_AB_tmp==0] <- NA_real_
-    PL_BB_tmp[PL_BB_tmp==0] <- NA_real_
-    nNA <- matrix(
-      mapply(function(x,y,z){sum(is.na(c(x,y,z)))}, PL_AA_tmp, PL_AB_tmp, PL_BB_tmp), 
-      nrow=nrow(PL_AA), ncol=ncol(PL_AA), dimnames = dimnames(PL_AA)
-    )
-    GQ <- base::pmin(PL_AA_tmp, PL_AB_tmp, PL_BB_tmp, na.rm=T)
-    GQ[nNA>1] <- 0
-    GQ[GQ>99] <- 99
-    
     ## hard genotypes
     hardgeno <- dosage2hard(genotypes)
     dosage <- round(dosage, 2)
@@ -221,10 +192,10 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
           genotypes$GP$pAA[i,j], ",", 
           genotypes$GP$pAB[i,j], ",", 
           genotypes$GP$pBB[i,j], ":",
-          round(PL_AA[i,j]), ",",
-          round(PL_AB[i,j]), ",",
-          round(PL_BB[i,j]), ":",
-          round(GQ[i,j]))
+          round(genotypes$PL$AA[i,j]), ",",
+          round(genotypes$PL$AB[i,j]), ",",
+          round(genotypes$PL$BB[i,j]), ":",
+          floor(genotypes$GQ[i,j])) # if using round, GQ=19.5 will pass filtering when using GQ<20 in VCF
       }
     }
     geno <- as.data.frame(cbind(CpG = rownames(dosage), geno))
@@ -273,7 +244,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
   }
   
   ## Filter dosage
-  dosage[GQ < 19.5] <- NA # in VCF output, GQ=19.5 will be rounded to 20
+  dosage[genotypes$GQ < 20] <- NA
   dosage <- apply(dosage[filter=="PASS",,drop=F], 1:2, as.numeric)
   
   ## Plots

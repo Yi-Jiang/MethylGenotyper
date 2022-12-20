@@ -7,13 +7,17 @@
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
 #' @param maxiter Maximal number of iterations for the EM algorithm.
+#' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
 #' @return  A list containing
 #' \item{RAI}{Ratio of Alternative allele Intensity}
 #' \item{shapes}{Shapes of the mixed beta distributions}
-#' \item{iterations}{Iterations}
+#' \item{priors}{Prior probabilities that the RAI values belong to one of the three genotypes}
+#' \item{U}{Proportion of RAI values being outlier}
 #' \item{GP}{Posterior probabilities for the three genotypes}
+#' \item{PL}{Phred-scaled genotype likelihood}
+#' \item{GQ}{Genotype quality}
 #' @export
-call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
+call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE){
   print(paste(Sys.time(), "Running EM to fit beta distributions for RAI values."))
   # Initialize
   assignments <- RAI %>% as.data.frame %>%
@@ -92,15 +96,44 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50){
   print(paste(Sys.time(), "Running the Bayesian approach to get posterior genotype probabilities."))
   probe2af <- get_AF(pop, type)
   AF <- matrix(rep(probe2af[rownames(RAI)], ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
-  GP <- get_GP(RAI, finalClusters$shapes[, c("shape1", "shape2")], bayesian=TRUE, AF)
+  GP <- get_GP(RAI, finalClusters$shapes[, c("shape1", "shape2")], bayesian=bayesian, AF)
+  
+  # PL
+  print(paste(Sys.time(), "Calculating Phred-scaled genotype likelihood (PL)."))
+  GP$pAA[GP$pAA < 1e-300] <- 1e-300
+  GP$pAB[GP$pAB < 1e-300] <- 1e-300
+  GP$pBB[GP$pBB < 1e-300] <- 1e-300
+  PL_AA <- -10 * log10(GP$pAA)
+  PL_AB <- -10 * log10(GP$pAB)
+  PL_BB <- -10 * log10(GP$pBB)
+  PL_min <- base::pmin(PL_AA, PL_AB, PL_BB)
+  PL_AA <- PL_AA - PL_min
+  PL_AB <- PL_AB - PL_min
+  PL_BB <- PL_BB - PL_min
+  PL <- list(AA = PL_AA, AB = PL_AB, BB = PL_BB)
+  
+  # GQ
+  print(paste(Sys.time(), "Calculating genotype quality (GQ)."))
+  PL_AA[PL_AA==0] <- NA_real_
+  PL_AB[PL_AB==0] <- NA_real_
+  PL_BB[PL_BB==0] <- NA_real_
+  nNA <- matrix(
+    mapply(function(x,y,z){sum(is.na(c(x,y,z)))}, PL_AA, PL_AB, PL_BB), 
+    nrow=nrow(PL_AA), ncol=ncol(PL_AA), dimnames = dimnames(PL_AA)
+  )
+  GQ <- base::pmin(PL_AA, PL_AB, PL_BB, na.rm=T)
+  GQ[nNA>1] <- 0
+  GQ[GQ>99] <- 99
   
   # return
   list(RAI=RAI, 
        shapes=finalClusters$shapes, 
        priors=finalClusters$priors, 
-       outlier=finalClusters$U, 
-       iterations=iterations, 
-       GP=GP)
+       U=finalClusters$U, 
+       #iterations=iterations, 
+       GP=GP,
+       PL=PL,
+       GQ=GQ)
 }
 
 #' Moments estimator for beta distribution (adapted from ewastools)
