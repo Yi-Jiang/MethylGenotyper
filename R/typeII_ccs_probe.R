@@ -11,12 +11,13 @@
 #' @param train If TRUE, will fit the distribution of RAI (Ratio of Alternative allele Intensity) and filter probes by number of peaks. If FALSE, will use predefined probe list.
 #' @param cpu Number of CPU. Only effective when train=TRUE.
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
+#' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
 #' @return A list containing
 #' \item{dosage}{A matrix of dosage genotypes. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with GQ<20 will be marked as NA.}
 #' \item{genotypes}{A list containing RAI, model parameters, Genotype probabilities (GP), Phred-scaled genotype likelihood (PL), and Genotype quality (GQ).}
 #' @export
 callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeII_ccs_probe.vcf", 
-                            R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, train=TRUE, cpu=1, pop="EAS"){
+                            R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, train=TRUE, cpu=1, pop="EAS", bayesian=TRUE){
   # calculate RAI
   if(input=="raw"){
     RAI <- getRAI_typeII(rgData, pop=pop)
@@ -44,7 +45,7 @@ callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
   }
   
   # call genotypes
-  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeII_ccs_probe", maxiter=50, bayesian=TRUE)
+  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeII_ccs_probe", maxiter=50, bayesian=bayesian)
   if(plotBeta){plot_beta_distribution(genotypes, type="typeII_ccs_probe")}
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 
                              R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
