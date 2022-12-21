@@ -15,5 +15,5 @@ getKinship_het(dosage, indAF)
 A data frame containing kinship coefficient (Phi) and sample relationships between each two samples.
 }
 \description{
-For heterogeneous samples.
+For heterogeneous samples. Only SNPs with missing rate < 10\% were used.
 }

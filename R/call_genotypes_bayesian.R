@@ -98,32 +98,9 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE){
   AF <- matrix(rep(probe2af[rownames(RAI)], ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
   GP <- get_GP(RAI, finalClusters$shapes[, c("shape1", "shape2")], bayesian=bayesian, AF)
   
-  # PL
-  print(paste(Sys.time(), "Calculating Phred-scaled genotype likelihood (PL)."))
-  GP$pAA[GP$pAA < 1e-300] <- 1e-300
-  GP$pAB[GP$pAB < 1e-300] <- 1e-300
-  GP$pBB[GP$pBB < 1e-300] <- 1e-300
-  PL_AA <- -10 * log10(GP$pAA)
-  PL_AB <- -10 * log10(GP$pAB)
-  PL_BB <- -10 * log10(GP$pBB)
-  PL_min <- base::pmin(PL_AA, PL_AB, PL_BB)
-  PL_AA <- PL_AA - PL_min
-  PL_AB <- PL_AB - PL_min
-  PL_BB <- PL_BB - PL_min
-  PL <- list(AA = PL_AA, AB = PL_AB, BB = PL_BB)
-  
-  # GQ
-  print(paste(Sys.time(), "Calculating genotype quality (GQ)."))
-  PL_AA[PL_AA==0] <- NA_real_
-  PL_AB[PL_AB==0] <- NA_real_
-  PL_BB[PL_BB==0] <- NA_real_
-  nNA <- matrix(
-    mapply(function(x,y,z){sum(is.na(c(x,y,z)))}, PL_AA, PL_AB, PL_BB), 
-    nrow=nrow(PL_AA), ncol=ncol(PL_AA), dimnames = dimnames(PL_AA)
-  )
-  GQ <- base::pmin(PL_AA, PL_AB, PL_BB, na.rm=T)
-  GQ[nNA>1] <- 0
-  GQ[GQ>99] <- 99
+  # PL, GQ
+  PL <- get_PL(GP)
+  GQ <- get_GQ(PL)
   
   # return
   list(RAI=RAI, 
@@ -222,4 +199,55 @@ get_GP <- function(RAI, shapes, bayesian=TRUE, AF){
   return(list(pAA=pAA, pAB=pAB, pBB=pBB))
 }
 
+#' Calculate Phred-scaled genotype likelihood (PL)
+#'
+#' @param GP A list of Genotype probabilities containing
+#' \item{pAA}{Posterior genotype probability of AA}
+#' \item{pAB}{Posterior genotype probability of AB}
+#' \item{pBB}{Posterior genotype probability of BB}
+#' @return A list of Phred-scaled genotype likelihoods containing
+#' \item{AA}{PL(AA)}
+#' \item{AB}{PL(AB)}
+#' \item{BB}{PL(BB)}
+#' @export
+get_PL <- function(GP){
+  print(paste(Sys.time(), "Calculating Phred-scaled genotype likelihood (PL)."))
+  GP$pAA[GP$pAA < 1e-300] <- 1e-300
+  GP$pAB[GP$pAB < 1e-300] <- 1e-300
+  GP$pBB[GP$pBB < 1e-300] <- 1e-300
+  PL_AA <- -10 * log10(GP$pAA)
+  PL_AB <- -10 * log10(GP$pAB)
+  PL_BB <- -10 * log10(GP$pBB)
+  PL_min <- base::pmin(PL_AA, PL_AB, PL_BB)
+  PL_AA <- PL_AA - PL_min
+  PL_AB <- PL_AB - PL_min
+  PL_BB <- PL_BB - PL_min
+  list(AA = PL_AA, AB = PL_AB, BB = PL_BB)
+}
+
+#' Calculate genotype quality (GQ)
+#'
+#' @param A list of Phred-scaled genotype likelihoods containing
+#' \item{AA}{PL(AA)}
+#' \item{AB}{PL(AB)}
+#' \item{BB}{PL(BB)}
+#' @return A matrix of genotype qualities
+#' @export
+get_GQ <- function(PL){
+  print(paste(Sys.time(), "Calculating genotype quality (GQ)."))
+  PL_AA <- PL$AA
+  PL_AB <- PL$AB
+  PL_BB <- PL$BB
+  PL_AA[PL_AA==0] <- NA_real_
+  PL_AB[PL_AB==0] <- NA_real_
+  PL_BB[PL_BB==0] <- NA_real_
+  nNA <- matrix(
+    mapply(function(x,y,z){sum(is.na(c(x,y,z)))}, PL_AA, PL_AB, PL_BB), 
+    nrow=nrow(PL_AA), ncol=ncol(PL_AA), dimnames = dimnames(PL_AA)
+  )
+  GQ <- base::pmin(PL_AA, PL_AB, PL_BB, na.rm=T)
+  GQ[nNA>1] <- 0
+  GQ[GQ>99] <- 99
+  GQ
+}
 

@@ -13,5 +13,5 @@ getKinship(dosage)
 A data frame containing kinship coefficient (Phi) and sample relationships between each two samples.
 }
 \description{
-For homogeneous samples.
+For homogeneous samples. Only SNPs with missing rate < 10\% were used.
 }

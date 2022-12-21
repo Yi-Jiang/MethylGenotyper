@@ -212,7 +212,9 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
     rownames(probeInfo) <- probeInfo$CpG
     vcf <- cbind(
       probeInfo[probes, 1:6], 
-      tibble(QUAL=".", FILTER=filter, INFO=paste0("AF=", AF, ";R2=", R2_constrained, ";HWE=", hwe_p), FORMAT="GT:DS:RAI:GP:PL:GQ")
+      tibble(QUAL=".", FILTER=filter, 
+             INFO=paste0("AF=", AF, ";R2=", R2_constrained, ";HWE=", sprintf("%.3g", hwe_p)), 
+             FORMAT="GT:DS:RAI:GP:PL:GQ")
     ) %>% left_join(geno, by=c("CpG"))
     vcf <- vcf[, -6]
     vcf$Chr <- factor(vcf$Chr, levels=c(paste0("chr", 1:22)))

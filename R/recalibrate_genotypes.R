@@ -65,6 +65,8 @@ recal_Geno <- function(genotypes, type, refPC, studyPC){
   GP <- get_GP(genotypes$genotypes$RAI, genotypes$genotypes$shapes[, c("shape1", "shape2")], bayesian=TRUE, indAF)
   genotypes_recal <- list(genotypes = genotypes$genotypes, indAF=indAF)
   genotypes_recal$genotypes$GP <- GP
+  genotypes_recal$genotypes$PL <- get_PL(genotypes_recal$genotypes$GP)
+  genotypes_recal$genotypes$GQ <- get_GQ(genotypes_recal$genotypes$PL)
   genotypes_recal$genotypes$RAI <- genotypes_recal$genotypes$RAI[rownames(GP$pAA), colnames(GP$pAA)]
   genotypes_recal$dosage <- format_genotypes(genotypes_recal$genotypes, vcf=T, 
                                              vcfName=paste0("genotypes.recal.", type, ".vcf"),

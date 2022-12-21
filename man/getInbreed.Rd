@@ -13,5 +13,5 @@ getInbreed(dosage)
 A data frame of inbreeding coefficients and sample contamination status.
 }
 \description{
-Calculate inbreeding coefficients according to Genotypes
+Only SNPs with missing rate < 10\% were used.
 }
