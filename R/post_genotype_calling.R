@@ -90,22 +90,30 @@ predContamination <- function(x) {
 
 #' Calculate inbreeding coefficients according to Genotypes
 #' 
-#' Only SNPs with missing rate < 10% were used.
-#' 
 #' @param genotype Genotype matrix, with each row indicates a SNP and each column indicates a sample. Dosage genotypes are forced to binary (0, 1, or 2) by using the `round` function.
 #' @return A data frame of inbreeding coefficients and sample contamination status.
 #' @export
 getInbreed <- function(dosage){
-  missing <- apply(dosage, 1, function(x) sum(is.na(x))) / ncol(dosage)
-  nValue <- apply(dosage, 1, function(x) length(unique(x[!is.na(x)])))
-  dosage <- dosage[missing < 0.1 & nValue >1,]
   binGeno <- round(dosage, 0) # force to 0/1/2
-  nHet_obs <- apply(binGeno, 2, function(x) sum(x==1, na.rm=TRUE))
-  nHet_exp <- sum(apply(binGeno, 1, function(x) mean(x, na.rm=TRUE)*(1-mean(x, na.rm=TRUE)/2)))
-  inbreed <- tibble(IID = colnames(binGeno), 
-                    nHet_obs = nHet_obs,
-                    nHet_exp = nHet_exp,
-                    F_pred = 1 - nHet_obs / nHet_exp,
-                    contamination = predContamination(1 - nHet_obs / nHet_exp))
+  pHet_exp <- apply(
+    binGeno, 1, 
+    function(x){
+      m <- mean(x, na.rm=TRUE)
+      m*(1-m/2)
+    }
+  )
+  samples <- colnames(binGeno)
+  nHet_obs <- c()
+  nHet_exp <- c()
+  for (sp in samples){
+    idx <- which(!is.na(binGeno[,sp]))
+    nHet_obs[sp] <- sum(binGeno[idx, sp]==1)
+    nHet_exp[sp] <- sum(pHet_exp[idx])
+  }
+  inbreed <- tibble(IID = samples, 
+                    nHet_obs = nHet_obs[samples],
+                    nHet_exp = nHet_exp[samples],
+                    F_pred = 1 - nHet_obs[samples] / nHet_exp[samples],
+                    contamination = predContamination(1 - nHet_obs[samples] / nHet_exp[samples]))
   inbreed
 }
