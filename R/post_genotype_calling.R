@@ -57,6 +57,7 @@ getKinship_het <- function(dosage, indAF){
   missing <- apply(dosage, 1, function(x) sum(is.na(x))) / ncol(dosage)
   nValue <- apply(dosage, 1, function(x) length(unique(x[!is.na(x)])))
   dosage <- dosage[missing < 0.1 & nValue >1,]
+  indAF <- indAF[rownames(dosage),]
   AF <- rowMeans(dosage, na.rm=TRUE)/2
   R2 <- apply(dosage, 1, function(x) var(x, na.rm=TRUE))/(2 * AF * (1 - AF))
   R2[R2 > 1] <- 1
