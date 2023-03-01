@@ -51,8 +51,9 @@ getRAI_typeI = function(rgData, pop="EAS", platform="EPIC"){
   }else{
     data(probeInfo_typeI_450K); probeInfo_typeI <- probeInfo_typeI_450K
   }
-  dR <- dplyr::filter(probeInfo_typeI, Color=="Red", .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
-  dG <- dplyr::filter(probeInfo_typeI, Color=="Grn", .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
+  df <- dplyr::filter(probeInfo_typeI, .data[[CpG]] %in% rownames(rgData[["AR"]]) & .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
+  dR <- dplyr::filter(df, Color=="Red")
+  dG <- dplyr::filter(df, Color=="Grn")
   dR_AR <- rgData[["AR"]][dR$CpG,] # Red channel, ib
   dR_BR <- rgData[["BR"]][dR$CpG,] # Red channel, ib
   dR_AG <- rgData[["AG"]][dR$CpG,] # Red channel, oob
