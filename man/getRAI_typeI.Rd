@@ -4,12 +4,14 @@
 \alias{getRAI_typeI}
 \title{Get RAI (Ratio of Alternative allele Intensity) for Type I CCS probes}
 \usage{
-getRAI_typeI(rgData, pop = "EAS")
+getRAI_typeI(rgData, pop = "EAS", platform = "EPIC")
 }
 \arguments{
 \item{rgData}{Noob and dye-bias corrected signals produced by using \code{correct_noob_dye}.}
 
 \item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.}
+
+\item{platform}{EPIC or 450K.}
 }
 \value{
 RAI (Ratio of Alternative allele Intensity).

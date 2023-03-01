@@ -12,22 +12,32 @@
 #' @param cpu Number of CPU. Only effective when train=TRUE.
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
+#' @param platform EPIC or 450K.
 #' @return A list containing
 #' \item{dosage}{A matrix of dosage genotypes. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with GQ<20 will be marked as NA.}
 #' \item{genotypes}{A list containing RAI, model parameters, Genotype probabilities (GP), Phred-scaled genotype likelihood (PL), and Genotype quality (GQ).}
 #' @export
 callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeII_ccs_probe.vcf", 
-                            R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, train=TRUE, cpu=1, pop="EAS", bayesian=TRUE){
+                            R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, train=TRUE, cpu=1, pop="EAS", 
+                            bayesian=TRUE, platform="EPIC"){
   # calculate RAI
   if(input=="raw"){
     RAI <- getRAI_typeII(rgData, pop=pop)
   }else if(input=="beta"){
-    data(probeInfo_typeII)
+    if(platform=="EPIC"){
+      data(probeInfo_typeII)
+    }else{
+      data(probeInfo_typeII_450K); probeInfo_typeII <- probeInfo_typeII_450K
+    }
     tag_af <- paste0(pop, "_AF")
     beta <- rgData[rownames(rgData) %in% probeInfo_typeII[probeInfo_typeII[,tag_af]>0.01 & probeInfo_typeII[,tag_af]<0.99, "CpG"], ]
     RAI <- 1 - beta
   }else if(input=="mval"){
-    data(probeInfo_typeII)
+    if(platform=="EPIC"){
+      data(probeInfo_typeII)
+    }else{
+      data(probeInfo_typeII_450K); probeInfo_typeII <- probeInfo_typeII_450K
+    }
     tag_af <- paste0(pop, "_AF")
     beta <- mval2beta(rgData[rownames(rgData) %in% probeInfo_typeII[probeInfo_typeII[,tag_af]>0.01 & probeInfo_typeII[,tag_af]<0.99, "CpG"], ])
     RAI <- 1 - beta
@@ -45,11 +55,11 @@ callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
   }
   
   # call genotypes
-  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeII_ccs_probe", maxiter=50, bayesian=bayesian)
+  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeII_ccs_probe", maxiter=50, bayesian=bayesian, platform=platform)
   if(plotBeta){plot_beta_distribution(genotypes, type="typeII_ccs_probe")}
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 
                              R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
-                             MAF_cutoff=MAF_cutoff, type="typeII_ccs_probe", pop=pop, plotAF=FALSE)
+                             MAF_cutoff=MAF_cutoff, type="typeII_ccs_probe", pop=pop, plotAF=FALSE, platform=platform)
   list(dosage=dosage, genotypes=genotypes)
 }
 
@@ -58,14 +68,19 @@ callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
 #' 
 #' @param rgData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
+#' @param platform EPIC or 450K.
 #' @return RAI (Ratio of Alternative allele Intensity).
 #' @export
-getRAI_typeII = function(rgData, pop="EAS"){
+getRAI_typeII = function(rgData, pop="EAS", platform="EPIC"){
   if(!(pop %in% c("EAS", "AMR", "AFR", "EUR", "SAS", "ALL"))){
     stop("pop must be one of EAS, AMR, AFR, EUR, SAS, and ALL.")
   }
   tag_af <- paste0(pop, "_AF")
-  data(probeInfo_typeII)
+  if(platform=="EPIC"){
+    data(probeInfo_typeII)
+  }else{
+    data(probeInfo_typeII_450K); probeInfo_typeII <- probeInfo_typeII_450K
+  }
   cg <- rownames(rgData[["AR"]])
   cg_IIR <- cg[cg %in% probeInfo_typeII[probeInfo_typeII[,"Group"]=="IIR" & probeInfo_typeII[,tag_af]>0.01 & probeInfo_typeII[,tag_af]<0.99, "CpG"]] # Type II, Alt allele match Red
   #cg_IIG <- cg[cg %in% probeInfo_typeII[probeInfo_typeII[,"Group"]=="IIG" & probeInfo_typeII[,tag_af]>0.01 & probeInfo_typeII[,tag_af]<0.99, "CpG"]] # Type II, Alt allele match Grn

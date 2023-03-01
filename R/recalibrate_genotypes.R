@@ -4,17 +4,22 @@
 #' @param studyGeno A matrix of genotypes of study samples. Provide probes as rows and samples as columns. Include all SNP probes, type I CCS probes, and type II CCS probes if available.
 #' @param plotPCA To plot the projection of study samples in reference ancestry space.
 #' @param cpu Number of CPU.
+#' @param platform EPIC or 450K.
 #' @return A list containing
 #' \item{refPC}{Top PCs in the reference}
 #' \item{studyPC}{Top PCs in study samples}
 #' @export
-projection <- function(studyGeno, plotPCA=TRUE, cpu=1){
+projection <- function(studyGeno, plotPCA=TRUE, cpu=1, platform="EPIC"){
   print(paste(Sys.time(), "Running projection."))
   ## Filter SNPs for PCA: MAF>0.1 and R2>0.9
   AF <- rowMeans(studyGeno, na.rm=TRUE) / 2
   R2 <- apply(studyGeno, 1, function(x) var(x, na.rm=TRUE)) / (2 * AF * (1 - AF))
   studyGeno <- studyGeno[AF>0.1 & AF<0.9 & R2>0.9,]
-  data(cpg2snp)
+  if(platform=="EPIC"){
+    data(cpg2snp)
+  }else{
+    data(cpg2snp_450K); cpg2snp <- cpg2snp_450K
+  }
   rownames(studyGeno) <- cpg2snp[rownames(studyGeno)]
   
   ## PCA and Procrustes analysis
@@ -35,14 +40,20 @@ projection <- function(studyGeno, plotPCA=TRUE, cpu=1){
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
 #' @param refPC Top PCs in the reference
 #' @param studyPC Top PCs in study samples
+#' @param platform EPIC or 450K.
 #' @return A list of recalibrated genotypes containing
 #' \item{dosage}{A matrix of genotype calls. Provide probes as rows and samples as columns.}
 #' \item{genotypes}{A list containing RAI, fits, and Genotype probabilities.}
 #' \item{indAF}{A matrix of individual-specific AFs. Provide probes as rows and samples as columns.}
 #' @export
-recal_Geno <- function(genotypes, type, refPC, studyPC){
-  data(cpg2snp)
-  data(snp2cpg)
+recal_Geno <- function(genotypes, type, refPC, studyPC, platform="EPIC"){
+  if(platform=="EPIC"){
+    data(cpg2snp)
+    data(snp2cpg)
+  }else{
+    data(cpg2snp_450K); cpg2snp <- cpg2snp_450K
+    data(snp2cpg_450K); snp2cpg <- snp2cpg_450K
+  }
   ## Model genotypes of the reference individuals as a linear function of PCs
   print(paste(Sys.time(), "Modeling genotypes and PCs on reference samples."))
   betas <- list()
@@ -71,7 +82,7 @@ recal_Geno <- function(genotypes, type, refPC, studyPC){
   genotypes_recal$dosage <- format_genotypes(genotypes_recal$genotypes, vcf=T, 
                                              vcfName=paste0("genotypes.recal.", type, ".vcf"),
                                              R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01,
-                                             type=type, plotAF=FALSE)
+                                             type=type, plotAF=FALSE, platform=platform)
   genotypes_recal
 }
 

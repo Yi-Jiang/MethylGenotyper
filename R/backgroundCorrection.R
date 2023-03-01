@@ -2,7 +2,7 @@
 #' Noob and dye-bias correction
 #' 
 #' @param target A data frame of two columns: Sample_Name, Basename, where Basename tells the location of IDAT files.
-#' @param mnfst Manifest file. Required columns: Name, AddressA_ID (numeric), AddressB_ID (numeric), Infinium_Design_Type, and Color_Channel
+#' @param platform EPIC or 450K.
 #' @param cpu Number of CPU.
 #' @return A list of noob and dye-bias corrected signals containing:
 #' \item{AR}{ - A matrix of probeA signals in Red channel}
@@ -10,13 +10,19 @@
 #' \item{BR}{ - A matrix of probeB signals in Red channel}
 #' \item{BG}{ - A matrix of probeB signals in Green channel}
 #' @export
-correct_noob_dye <- function(target, mnfst, cpu=1){
+correct_noob_dye <- function(target, platform="EPIC", cpu=1){
     print(paste(Sys.time(), "Running background correction."))
-    data(probelist)
+    if(platform=="EPIC"){
+      data(mnfst) # Required columns: Name, AddressA_ID (numeric), AddressB_ID (numeric), Infinium_Design_Type, and Color_Channel
+      data(probelist)
+    }else{
+      data(mnfst_450K); mnfst <- mnfst_450K
+      data(probelist_450K); probelist <- probelist_450K
+    }
     cl <- makeCluster(cpu)
     registerDoParallel(cl)
     rgData_list <- foreach (sp=c(1:nrow(target)), .packages="tidyverse", 
-                            .export=c("probelist", "backgroundCorrectionNoobFit", "normExpSignal")) %dopar% {
+                            .export=c("probelist", "mnfst", "backgroundCorrectionNoobFit", "normExpSignal")) %dopar% {
         rgSet = minfi::read.metharray.exp(targets=target[sp,])
         green <- minfi::getGreen(rgSet)[,1] # vector: IBG IAG IIG
         red <- minfi::getRed(rgSet)[,1]   # vector: IBR IAR IIR

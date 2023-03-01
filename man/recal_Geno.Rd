@@ -4,7 +4,7 @@
 \alias{recal_Geno}
 \title{Recalibrate genotypes for samples of mixed population}
 \usage{
-recal_Geno(genotypes, type, refPC, studyPC)
+recal_Geno(genotypes, type, refPC, studyPC, platform = "EPIC")
 }
 \arguments{
 \item{genotypes}{A list returned by either \code{callGeno_snp}, \code{callGeno_typeI}, or \code{callGeno_typeII} function.}
@@ -14,6 +14,8 @@ recal_Geno(genotypes, type, refPC, studyPC)
 \item{refPC}{Top PCs in the reference}
 
 \item{studyPC}{Top PCs in study samples}
+
+\item{platform}{EPIC or 450K.}
 }
 \value{
 A list of recalibrated genotypes containing

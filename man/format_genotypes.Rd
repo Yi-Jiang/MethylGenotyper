@@ -41,6 +41,8 @@ format_genotypes(
 \item{pop}{Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.}
 
 \item{plotAF}{To plot the distribution of AFs in 1KGP and input data.}
+
+\item{platform}{EPIC or 450K.}
 }
 \value{
 A matrix of genotype calls.

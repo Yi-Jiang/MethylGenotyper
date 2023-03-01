@@ -11,12 +11,14 @@
 #' @param cpu Number of CPU. Only effective when train=TRUE.
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
+#' @param platform EPIC or 450K.
 #' @return A list containing
 #' \item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed.}
 #' \item{genotypes}{A list containing RAI, fits, and Genotype probabilities.}
 #' @export
 callGeno_typeI <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeI_ccs_probe.vcf", 
-                         R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, train=TRUE, cpu=1, pop="EAS", bayesian=TRUE){
+                         R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, train=TRUE, cpu=1, pop="EAS", 
+                         bayesian=TRUE, platform="EPIC"){
   RAI <- getRAI_typeI(rgData, pop=pop)
   if(train){
     mod <- getMod(RAI, cpu=cpu)
@@ -24,11 +26,11 @@ callGeno_typeI <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes
   }else{
     RAI <- RAI[rownames(RAI) %in% dplyr::filter(probeInfo_typeI, h_0.1==TRUE, loc_pass==TRUE)$CpG,]
   }
-  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeI_ccs_probe", maxiter=50, bayesian=bayesian)
+  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeI_ccs_probe", maxiter=50, bayesian=bayesian, platform=platform)
   if(plotBeta){plot_beta_distribution(genotypes, type="typeI_ccs_probe")}
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 
                              R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
-                             MAF_cutoff=MAF_cutoff, type="typeI_ccs_probe", pop=pop, plotAF=FALSE)
+                             MAF_cutoff=MAF_cutoff, type="typeI_ccs_probe", pop=pop, plotAF=FALSE, platform=platform)
   list(dosage=dosage, genotypes=genotypes)
 }
 
@@ -36,14 +38,19 @@ callGeno_typeI <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes
 #' 
 #' @param rgData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
+#' @param platform EPIC or 450K.
 #' @return RAI (Ratio of Alternative allele Intensity).
 #' @export
-getRAI_typeI = function(rgData, pop="EAS"){
+getRAI_typeI = function(rgData, pop="EAS", platform="EPIC"){
   if(!(pop %in% c("EAS", "AMR", "AFR", "EUR", "SAS", "ALL"))){
     stop("pop must be one of EAS, AMR, AFR, EUR, SAS, and ALL.")
   }
   tag_af <- paste0(pop, "_AF")
-  data(probeInfo_typeI)
+  if(platform=="EPIC"){
+    data(probeInfo_typeI)
+  }else{
+    data(probeInfo_typeI_450K); probeInfo_typeI <- probeInfo_typeI_450K
+  }
   dR <- dplyr::filter(probeInfo_typeI, Color=="Red", .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
   dG <- dplyr::filter(probeInfo_typeI, Color=="Grn", .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
   dR_AR <- rgData[["AR"]][dR$CpG,] # Red channel, ib

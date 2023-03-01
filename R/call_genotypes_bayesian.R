@@ -8,6 +8,7 @@
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
 #' @param maxiter Maximal number of iterations for the EM algorithm.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
+#' @param platform EPIC or 450K.
 #' @return  A list containing
 #' \item{RAI}{Ratio of Alternative allele Intensity}
 #' \item{shapes}{Shapes of the mixed beta distributions}
@@ -17,7 +18,7 @@
 #' \item{PL}{Phred-scaled genotype likelihood}
 #' \item{GQ}{Genotype quality}
 #' @export
-call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE){
+call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE, platform="EPIC"){
   print(paste(Sys.time(), "Running EM to fit beta distributions for RAI values."))
   # Initialize
   assignments <- RAI %>% as.data.frame %>%
@@ -94,7 +95,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE){
   
   # Get posterior genotype probabilities
   print(paste(Sys.time(), "Running the Bayesian approach to get posterior genotype probabilities."))
-  probe2af <- get_AF(pop, type)
+  probe2af <- get_AF(pop=pop, type=type, platform=platform)
   AF <- matrix(rep(probe2af[rownames(RAI)], ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
   GP <- get_GP(RAI, finalClusters$shapes[, c("shape1", "shape2")], bayesian=bayesian, AF)
   
@@ -133,24 +134,38 @@ eBeta = function(x,w){
 
 #' Extract AFs from matching population in the 1000 Genomes Project (1KGP)
 #'
+#' @param platform EPIC or 450K.
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
+#' @param platform EPIC or 450K.
 #' @return A vector of AFs
 #' @export
-get_AF <- function(pop="EAS", type){
+get_AF <- function(pop="EAS", type, platform="EPIC"){
   if(!(pop %in% c("EAS", "AMR", "AFR", "EUR", "SAS", "ALL"))){
     print("ERROR: get_AF: Wrong pop value supplied!"); return(NA)
   }
   if(type=="snp_probe"){
-    data(probeInfo_snp)
+    if(platform=="EPIC"){
+      data(probeInfo_snp)
+    }else{
+      data(probeInfo_snp_450K); probeInfo_snp <- probeInfo_snp_450K
+    }
     probe2af <- probeInfo_snp[, paste0(pop, "_AF")]
     names(probe2af) <- probeInfo_snp$CpG
   }else if(type=="typeI_ccs_probe"){
-    data(probeInfo_typeI)
+    if(platform=="EPIC"){
+      data(probeInfo_typeI)
+    }else{
+      data(probeInfo_typeI_450K); probeInfo_typeI <- probeInfo_typeI_450K
+    }
     probe2af <- probeInfo_typeI[, paste0(pop, "_AF")]
     names(probe2af) <- probeInfo_typeI$CpG
   }else if(type=="typeII_ccs_probe"){
-    data(probeInfo_typeII)
+    if(platform=="EPIC"){
+      data(probeInfo_typeII)
+    }else{
+      data(probeInfo_typeII_450K); probeInfo_typeII <- probeInfo_typeII_450K
+    }
     probe2af <- probeInfo_typeII[, paste0(pop, "_AF")]
     names(probe2af) <- probeInfo_typeII$CpG
   }else{

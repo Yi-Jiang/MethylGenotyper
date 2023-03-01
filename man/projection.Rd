@@ -4,7 +4,7 @@
 \alias{projection}
 \title{PCA and Procrustes analysis}
 \usage{
-projection(studyGeno, plotPCA = TRUE, cpu = 1)
+projection(studyGeno, plotPCA = TRUE, cpu = 1, platform = "EPIC")
 }
 \arguments{
 \item{studyGeno}{A matrix of genotypes of study samples. Provide probes as rows and samples as columns. Include all SNP probes, type I CCS probes, and type II CCS probes if available.}
@@ -12,6 +12,8 @@ projection(studyGeno, plotPCA = TRUE, cpu = 1)
 \item{plotPCA}{To plot the projection of study samples in reference ancestry space.}
 
 \item{cpu}{Number of CPU.}
+
+\item{platform}{EPIC or 450K.}
 }
 \value{
 A list containing

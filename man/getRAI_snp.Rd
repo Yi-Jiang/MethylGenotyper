@@ -4,10 +4,12 @@
 \alias{getRAI_snp}
 \title{Get RAI (Ratio of Alternative allele Intensity) for SNP probes}
 \usage{
-getRAI_snp(rgData)
+getRAI_snp(rgData, platform = "EPIC")
 }
 \arguments{
 \item{rgData}{Noob and dye-bias corrected signals produced by using \code{correct_noob_dye}.}
+
+\item{platform}{EPIC or 450K.}
 }
 \value{
 RAI (Ratio of Alternative allele Intensity).
