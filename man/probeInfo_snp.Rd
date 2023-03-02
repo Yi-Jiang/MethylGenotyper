@@ -3,9 +3,9 @@
 \docType{data}
 \name{probeInfo_snp}
 \alias{probeInfo_snp}
-\title{SNP probe information}
+\title{SNP probe information for EPIC}
 \format{
-A data frame with 53 rows and 8 columns:
+A data frame with 53 rows and 14 columns:
 \describe{
 \item{Chr}{Chromosome ID}
 \item{Pos}{Position}
@@ -15,6 +15,12 @@ A data frame with 53 rows and 8 columns:
 \item{CpG}{CpG}
 \item{Color}{Color channel}
 \item{Group}{Probe types, color channel, and signal corresponds to alternative allele}
+\item{ALL_AF}{Allele frequency of all population}
+\item{EAS_AF}{Allele frequency of East Asian}
+\item{AMR_AF}{Allele frequency of American}
+\item{AFR_AF}{Allele frequency of African}
+\item{EUR_AF}{Allele frequency of European}
+\item{SAS_AF}{Allele frequency of South Asian}
 }
 }
 \source{

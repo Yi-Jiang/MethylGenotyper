@@ -4,7 +4,14 @@
 \alias{call_genotypes_bayesian}
 \title{Call genotypes based on EM algorithm and Bayesian approach}
 \usage{
-call_genotypes_bayesian(RAI, pop, type, maxiter = 50, bayesian = TRUE)
+call_genotypes_bayesian(
+  RAI,
+  pop,
+  type,
+  maxiter = 50,
+  bayesian = TRUE,
+  platform = "EPIC"
+)
 }
 \arguments{
 \item{RAI}{A matrix of RAI (Ratio of Alternative allele Intensity) for probes. Provide probes as rows and samples as columns.}
@@ -16,6 +23,8 @@ call_genotypes_bayesian(RAI, pop, type, maxiter = 50, bayesian = TRUE)
 \item{maxiter}{Maximal number of iterations for the EM algorithm.}
 
 \item{bayesian}{Use the Bayesian approach to calculate posterior genotype probabilities.}
+
+\item{platform}{EPIC or 450K.}
 }
 \value{
 A list containing

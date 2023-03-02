@@ -16,7 +16,8 @@ callGeno_typeII(
   train = TRUE,
   cpu = 1,
   pop = "EAS",
-  bayesian = TRUE
+  bayesian = TRUE,
+  platform = "EPIC"
 )
 }
 \arguments{
@@ -41,6 +42,8 @@ callGeno_typeII(
 \item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.}
 
 \item{bayesian}{Use the Bayesian approach to calculate posterior genotype probabilities.}
+
+\item{platform}{EPIC or 450K.}
 }
 \value{
 A list containing

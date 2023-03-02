@@ -3,9 +3,9 @@
 \docType{data}
 \name{probeInfo_typeI}
 \alias{probeInfo_typeI}
-\title{Type I CCS probe information}
+\title{Type I CCS probe information for EPIC}
 \format{
-A data frame with 717 rows and 16 columns:
+A data frame with 715 rows and 16 columns:
 \describe{
 \item{Chr}{Chromosome ID}
 \item{Pos}{Position}

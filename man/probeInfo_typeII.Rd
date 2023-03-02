@@ -3,7 +3,7 @@
 \docType{data}
 \name{probeInfo_typeII}
 \alias{probeInfo_typeII}
-\title{Type II CCS probe information}
+\title{Type II CCS probe information for EPIC}
 \format{
 A data frame with 26420 rows and 16 columns:
 \describe{

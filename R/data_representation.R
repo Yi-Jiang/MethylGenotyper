@@ -149,10 +149,11 @@ dosage2hard <- function(genotypes){
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
 #' @param plotAF To plot the distribution of AFs in 1KGP and input data.
+#' @param platform EPIC or 450K.
 #' @return A matrix of genotype calls.
 #' @export
 format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2_cutoff_down=0.75, 
-                             MAF_cutoff=0.01, pop="ALL", type, plotAF=FALSE){
+                             MAF_cutoff=0.01, pop="ALL", type, plotAF=FALSE, platform="EPIC"){
   print(paste(Sys.time(), "Calculating AF, R2, and HWE."))
   dosage <- genotypes$GP$pAB + 2 * genotypes$GP$pBB
   probes <- rownames(dosage)
@@ -200,11 +201,23 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
     }
     geno <- as.data.frame(cbind(CpG = rownames(dosage), geno))
     if(type=="snp_probe"){
-      data(probeInfo_snp); probeInfo = probeInfo_snp
+      if(platform=="EPIC"){
+        data(probeInfo_snp); probeInfo <- probeInfo_snp
+      }else{
+        data(probeInfo_snp_450K); probeInfo <- probeInfo_snp_450K
+      }
     }else if(type=="typeI_ccs_probe"){
-      data(probeInfo_typeI); probeInfo = probeInfo_typeI
+      if(platform=="EPIC"){
+        data(probeInfo_typeI); probeInfo <- probeInfo_typeI
+      }else{
+        data(probeInfo_typeI_450K); probeInfo <- probeInfo_typeI_450K
+      }
     }else if(type=="typeII_ccs_probe"){
-      data(probeInfo_typeII); probeInfo = probeInfo_typeII
+      if(platform=="EPIC"){
+        data(probeInfo_typeII); probeInfo <- probeInfo_typeII
+      }else{
+        data(probeInfo_typeII_450K); probeInfo <- probeInfo_typeII_450K
+      }
     }else{
       print("Error: misspecified probe types!")
       return
@@ -250,7 +263,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
   dosage <- apply(dosage[filter=="PASS",,drop=F], 1:2, as.numeric)
   
   ## Plots
-  probe2af <- get_AF(pop, type)
+  probe2af <- get_AF(pop=pop, type=type, platform=platform)
   if(plotAF){plotAF_func(AF_input=AF[rownames(dosage)], AF_1KGP=probe2af[rownames(genotypes$RAI)], pop=pop, type=type)}
   
   dosage
