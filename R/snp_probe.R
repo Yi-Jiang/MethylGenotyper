@@ -8,7 +8,7 @@
 #' @param vcfName VCF file name. Only effective when vcf=TRUE.
 #' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned matrix, variants with R-square outside this range will be removed.
 #' @param MAF_cutoff A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
-#' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
+#' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
 #' @param platform EPIC or 450K.
 #' @return A list containing

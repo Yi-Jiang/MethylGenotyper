@@ -33,7 +33,7 @@ callGeno_snp(
 
 \item{MAF_cutoff}{A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with MAF below the cutoff will be removed.}
 
-\item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.}
+\item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL.}
 
 \item{bayesian}{Use the Bayesian approach to calculate posterior genotype probabilities.}
 

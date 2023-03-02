@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-The `MethylGenotyper` package provides functions to infer genotypes (produce a VCF file) for specific probes and on Illumina methylation array. The probes include SNP probes, Type I CCS (color-channel-switching) probes, and Type II CCS probes. We defined RAI as the Ratio of Alternative allele Intensity to total intensity and calculated RAI for each probe and sample.
+The `MethylGenotyper` package provides functions to infer genotypes (produce a VCF file) for specific probes and on Illumina methylation array (EPIC or 450K). The probes include SNP probes, Type I CCS (color-channel-switching) probes, and Type II CCS probes. We defined RAI as the Ratio of Alternative allele Intensity to total intensity and calculated RAI for each probe and sample.
 
 -   **SNP probe:** There are 59 SNP probes (started with "rs") on EPIC array and 65 SNP probes on 450K array. Probes on sex chromosomes (six in EPIC and eight on 450K) were removed. We aligned each probe sequence to reference genome and calculated RAI, which is defined as the proportion of probe signals supporting alternative allele.
 -   **Type I CCS probe:** Training from our in-house data, we provide a list of 132 Type I CCS probes on EPIC array. It's recommended to train your own models. These probes are type I probes with SNPs at the extension bases resulting in CCS (A,T \<-\> C,G mutation). The signals for probes with CCS SNPs are called out-of-band signals. The RAI is defined as the proportion of out-of-band signals over total signals.
@@ -42,28 +42,19 @@ This package has the following dependencies: `minfi`, `tidyverse`, `foreach`, `d
 library(MethylGenotyper)
 ```
 
-### Read manifest file and IDAT file list
-
-Load EPIC manifest file. Required columns: Name, AddressA_ID, AddressB_ID, Infinium_Design_Type, and Color_Channel.
-
-```{r mnfst, eval=TRUE, warning=FALSE, message=TRUE}
-data(mnfst)
-head(mnfst)
-```
+### Read IDAT files and perform noob and dye-bias correction
 
 Read IDAT file list. Here is an example of processing three IDAT files from `minfiDataEPIC`. Note that this is just an exemplification of how this tool works. We strongly recommend to use a larger sample size to test the code, such as [GSE112179](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE112179). Your may process your own data by specifying your target file list. Required collumns: Sample_Name, Basename.
 
 ```{r rgSet, eval=TRUE, warning=FALSE, message=TRUE}
-target <- get_target("EPIC")
+target <- get_target(platform="EPIC")
 head(target)
 ```
-
-### Read IDAT files and noob and dye-bias correction
 
 With the following code, the IDAT files listed in `target` will be read one-by-one. For each sample, a noob background correction and dye-bias correction will be conducted. You can specify the number of CPUs to enable parallel processing. After that, a list of four elements will be returned, including corrected signals of probe A and probe B for the two color channels.
 
 ```{r correct_noob_dye, eval=FALSE, warning=FALSE, message=FALSE}
-rgData <- correct_noob_dye(target, mnfst, cpu=3)
+rgData <- correct_noob_dye(target, platform="EPIC", cpu=3)
 ```
 
 ### Call genotypes
@@ -80,20 +71,20 @@ We noted that in the example data, most of variants have $R^2$=0. This is becaus
 
 ```{r callGeno, eval=FALSE, warning=FALSE, message=FALSE}
 # Call genotypes for SNP probes, Type I CCS probes, and Type II CCS probes
-genotype_snp <- callGeno_snp(rgData, input="raw", vcf=TRUE, pop="EAS")
-genotype_typeI <- callGeno_typeI(rgData, vcf=TRUE, pop="EAS")
-genotype_typeII <- callGeno_typeII(rgData, input="raw", vcf=TRUE, pop="EAS")
+genotype_snp <- callGeno_snp(rgData, input="raw", vcf=TRUE, pop="EAS", platform="EPIC")
+genotype_typeI <- callGeno_typeI(rgData, vcf=TRUE, pop="EAS", platform="EPIC")
+genotype_typeII <- callGeno_typeII(rgData, input="raw", vcf=TRUE, pop="EAS", platform="EPIC")
 
 # Combine genotypes inferred from the three probe types
 dosage <- rbind(genotype_snp$dosage, genotype_typeI$dosage, genotype_typeII$dosage)
 ```
 
-As an alternative option, you can input a matrix of beta values or M values, with each row indicates a probe and each column indicates a sample. This option only works for SNP probes and Type II CCS probes. Here are the examples of calling genotypes from beta values. For input of M values, please specify `input="mval"`. Remember to conduct background correction and dye-bias correction before running the following code.
+As an alternative option, you can input a matrix of beta values or M values, with each row indicates a probe and each column indicates a sample. This option only works for SNP probes and Type II CCS probes. Here are the examples of calling genotypes from beta values. For input of M values, please specify `input="mval"`. Remember to conduct background correction and dye-bias correction before running the following code. Also be noted that other correction should NOT be conducted, like BMIQ, as it flattens the peaks through a scale transformation.
 
 ```{r callGeno2, eval=FALSE, warning=FALSE, message=FALSE}
 # Call genotypes for SNP probes and Type II CCS probes
-genotype_snp <- callGeno_snp(beta_matrix, input="beta", vcf=TRUE, pop="EAS")
-genotype_typeII <- callGeno_typeII(beta_matrix, input="beta", vcf=TRUE, pop="EAS")
+genotype_snp <- callGeno_snp(beta_matrix, input="beta", vcf=TRUE, pop="EAS", platform="EPIC")
+genotype_typeII <- callGeno_typeII(beta_matrix, input="beta", vcf=TRUE, pop="EAS", platform="EPIC")
 
 # Combine genotypes inferred from the three probe types
 dosage <- rbind(genotype_snp$dosage, genotype_typeII$dosage)
@@ -111,12 +102,12 @@ For samples from a mixed population, we recommend to recalibrate the genotype ca
 
 ```{r recal_geno, eval=FALSE, warning=FALSE, message=FALSE}
 # PCA and Procrustes analysis, based on genotypes of all probes passing QC
-pc <- projection(dosage, plotPCA=TRUE, cpu=3)
+pc <- projection(dosage, plotPCA=TRUE, cpu=3, platform="EPIC")
 
 # Recalibrate genotypes for SNP probes, Type I CCS probes, and Type II CCS probes
-genotype_snp_recal <- recal_Geno(genotype_snp, type="snp_probe", refPC=pc$refPC, studyPC=pc$studyPC)
-genotype_typeI_recal <- recal_Geno(genotype_typeI, type="typeI_ccs_probe", refPC=pc$refPC, studyPC=pc$studyPC)
-genotype_typeII_recal <- recal_Geno(genotype_typeII, type="typeII_ccs_probe", refPC=pc$refPC, studyPC=pc$studyPC)
+genotype_snp_recal <- recal_Geno(genotype_snp, type="snp_probe", refPC=pc$refPC, studyPC=pc$studyPC, platform="EPIC")
+genotype_typeI_recal <- recal_Geno(genotype_typeI, type="typeI_ccs_probe", refPC=pc$refPC, studyPC=pc$studyPC, platform="EPIC")
+genotype_typeII_recal <- recal_Geno(genotype_typeII, type="typeII_ccs_probe", refPC=pc$refPC, studyPC=pc$studyPC, platform="EPIC")
 
 # Combine genotypes inferred from the three probe types
 dosage_recal <- rbind(genotype_snp_recal$dosage, genotype_typeI_recal$dosage, genotype_typeII_recal$dosage)
