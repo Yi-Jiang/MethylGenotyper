@@ -45,7 +45,7 @@ format_genotypes(
 \item{platform}{EPIC or 450K.}
 }
 \value{
-A matrix of genotype calls.
+A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with genotype quality (GQ) < 20 will be marked as NA.
 
 A matrix of genotype calls.
 }

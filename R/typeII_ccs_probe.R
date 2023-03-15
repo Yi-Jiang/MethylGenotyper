@@ -14,8 +14,8 @@
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
 #' @param platform EPIC or 450K.
 #' @return A list containing
-#' \item{dosage}{A matrix of dosage genotypes. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with GQ<20 will be marked as NA.}
-#' \item{genotypes}{A list containing RAI, model parameters, Genotype probabilities (GP), Phred-scaled genotype likelihood (PL), and Genotype quality (GQ).}
+#' \item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with genotype quality (GQ) < 20 will be marked as NA.}
+#' \item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), genotype probability (GP), Phred-scaled genotype likelihood (PL), and genotype quality (GQ).}
 #' @export
 callGeno_typeII <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeII_ccs_probe.vcf", 
                             R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, train=TRUE, cpu=1, pop="EAS", 

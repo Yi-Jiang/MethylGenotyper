@@ -41,12 +41,15 @@ projection <- function(studyGeno, plotPCA=TRUE, cpu=1, platform="EPIC"){
 #' @param refPC Top PCs in the reference
 #' @param studyPC Top PCs in study samples
 #' @param platform EPIC or 450K.
+#' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned matrix, variants with R-square outside this range will be removed.
+#' @param MAF_cutoff A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
 #' @return A list of recalibrated genotypes containing
-#' \item{dosage}{A matrix of genotype calls. Provide probes as rows and samples as columns.}
-#' \item{genotypes}{A list containing RAI, fits, and Genotype probabilities.}
-#' \item{indAF}{A matrix of individual-specific AFs. Provide probes as rows and samples as columns.}
+#' \item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with genotype quality (GQ) < 20 will be marked as NA.}
+#' \item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), genotype probability (GP), Phred-scaled genotype likelihood (PL), and genotype quality (GQ).}
+#' \item{indAF}{A matrix of individual-specific AFs.}
 #' @export
-recal_Geno <- function(genotypes, type, refPC, studyPC, platform="EPIC"){
+recal_Geno <- function(genotypes, type, refPC, studyPC, platform="EPIC",
+                       R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01){
   if(platform=="EPIC"){
     data(cpg2snp)
     data(snp2cpg)
@@ -81,7 +84,7 @@ recal_Geno <- function(genotypes, type, refPC, studyPC, platform="EPIC"){
   genotypes_recal$genotypes$RAI <- genotypes_recal$genotypes$RAI[rownames(GP$pAA), colnames(GP$pAA)]
   genotypes_recal$dosage <- format_genotypes(genotypes_recal$genotypes, vcf=T, 
                                              vcfName=paste0("genotypes.recal.", type, ".vcf"),
-                                             R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01,
+                                             R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, MAF_cutoff=MAF_cutoff,
                                              type=type, plotAF=FALSE, platform=platform)
   genotypes_recal
 }

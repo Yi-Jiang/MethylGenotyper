@@ -4,7 +4,16 @@
 \alias{recal_Geno}
 \title{Recalibrate genotypes for samples of mixed population}
 \usage{
-recal_Geno(genotypes, type, refPC, studyPC, platform = "EPIC")
+recal_Geno(
+  genotypes,
+  type,
+  refPC,
+  studyPC,
+  platform = "EPIC",
+  R2_cutoff_up = 1.1,
+  R2_cutoff_down = 0.75,
+  MAF_cutoff = 0.01
+)
 }
 \arguments{
 \item{genotypes}{A list returned by either \code{callGeno_snp}, \code{callGeno_typeI}, or \code{callGeno_typeII} function.}
@@ -16,12 +25,16 @@ recal_Geno(genotypes, type, refPC, studyPC, platform = "EPIC")
 \item{studyPC}{Top PCs in study samples}
 
 \item{platform}{EPIC or 450K.}
+
+\item{R2_cutoff_up, R2_cutoff_down}{R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the \code{FILTER} column. For the returned matrix, variants with R-square outside this range will be removed.}
+
+\item{MAF_cutoff}{A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with MAF below the cutoff will be removed.}
 }
 \value{
 A list of recalibrated genotypes containing
-\item{dosage}{A matrix of genotype calls. Provide probes as rows and samples as columns.}
-\item{genotypes}{A list containing RAI, fits, and Genotype probabilities.}
-\item{indAF}{A matrix of individual-specific AFs. Provide probes as rows and samples as columns.}
+\item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with genotype quality (GQ) < 20 will be marked as NA.}
+\item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), genotype probability (GP), Phred-scaled genotype likelihood (PL), and genotype quality (GQ).}
+\item{indAF}{A matrix of individual-specific AFs.}
 }
 \description{
 Recalibrate genotypes for samples of mixed population

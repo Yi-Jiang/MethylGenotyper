@@ -44,8 +44,8 @@ callGeno_typeI(
 }
 \value{
 A list containing
-\item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed.}
-\item{genotypes}{A list containing RAI, fits, and Genotype probabilities.}
+\item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with genotype quality (GQ) < 20 will be marked as NA.}
+\item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), genotype probability (GP), Phred-scaled genotype likelihood (PL), and genotype quality (GQ).}
 }
 \description{
 Call genotypes for Type I CCS probes

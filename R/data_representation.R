@@ -150,7 +150,7 @@ dosage2hard <- function(genotypes){
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
 #' @param plotAF To plot the distribution of AFs in 1KGP and input data.
 #' @param platform EPIC or 450K.
-#' @return A matrix of genotype calls.
+#' @return A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with genotype quality (GQ) < 20 will be marked as NA.
 #' @export
 format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2_cutoff_down=0.75, 
                              MAF_cutoff=0.01, pop="ALL", type, plotAF=FALSE, platform="EPIC"){
