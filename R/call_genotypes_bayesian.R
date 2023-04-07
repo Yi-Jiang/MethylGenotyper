@@ -216,14 +216,8 @@ get_GP <- function(RAI, shapes, bayesian=TRUE, AF){
 
 #' Calculate Phred-scaled genotype likelihood (PL)
 #'
-#' @param GP A list of Genotype probabilities containing
-#' \item{pAA}{Posterior genotype probability of AA}
-#' \item{pAB}{Posterior genotype probability of AB}
-#' \item{pBB}{Posterior genotype probability of BB}
-#' @return A list of Phred-scaled genotype likelihoods containing
-#' \item{AA}{PL(AA)}
-#' \item{AB}{PL(AB)}
-#' \item{BB}{PL(BB)}
+#' @param GP A list of posterior genotype probabilities of genotype AA, AB, and BB.
+#' @return A list of Phred-scaled genotype likelihoods containing PL(AA), PL(AB), and PL(BB).
 #' @export
 get_PL <- function(GP){
   print(paste(Sys.time(), "Calculating Phred-scaled genotype likelihood (PL)."))
@@ -242,10 +236,7 @@ get_PL <- function(GP){
 
 #' Calculate genotype quality (GQ)
 #'
-#' @param A list of Phred-scaled genotype likelihoods containing
-#' \item{AA}{PL(AA)}
-#' \item{AB}{PL(AB)}
-#' \item{BB}{PL(BB)}
+#' @param PL A list of Phred-scaled genotype likelihoods containing PL(AA), PL(AB), and PL(BB).
 #' @return A matrix of genotype qualities
 #' @export
 get_GQ <- function(PL){

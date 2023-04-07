@@ -7,10 +7,7 @@
 get_GQ(PL)
 }
 \arguments{
-\item{A}{list of Phred-scaled genotype likelihoods containing
-\item{AA}{PL(AA)}
-\item{AB}{PL(AB)}
-\item{BB}{PL(BB)}}
+\item{PL}{A list of Phred-scaled genotype likelihoods containing PL(AA), PL(AB), and PL(BB).}
 }
 \value{
 A matrix of genotype qualities

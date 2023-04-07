@@ -7,16 +7,10 @@
 get_PL(GP)
 }
 \arguments{
-\item{GP}{A list of Genotype probabilities containing
-\item{pAA}{Posterior genotype probability of AA}
-\item{pAB}{Posterior genotype probability of AB}
-\item{pBB}{Posterior genotype probability of BB}}
+\item{GP}{A list of posterior genotype probabilities of genotype AA, AB, and BB.}
 }
 \value{
-A list of Phred-scaled genotype likelihoods containing
-\item{AA}{PL(AA)}
-\item{AB}{PL(AB)}
-\item{BB}{PL(BB)}
+A list of Phred-scaled genotype likelihoods containing PL(AA), PL(AB), and PL(BB).
 }
 \description{
 Calculate Phred-scaled genotype likelihood (PL)
