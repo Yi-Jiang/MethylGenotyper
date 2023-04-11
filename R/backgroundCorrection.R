@@ -21,7 +21,7 @@ correct_noob_dye <- function(target, platform="EPIC", cpu=1){
       data(mnfst_450K); mnfst <- mnfst_450K
       data(probelist_450K); probelist <- probelist_450K
     }
-    rgSet = minfi::read.metharray.exp(targets=target[1,])
+    rgSet = suppressWarnings(minfi::read.metharray.exp(targets=target[1,]))
     if(length(intersect(rgSet@NAMES, mnfst$AddressA_ID)) < 10){
       print("ERROR: Address IDs not found in manifest file. Please check that you have specified the correct platform."); return(NA)
     }
