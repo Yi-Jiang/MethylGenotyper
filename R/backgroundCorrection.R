@@ -12,6 +12,8 @@
 #' @export
 correct_noob_dye <- function(target, platform="EPIC", cpu=1){
     print(paste(Sys.time(), "Running background correction."))
+    
+    ## Check platform
     if(platform=="EPIC"){
       data(mnfst) # Required columns: Name, AddressA_ID (numeric), AddressB_ID (numeric), Infinium_Design_Type, and Color_Channel
       data(probelist)
@@ -19,6 +21,12 @@ correct_noob_dye <- function(target, platform="EPIC", cpu=1){
       data(mnfst_450K); mnfst <- mnfst_450K
       data(probelist_450K); probelist <- probelist_450K
     }
+    rgSet = minfi::read.metharray.exp(targets=target[1,])
+    if(length(intersect(rgSet@NAMES, mnfst$AddressA_ID)) < 10){
+      print("ERROR: Address IDs not found in manifest file. Please check that you have specified the correct platform."); return(NA)
+    }
+    
+    ## Run noob and dye-bias correction
     cl <- makeCluster(cpu)
     registerDoParallel(cl)
     rgData_list <- foreach (sp=c(1:nrow(target)), .packages="tidyverse", 
