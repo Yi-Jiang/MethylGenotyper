@@ -15,7 +15,8 @@ callGeno_snp(
   MAF_cutoff = 0.01,
   pop = "EAS",
   bayesian = TRUE,
-  platform = "EPIC"
+  platform = "EPIC",
+  verbose = 1
 )
 }
 \arguments{
@@ -38,6 +39,8 @@ callGeno_snp(
 \item{bayesian}{Use the Bayesian approach to calculate posterior genotype probabilities.}
 
 \item{platform}{EPIC or 450K.}
+
+\item{verbose}{Verbose mode: 0/1/2.}
 }
 \value{
 A list containing

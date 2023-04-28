@@ -12,40 +12,18 @@
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
 #' @param platform EPIC or 450K.
+#' @param verbose Verbose mode: 0/1/2.
 #' @return A list containing
 #' \item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with genotype quality (GQ) < 20 will be marked as NA.}
 #' \item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), genotype probability (GP), Phred-scaled genotype likelihood (PL), and genotype quality (GQ).}
 #' @export
 callGeno_typeI <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeI_ccs_probe.vcf", 
                          R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, train=TRUE, cpu=1, pop="EAS", 
-                         bayesian=TRUE, platform="EPIC"){
+                         bayesian=TRUE, platform="EPIC", verbose=1){
   if(!train & platform!="EPIC"){
     print("Error: train=FALSE only works with platform=EPIC.")
     return(NA)
   }
-  RAI <- getRAI_typeI(rgData, pop=pop)
-  if(train){
-    mod <- getMod(RAI, cpu=cpu)
-    RAI <- RAI[dplyr::filter(mod, h_0.1==TRUE, loc_pass==TRUE)$Name,]
-  }else{
-    RAI <- RAI[rownames(RAI) %in% dplyr::filter(probeInfo_typeI, h_0.1==TRUE, loc_pass==TRUE)$CpG,]
-  }
-  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeI_ccs_probe", maxiter=50, bayesian=bayesian, platform=platform)
-  if(plotBeta){plot_beta_distribution(genotypes, type="typeI_ccs_probe")}
-  dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 
-                             R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
-                             MAF_cutoff=MAF_cutoff, type="typeI_ccs_probe", pop=pop, plotAF=FALSE, platform=platform)
-  list(dosage=dosage, genotypes=genotypes)
-}
-
-#' Get RAI (Ratio of Alternative allele Intensity) for Type I CCS probes
-#' 
-#' @param rgData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
-#' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
-#' @param platform EPIC or 450K.
-#' @return RAI (Ratio of Alternative allele Intensity).
-#' @export
-getRAI_typeI = function(rgData, pop="EAS", platform="EPIC"){
   if(!(pop %in% c("EAS", "AMR", "AFR", "EUR", "SAS", "ALL"))){
     stop("pop must be one of EAS, AMR, AFR, EUR, SAS, and ALL.")
   }
@@ -55,6 +33,8 @@ getRAI_typeI = function(rgData, pop="EAS", platform="EPIC"){
   }else{
     data(probeInfo_typeI_450K); probeInfo_typeI <- probeInfo_typeI_450K
   }
+  
+  # calculate RAI
   df <- dplyr::filter(probeInfo_typeI, .data[["CpG"]] %in% rownames(rgData[["AR"]]) & .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
   dR <- dplyr::filter(df, Color=="Red")
   dG <- dplyr::filter(df, Color=="Grn")
@@ -70,6 +50,21 @@ getRAI_typeI = function(rgData, pop="EAS", platform="EPIC"){
     pmax(dG_AR + dG_BR, 1) / pmax(dG_AR + dG_BR + dG_AG + dG_BG, 2),
     pmax(dR_AG + dR_BG, 1) / pmax(dR_AG + dR_BG + dR_AR + dR_BR, 2)
   )
-  RAI
+  
+  # filter probes based on peak density and positions.
+  if(train){
+    mod <- getMod(RAI, cpu=cpu)
+    RAI <- RAI[dplyr::filter(mod, h_0.1==TRUE, loc_pass==TRUE)$Name,]
+  }else{
+    RAI <- RAI[rownames(RAI) %in% dplyr::filter(probeInfo_typeI, h_0.1==TRUE, loc_pass==TRUE)$CpG,]
+  }
+  
+  # call genotypes
+  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeI_ccs_probe", maxiter=50, bayesian=bayesian, platform=platform, verbose=verbose)
+  if(plotBeta){plot_beta_distribution(genotypes, type="typeI_ccs_probe")}
+  dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 
+                             R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
+                             MAF_cutoff=MAF_cutoff, type="typeI_ccs_probe", pop=pop, plotAF=FALSE, platform=platform)
+  list(dosage=dosage, genotypes=genotypes)
 }
 

@@ -11,12 +11,13 @@
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
 #' @param platform EPIC or 450K.
+#' @param verbose Verbose mode: 0/1/2.
 #' @return A list containing
 #' \item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with genotype quality (GQ) < 20 will be marked as NA.}
 #' \item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), genotype probability (GP), Phred-scaled genotype likelihood (PL), and genotype quality (GQ).}
 #' @export
 callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.snp_probe.vcf", 
-                         R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, pop="EAS", bayesian=TRUE, platform="EPIC"){
+                         R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, pop="EAS", bayesian=TRUE, platform="EPIC", verbose=1){
   if(input=="raw"){
     RAI <- getRAI_snp(rgData, platform=platform)
   }else if(input=="beta"){
@@ -45,7 +46,7 @@ callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName
     print("Error: Input data type must be one of raw, beta, and mval.")
     return(NA)
   }
-  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="snp_probe", maxiter=50, bayesian=bayesian, platform=platform)
+  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="snp_probe", maxiter=50, bayesian=bayesian, platform=platform, verbose=verbose)
   if(plotBeta){plot_beta_distribution(genotypes, type="snp_probe")}
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, R2_cutoff_up=R2_cutoff_up, 
                              R2_cutoff_down=R2_cutoff_down, MAF_cutoff=MAF_cutoff, type="snp_probe",

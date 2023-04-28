@@ -10,7 +10,8 @@ call_genotypes_bayesian(
   type,
   maxiter = 50,
   bayesian = TRUE,
-  platform = "EPIC"
+  platform = "EPIC",
+  verbose = 1
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ call_genotypes_bayesian(
 \item{bayesian}{Use the Bayesian approach to calculate posterior genotype probabilities.}
 
 \item{platform}{EPIC or 450K.}
+
+\item{verbose}{Verbose mode: 0/1/2.}
 }
 \value{
 A list containing
@@ -32,6 +35,7 @@ A list containing
 \item{shapes}{Shapes of the mixed beta distributions}
 \item{priors}{Prior probabilities that the RAI values belong to one of the three genotypes}
 \item{U}{Proportion of RAI values being outlier}
+\item{logLik}{Log-likelihood}
 \item{GP}{Posterior probabilities for the three genotypes}
 \item{PL}{Phred-scaled genotype likelihood}
 \item{GQ}{Genotype quality}
