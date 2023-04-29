@@ -88,7 +88,7 @@ getHWE <- function(hardgeno){
   hardgeno_sum[is.na(hardgeno_sum)] <- 0
   colnames(hardgeno_sum) <- c("MM","MN","NN")
   hardgeno_sum_1 <- hardgeno_sum[rowSums(hardgeno_sum)!=0,]
-  hardgeno_sum_0 <- hardgeno_sum[rowSums(hardgeno_sum)==0,]
+  #hardgeno_sum_0 <- hardgeno_sum[rowSums(hardgeno_sum)==0,]
   hwe <- suppressWarnings(HWChisqMat(hardgeno_sum_1, cc=0, verbose=FALSE))
   hwe_p <- rep(0, nrow(hardgeno_sum))
   names(hwe_p) <- rownames(hardgeno_sum)
@@ -157,12 +157,16 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
   print(paste(Sys.time(), "Calculating AF, R2, and HWE."))
   dosage <- genotypes$GP$pAB + 2 * genotypes$GP$pBB
   probes <- rownames(dosage)
-  AF <- rowMeans(dosage) / 2
+  dosage_GQ20 <- dosage; dosage_GQ20[genotypes$GQ < 20] <- NA_real_
+  missing <- rowSums(is.na(dosage_GQ20)) / ncol(dosage_GQ20)
+  AF <- rowMeans(dosage_GQ20, na.rm=T) / 2
   AF[is.na(AF)] <- 0
-  R2 <- apply(dosage, 1, var) / (2 * AF * (1 - AF))
+  R2 <- apply(dosage_GQ20, 1, function(x) var(x, na.rm=T)) / (2 * AF * (1 - AF))
   R2[is.na(R2)] <- 0
   R2_constrained <- sapply(R2, constrain_R2)
-  hwe_p <- getHWE(dosage2hard(genotypes))
+  hardgeno <- dosage2hard(genotypes)
+  hardgeno[is.na(dosage_GQ20)] <- NA_real_
+  hwe_p <- getHWE(hardgeno)
   filter_AF <- sapply(AF, function(x) filter_by_AF(x, MAF_cutoff))
   filter_R2 <- sapply(R2, function(x) filter_by_R2(x, R2_cutoff_up, R2_cutoff_down))
   filter_HWE <- sapply(hwe_p, function(x) filter_by_HWE(x, 1e-6))
@@ -226,7 +230,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
     vcf <- cbind(
       probeInfo[probes, 1:6], 
       tibble(QUAL=".", FILTER=filter, 
-             INFO=paste0("AF=", AF, ";R2=", R2_constrained, ";HWE=", sprintf("%.3g", hwe_p)), 
+             INFO=paste0("AF=", AF, ";R2=", R2_constrained, ";HWE=", sprintf("%.3g", hwe_p), ";Missing=", sprintf("%.2g", missing)), 
              FORMAT="GT:DS:RAI:GP:PL:GQ")
     ) %>% left_join(geno, by=c("CpG"))
     vcf <- vcf[, -6]
@@ -238,9 +242,10 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
     header <- paste(
       "##fileformat=VCFv4.2",
       paste(paste0("##contig=<ID=chr", 1:22, ">"), collapse="\n"),
-      "##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele frequency\">",
-      "##INFO=<ID=R2,Number=1,Type=Float,Description=\"R-square, encoded as var(G)/2p(1-p), where G is dosage genotype and p is allele frequency. Variants with 1<R2<=1.1 are constrained to 1. Variants with R2>1.1 (marked as .) are recommended to remove.\">",
-      "##INFO=<ID=HWE,Number=1,Type=Float,Description=\"Hardy-Weinberg Equilibrium p-value\">",
+      "##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele frequency. Genotypes with GQ<20 were removed.\">",
+      "##INFO=<ID=R2,Number=1,Type=Float,Description=\"R-square, encoded as var(G)/2p(1-p), where G is dosage genotype and p is allele frequency. Variants with 1<R2<=1.1 are constrained to 1. Variants with R2>1.1 (marked as .) are recommended to remove. Genotypes with GQ<20 were removed.\">",
+      "##INFO=<ID=HWE,Number=1,Type=Float,Description=\"Hardy-Weinberg Equilibrium p-value. Genotypes with GQ<20 were removed.\">",
+      "##INFO=<ID=Missing,Number=1,Type=Float,Description=\"Missing rate, denoting proportion of genotypes with GQ<20.\">",
       paste0("##FILTER=<ID=MAF,Description=\"MAF is below ", MAF_cutoff, "\">"),
       paste0("##FILTER=<ID=R2_low,Description=\"R2 is below ", R2_cutoff_down, "\">"),
       paste0("##FILTER=<ID=R2_high,Description=\"R2 is above ", R2_cutoff_up, "\">"),
