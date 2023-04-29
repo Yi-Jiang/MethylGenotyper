@@ -33,7 +33,7 @@ constrain_R2 <- function(R2){
       R2 = 1
     }
   }else{
-    R2 = round(R2, 3)
+    R2 <- sapply(R2, function(x) sprintf("%#.3g", x))
   }
   R2
 }
@@ -169,7 +169,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
   filter <- paste(filter_AF, filter_R2, filter_HWE, sep=";")
   filter[filter=="PASS;PASS;PASS"] <- "PASS"
   filter[filter!="PASS;PASS;PASS"] <- gsub(";PASS", "", gsub("PASS;", "", filter[filter!="PASS;PASS;PASS"]))
-  AF <- round(AF, 3)
+  AF <- sapply(AF, function(x) sprintf("%#.3g", x))
 
   ## Write into a VCF file
   if(vcf){
