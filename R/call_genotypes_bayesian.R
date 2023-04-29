@@ -200,22 +200,24 @@ get_AF <- function(pop="EAS", type, platform="EPIC"){
 #' @param RAI A MxN matrix of RAI (Ratio of Alternative allele Intensity). Provide probes as rows and samples as columns.
 #' @param shapes A data frame (3x2) containing the two shapes for beta distributions of the three clusters. 
 #' @param bayesian Use the Bayesian approach or not.
-#' @param AF A MxN matrix of AFs. Provide SNPs as rows and samples as columns.
+#' @param AF A MxN matrix of AFs. Provide SNPs as rows and samples as columns. Only effective when bayesian=TRUE.
 #' @return  A list containing
 #' \item{pAA}{Posterior genotype probability of AA}
 #' \item{pAB}{Posterior genotype probability of AB}
 #' \item{pBB}{Posterior genotype probability of BB}
 #' @export
 get_GP <- function(RAI, shapes, bayesian=TRUE, AF){
-  probes <- intersect(rownames(RAI), rownames(AF))
-  samples <- intersect(colnames(RAI), colnames(AF))
-  RAI <- RAI[probes, samples]
   shapes$mean <- shapes$shape1 / (shapes$shape1 + shapes$shape2)
   shapes <- as.matrix(shapes[order(shapes$mean),]) # row1 to row3: AA, AB, BB
   pD_AA <- apply(RAI, 1:2, function(x) dbeta(x, shapes[1, 1], shapes[1, 2])) # probability of data given genotype AA
   pD_AB <- apply(RAI, 1:2, function(x) dbeta(x, shapes[2, 1], shapes[2, 2]))
   pD_BB <- apply(RAI, 1:2, function(x) dbeta(x, shapes[3, 1], shapes[3, 2]))
   if(bayesian==TRUE){
+    probes <- intersect(rownames(RAI), rownames(AF))
+    samples <- intersect(colnames(RAI), colnames(AF))
+    pD_AA <- pD_AA[probes, samples]
+    pD_AB <- pD_AB[probes, samples]
+    pD_BB <- pD_BB[probes, samples]
     AF <- AF[probes, samples]
     pAA_prior <- (1 - AF) ^2 # Prior genotype probability of AA
     pAB_prior <- 2 * AF * (1 - AF)

@@ -13,7 +13,7 @@ get_GP(RAI, shapes, bayesian = TRUE, AF)
 
 \item{bayesian}{Use the Bayesian approach or not.}
 
-\item{AF}{A MxN matrix of AFs. Provide SNPs as rows and samples as columns.}
+\item{AF}{A MxN matrix of AFs. Provide SNPs as rows and samples as columns. Only effective when bayesian=TRUE.}
 }
 \value{
 A list containing
