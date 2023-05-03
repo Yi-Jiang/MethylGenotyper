@@ -4,12 +4,12 @@
 \alias{filter_by_HWE}
 \title{Filter by Hardy–Weinberg Equilibrium (HWE) p value}
 \usage{
-filter_by_HWE(hwe_p, hwe_p_cutoff)
+filter_by_HWE(hwe_p, HWE_cutoff = 1e-06)
 }
 \arguments{
 \item{hwe_p}{Hardy–Weinberg Equilibrium (HWE) p values}
 
-\item{hwe_p_cutoff}{A HWE p value cutoff to filter variants.}
+\item{HWE_cutoff}{A HWE p value cutoff to filter variants.}
 }
 \value{
 Whether the variant passed filtering.

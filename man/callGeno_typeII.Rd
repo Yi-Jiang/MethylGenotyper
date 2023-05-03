@@ -10,9 +10,11 @@ callGeno_typeII(
   plotBeta = FALSE,
   vcf = FALSE,
   vcfName = "genotypes.typeII_ccs_probe.vcf",
+  GP_cutoff = 0.9,
   R2_cutoff_up = 1.1,
   R2_cutoff_down = 0.75,
   MAF_cutoff = 0.01,
+  HWE_cutoff = 1e-06,
   train = TRUE,
   cpu = 1,
   pop = "EAS",
@@ -33,9 +35,13 @@ callGeno_typeII(
 
 \item{vcfName}{VCF file name. Only effective when vcf=TRUE.}
 
+\item{GP_cutoff}{Genotypes with the highest genotype probability < GP_cutoff will be treated as missing. Only non-missing genotypes will be used to calculate MAF, R2, and HWE p value.}
+
 \item{R2_cutoff_up, R2_cutoff_down}{R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the \code{FILTER} column. For the returned matrix, variants with R-square outside this range will be removed.}
 
 \item{MAF_cutoff}{A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with MAF below the cutoff will be removed.}
+
+\item{HWE_cutoff}{HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with HWE p value below the cutoff will be removed.}
 
 \item{train}{If TRUE, will fit the distribution of RAI (Ratio of Alternative allele Intensity) and filter probes by number of peaks. If FALSE, will use predefined probe list.}
 
@@ -53,8 +59,8 @@ callGeno_typeII(
 }
 \value{
 A list containing
-\item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with genotype quality (GQ) < 20 will be marked as NA.}
-\item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), genotype probability (GP), Phred-scaled genotype likelihood (PL), and genotype quality (GQ).}
+\item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with the highest genotype probability < GP_cutoff will be marked as NA.}
+\item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), and genotype probability (GP).}
 \item{methyl_recalc}{Re-calculated methylation levels on reference alleles. A list containing shapes of the mixed beta distributions and true methylation level (pM) for each probe.}
 }
 \description{

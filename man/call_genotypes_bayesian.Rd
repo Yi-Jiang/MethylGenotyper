@@ -37,8 +37,6 @@ A list containing
 \item{U}{Proportion of RAI values being outlier}
 \item{logLik}{Log-likelihood}
 \item{GP}{Posterior probabilities for the three genotypes}
-\item{PL}{Phred-scaled genotype likelihood}
-\item{GQ}{Genotype quality}
 }
 \description{
 The Expectation–maximization (EM) algorithm is used to fit a mixture of three beta distributions representing the three genotypes (AA, AB, and BB) and one uniform distribution representing the outliers (adapted from ewastools). Then, the Bayesian approach is used to get the genotype probabilities, with AFs of the matched population (the 1000 Genomes Project, 1KGP) being used to infer priors.

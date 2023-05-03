@@ -101,12 +101,12 @@ getHWE <- function(hardgeno){
 #' Variants with Hardy–Weinberg Equilibrium (HWE) p value < 1e-6 are recommended to remove.
 #' 
 #' @param hwe_p Hardy–Weinberg Equilibrium (HWE) p values
-#' @param hwe_p_cutoff A HWE p value cutoff to filter variants.
+#' @param HWE_cutoff A HWE p value cutoff to filter variants.
 #' @return Whether the variant passed filtering.
 #' @export
-filter_by_HWE <- function(hwe_p, hwe_p_cutoff){
-  if(hwe_p < hwe_p_cutoff){
-    #filter=paste0("P(HWE)<", hwe_p_cutoff)
+filter_by_HWE <- function(hwe_p, HWE_cutoff=1e-6){
+  if(hwe_p < HWE_cutoff){
+    #filter=paste0("P(HWE)<", HWE_cutoff)
     filter="HWE"
   }else{
     filter="PASS"
@@ -144,32 +144,35 @@ dosage2hard <- function(genotypes){
 #' @param genotypes Genotype calls.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
 #' @param vcfName VCF file name. Only effective when vcf=TRUE.
+#' @param GP_cutoff Genotypes with the highest genotype probability < GP_cutoff will be treated as missing. Only non-missing genotypes will be used to calculate MAF, R2, and HWE p value.
 #' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned matrix, variants with R-square outside this range will be removed.
-#' @param MAF_cutoff An MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
+#' @param MAF_cutoff MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
+#' @param HWE_cutoff HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with HWE p value below the cutoff will be removed.
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
 #' @param plotAF To plot the distribution of AFs in 1KGP and input data.
 #' @param platform EPIC or 450K.
-#' @return A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with genotype quality (GQ) < 20 will be marked as NA.
+#' @return A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with the highest genotype probability < GP_cutoff will be marked as NA.
 #' @export
-format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2_cutoff_down=0.75, 
-                             MAF_cutoff=0.01, pop="ALL", type, plotAF=FALSE, platform="EPIC"){
+format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, R2_cutoff_up=1.1, R2_cutoff_down=0.75, 
+                             MAF_cutoff=0.01, HWE_cutoff=1e-6, pop="ALL", type, plotAF=FALSE, platform="EPIC"){
   print(paste(Sys.time(), "Calculating AF, R2, and HWE."))
   dosage <- genotypes$GP$pAB + 2 * genotypes$GP$pBB
   probes <- rownames(dosage)
-  dosage_GQ20 <- dosage; dosage_GQ20[genotypes$GQ < 20] <- NA_real_
-  missing <- rowSums(is.na(dosage_GQ20)) / ncol(dosage_GQ20)
-  AF <- rowMeans(dosage_GQ20, na.rm=T) / 2
+  maxGP <- pmax(genotypes$GP$pAA, genotypes$GP$pAB, genotypes$GP$pBB, na.rm=TRUE)
+  dosage_GP <- dosage; dosage_GP[maxGP < GP_cutoff] <- NA_real_
+  missing <- rowSums(is.na(dosage_GP)) / ncol(dosage_GP)
+  AF <- rowMeans(dosage_GP, na.rm=T) / 2
   AF[is.na(AF)] <- 0
-  R2 <- apply(dosage_GQ20, 1, function(x) var(x, na.rm=T)) / (2 * AF * (1 - AF))
+  R2 <- apply(dosage_GP, 1, function(x) var(x, na.rm=T)) / (2 * AF * (1 - AF))
   R2[is.na(R2)] <- 0
   R2_constrained <- sapply(R2, constrain_R2)
   hardgeno <- dosage2hard(genotypes)
-  hardgeno[is.na(dosage_GQ20)] <- NA_real_
+  hardgeno[is.na(dosage_GP)] <- NA_real_
   hwe_p <- getHWE(hardgeno)
   filter_AF <- sapply(AF, function(x) filter_by_AF(x, MAF_cutoff))
   filter_R2 <- sapply(R2, function(x) filter_by_R2(x, R2_cutoff_up, R2_cutoff_down))
-  filter_HWE <- sapply(hwe_p, function(x) filter_by_HWE(x, 1e-6))
+  filter_HWE <- sapply(hwe_p, function(x) filter_by_HWE(x, HWE_cutoff))
   filter <- paste(filter_AF, filter_R2, filter_HWE, sep=";")
   filter[filter=="PASS;PASS;PASS"] <- "PASS"
   filter[filter!="PASS;PASS;PASS"] <- gsub(";PASS", "", gsub("PASS;", "", filter[filter!="PASS;PASS;PASS"]))
@@ -196,11 +199,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
           round(genotypes$RAI[i,j], 2), ":", 
           genotypes$GP$pAA[i,j], ",", 
           genotypes$GP$pAB[i,j], ",", 
-          genotypes$GP$pBB[i,j], ":",
-          round(genotypes$PL$AA[i,j]), ",",
-          round(genotypes$PL$AB[i,j]), ",",
-          round(genotypes$PL$BB[i,j]), ":",
-          floor(genotypes$GQ[i,j])) # if using round, GQ=19.5 will pass filtering when using GQ<20 in VCF
+          genotypes$GP$pBB[i,j])
       }
     }
     geno <- as.data.frame(cbind(CpG = rownames(dosage), geno))
@@ -231,7 +230,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
       probeInfo[probes, 1:6], 
       tibble(QUAL=".", FILTER=filter, 
              INFO=paste0("AF=", AF, ";R2=", R2_constrained, ";HWE=", sprintf("%.3g", hwe_p), ";Missing=", sprintf("%.2g", missing)), 
-             FORMAT="GT:DS:RAI:GP:PL:GQ")
+             FORMAT="GT:DS:RAI:GP")
     ) %>% left_join(geno, by=c("CpG"))
     vcf <- vcf[, -6]
     vcf$Chr <- factor(vcf$Chr, levels=c(paste0("chr", 1:22)))
@@ -242,10 +241,10 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
     header <- paste(
       "##fileformat=VCFv4.2",
       paste(paste0("##contig=<ID=chr", 1:22, ">"), collapse="\n"),
-      "##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele frequency. Genotypes with GQ<20 were removed.\">",
-      "##INFO=<ID=R2,Number=1,Type=Float,Description=\"R-square, encoded as var(G)/2p(1-p), where G is dosage genotype and p is allele frequency. Variants with 1<R2<=1.1 are constrained to 1. Variants with R2>1.1 (marked as .) are recommended to remove. Genotypes with GQ<20 were removed.\">",
-      "##INFO=<ID=HWE,Number=1,Type=Float,Description=\"Hardy-Weinberg Equilibrium p-value. Genotypes with GQ<20 were removed.\">",
-      "##INFO=<ID=Missing,Number=1,Type=Float,Description=\"Missing rate, denoting proportion of genotypes with GQ<20.\">",
+      paste0("##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele frequency. Genotypes with the highest genotype probability < ", GP_cutoff, " were not counted.\">"),
+      paste0("##INFO=<ID=R2,Number=1,Type=Float,Description=\"R-square, encoded as var(G)/2p(1-p), where G is dosage genotype and p is allele frequency. Variants with 1<R2<=1.1 are constrained to 1. Variants with R2>1.1 (marked as .) are recommended to remove. Genotypes with the highest genotype probability < ", GP_cutoff, " were not counted.\">"),
+      paste0("##INFO=<ID=HWE,Number=1,Type=Float,Description=\"Hardy-Weinberg Equilibrium p-value. Genotypes with the highest genotype probability < ", GP_cutoff, " were not counted.\">"),
+      paste0("##INFO=<ID=Missing,Number=1,Type=Float,Description=\"Missing rate, denoting the proportion of genotypes with the highest genotype probability < ", GP_cutoff, ".\">"),
       paste0("##FILTER=<ID=MAF,Description=\"MAF is below ", MAF_cutoff, "\">"),
       paste0("##FILTER=<ID=R2_low,Description=\"R2 is below ", R2_cutoff_down, "\">"),
       paste0("##FILTER=<ID=R2_high,Description=\"R2 is above ", R2_cutoff_up, "\">"),
@@ -254,8 +253,6 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
       "##FORMAT=<ID=DS,Number=1,Type=Float,Description=\"Genotype dosage\">",
       "##FORMAT=<ID=RAI,Number=1,Type=Float,Description=\"RAI (Ratio of Alternative allele Intensity)\">",
       "##FORMAT=<ID=GP,Number=G,Type=Float,Description=\"Genotype probability of reference homozygous, heterozygous, and alternative homozygous\">",
-      "##FORMAT=<ID=PL,Number=G,Type=Integer,Description=\"Phred-scaled genotype likelihood\">",
-      "##FORMAT=<ID=GQ,Number=1,Type=Integer,Description=\"Genotype quality\">",
       paste0("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t", samplelist),
       sep = "\n"
     )
@@ -264,14 +261,13 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, R2_cutoff_up=1.1, R2
   }
   
   ## Filter dosage
-  dosage[genotypes$GQ < 20] <- NA
-  dosage <- apply(dosage[filter=="PASS",,drop=F], 1:2, as.numeric)
+  dosage_GP <- apply(dosage_GP[filter=="PASS",,drop=F], 1:2, as.numeric)
   
   ## Plots
   probe2af <- get_AF(pop=pop, type=type, platform=platform)
-  if(plotAF){plotAF_func(AF_input=AF[rownames(dosage)], AF_1KGP=probe2af[rownames(genotypes$RAI)], pop=pop, type=type)}
+  if(plotAF){plotAF_func(AF_input=AF[rownames(dosage_GP)], AF_1KGP=probe2af[rownames(dosage_GP)], pop=pop, type=type)}
   
-  dosage
+  dosage_GP
 }
 
 #' Plot the distribution of AFs in 1KGP and input data.
