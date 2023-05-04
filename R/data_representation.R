@@ -118,24 +118,19 @@ filter_by_HWE <- function(hwe_p, HWE_cutoff=1e-6){
 #' 
 #' Hard genotype is defined as the genotype with highest genotype probability.
 #' 
-#' @param genotypes Genotype calls.
+#' @param AA Genotype probability of AA or 0/0.
+#' @param AB Genotype probability of AB or 0/1.
+#' @param BB Genotype probability of BB or 1/1.
+#' @param GP_cutoff Genotypes with the highest genotype probability < GP_cutoff will be set as NA.
 #' @return A matrix of hard genotypes.
 #' @export
-dosage2hard <- function(genotypes){
-  hardgeno <- t(sapply(1:nrow(genotypes$RAI), function(i){
-    sapply(1:ncol(genotypes$RAI), function(j){
-      if(is.na(genotypes$GP$pAA[i,j])){
-        NA
-      }else{
-        names(which.max(c(
-          "0/0"=genotypes$GP$pAA[i,j], 
-          "0/1"=genotypes$GP$pAB[i,j], 
-          "1/1"=genotypes$GP$pBB[i,j]
-        )))
-      }
-    })
-  }))
-  dimnames(hardgeno) <- dimnames(genotypes$RAI)
+dosage2hard <- function(AA, AB, BB, GP_cutoff=0.9){
+  pmax0 <- pmax(AA, AB, BB)
+  hardgeno <- matrix(NA, nrow=nrow(AA), ncol=ncol(AA), dimnames=dimnames(AA))
+  hardgeno[pmax0==AA] <- "0/0"
+  hardgeno[pmax0==AB] <- "0/1"
+  hardgeno[pmax0==BB] <- "1/1"
+  hardgeno[pmax0 < GP_cutoff] <- NA_real_
   hardgeno
 }
 
@@ -160,15 +155,14 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, R2_cu
   dosage <- genotypes$GP$pAB + 2 * genotypes$GP$pBB
   probes <- rownames(dosage)
   maxGP <- pmax(genotypes$GP$pAA, genotypes$GP$pAB, genotypes$GP$pBB, na.rm=TRUE)
-  dosage_GP <- dosage; dosage_GP[maxGP < GP_cutoff] <- NA_real_
-  missing <- rowSums(is.na(dosage_GP)) / ncol(dosage_GP)
-  AF <- rowMeans(dosage_GP, na.rm=T) / 2
+  dosage[maxGP < GP_cutoff] <- NA_real_
+  missing <- rowSums(is.na(dosage)) / ncol(dosage)
+  AF <- rowMeans(dosage, na.rm=T) / 2
   AF[is.na(AF)] <- 0
-  R2 <- apply(dosage_GP, 1, function(x) var(x, na.rm=T)) / (2 * AF * (1 - AF))
+  R2 <- apply(dosage, 1, function(x) var(x, na.rm=T)) / (2 * AF * (1 - AF))
   R2[is.na(R2)] <- 0
   R2_constrained <- sapply(R2, constrain_R2)
-  hardgeno <- dosage2hard(genotypes)
-  hardgeno[is.na(dosage_GP)] <- NA_real_
+  hardgeno <- dosage2hard(genotypes$GP$pAA, genotypes$GP$pAB, genotypes$GP$pBB, GP_cutoff=GP_cutoff)
   hwe_p <- getHWE(hardgeno)
   filter_AF <- sapply(AF, function(x) filter_by_AF(x, MAF_cutoff))
   filter_R2 <- sapply(R2, function(x) filter_by_R2(x, R2_cutoff_up, R2_cutoff_down))
@@ -180,9 +174,10 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, R2_cu
 
   ## Write into a VCF file
   if(vcf){
-    ## hard genotypes
-    hardgeno <- dosage2hard(genotypes)
-    dosage <- round(dosage, 2)
+    ## format
+    hardgeno[is.na(hardgeno)] <- "./."
+    dosage_chr <- round(dosage, 2)
+    dosage_chr[is.na(dosage_chr)] <- "."
     genotypes$GP$pAA <- round(genotypes$GP$pAA, 2)
     genotypes$GP$pAB <- round(genotypes$GP$pAB, 2)
     genotypes$GP$pBB <- round(genotypes$GP$pBB, 2)
@@ -195,7 +190,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, R2_cu
       for(j in 1:ncol(geno)){
         geno[i,j] <- paste0(
           hardgeno[i,j], ":",
-          dosage[i,j], ":", 
+          dosage_chr[i,j], ":", 
           round(genotypes$RAI[i,j], 2), ":", 
           genotypes$GP$pAA[i,j], ",", 
           genotypes$GP$pAB[i,j], ",", 
@@ -222,7 +217,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, R2_cu
         data(probeInfo_typeII_450K); probeInfo <- probeInfo_typeII_450K
       }
     }else{
-      print("Error: misspecified probe types!")
+      print("Error: misspecified probe type!")
       return
     }
     rownames(probeInfo) <- probeInfo$CpG
@@ -261,13 +256,13 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, R2_cu
   }
   
   ## Filter dosage
-  dosage_GP <- apply(dosage_GP[filter=="PASS",,drop=F], 1:2, as.numeric)
+  dosage <- dosage[filter=="PASS",,drop=F]
   
   ## Plots
   probe2af <- get_AF(pop=pop, type=type, platform=platform)
-  if(plotAF){plotAF_func(AF_input=AF[rownames(dosage_GP)], AF_1KGP=probe2af[rownames(dosage_GP)], pop=pop, type=type)}
+  if(plotAF){plotAF_func(AF_input=AF[rownames(dosage)], AF_1KGP=probe2af[rownames(dosage)], pop=pop, type=type)}
   
-  dosage_GP
+  dosage
 }
 
 #' Plot the distribution of AFs in 1KGP and input data.

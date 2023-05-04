@@ -56,17 +56,22 @@ callGeno_typeI <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes
   # filter probes based on peak density and positions.
   if(train){
     mod <- getMod(RAI, cpu=cpu)
-    RAI <- RAI[dplyr::filter(mod, h_0.1==TRUE, loc_pass==TRUE)$Name,]
+    RAI <- RAI[dplyr::filter(mod, h_0.1==TRUE, loc_pass==TRUE)$CpG,]
   }else{
-    RAI <- RAI[rownames(RAI) %in% dplyr::filter(probeInfo_typeI, h_0.1==TRUE, loc_pass==TRUE)$CpG,]
+    mod <- dplyr::filter(probeInfo_typeI, h_0.1==TRUE, loc_pass==TRUE) %>%
+      dplyr::select(SNP, CpG, h_0.1, loc_pass, nmod, loc0, loc1, loc2)
+    rownames(mod) <- mod$CpG
+    RAI <- RAI[mod$CpG,]
   }
   
   # call genotypes
-  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeI_ccs_probe", maxiter=50, bayesian=bayesian, platform=platform, verbose=verbose)
+  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeI_ccs_probe", maxiter=50, 
+                                       bayesian=bayesian, platform=platform, verbose=verbose)
   if(plotBeta){plot_beta_distribution(genotypes, type="typeI_ccs_probe")}
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, GP_cutoff=GP_cutoff,
                              R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
-                             MAF_cutoff=MAF_cutoff, HWE_cutoff=HWE_cutoff, type="typeI_ccs_probe", pop=pop, plotAF=FALSE, platform=platform)
-  list(dosage=dosage, genotypes=genotypes)
+                             MAF_cutoff=MAF_cutoff, HWE_cutoff=HWE_cutoff, type="typeI_ccs_probe", 
+                             pop=pop, plotAF=FALSE, platform=platform)
+  list(dosage=dosage, mod=mod, genotypes=genotypes)
 }
 

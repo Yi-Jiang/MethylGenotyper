@@ -9,24 +9,23 @@ getMod <- function(RAI, cpu=1){
   print(paste(Sys.time(), "Running mod test."))
   # Estimate number of modes for each probe
   n <- apply(RAI, 1, function(x) (nmodes(x, 0.05, lowsup=0, uppsup=1)))
-  mod <- tibble(Name=names(n), nmod=n)
-  mod$nmod2 <- mod$nmod
-  mod[mod$nmod2>3, "nmod2"] <- 3
+  mod <- tibble(CpG=names(n), nmod=n)
+  mod[mod$nmod>3, "nmod"] <- 3
   
   # Estimate mode location for each probe
   cl<- makeCluster(cpu)
   registerDoParallel(cl) 
-  out <- foreach(i=mod$Name, .packages=c("tidyverse","multimode")) %dopar% {
+  out <- foreach(i=mod$CpG, .packages=c("tidyverse","multimode")) %dopar% {
     tryCatch({
-      a <- locmodes(RAI[i, ], mod0=dplyr::filter(mod, Name==i)$nmod2)
+      a <- locmodes(RAI[i, ], mod0=dplyr::filter(mod, CpG==i)$nmod)
       a
     }, error = function(e) return(paste0("The variable '", i, "'", " caused the error: '", e, "'")))
   }
   stopImplicitCluster()
   stopCluster(cl)
-  names(out) <- mod$Name
-  out2 <- out[dplyr::filter(mod, nmod2==2)$Name]
-  out3 <- out[dplyr::filter(mod, nmod2==3)$Name]
+  names(out) <- mod$CpG
+  out2 <- out[dplyr::filter(mod, nmod==2)$CpG]
+  out3 <- out[dplyr::filter(mod, nmod==3)$CpG]
   
   # Filter mode density height (>0.1)
   if(length(out2)>0){
@@ -42,7 +41,7 @@ getMod <- function(RAI, cpu=1){
   height <- bind_rows(height2, height3)
   hfilter <- rowSums(height>0.1, na.rm=T)>1
   nhfilter <- rowSums(height>0.1, na.rm=T)
-  mod <- left_join(mod, tibble(Name=names(hfilter), h_0.1=hfilter, nh_0.1=nhfilter))
+  mod <- left_join(mod, tibble(CpG=names(hfilter), h_0.1=hfilter, nh_0.1=nhfilter))
   
   # Filter mode location
   if(length(out2)>0){
@@ -61,10 +60,10 @@ getMod <- function(RAI, cpu=1){
   }
   k.lo <- bind_rows(k.lo2.01, k.lo2.12, k.lo3)
   colnames(k.lo) <- c("loc0", "loc1", "loc2")
-  k.lo <- data.frame(Name=rownames(k.lo), k.lo)
-  mod <- mutate(mod, loc_pass=(Name %in% rownames(k.lo))) %>% left_join(k.lo, by="Name")
+  k.lo <- data.frame(CpG=rownames(k.lo), k.lo)
+  mod <- mutate(mod, loc_pass=(CpG %in% rownames(k.lo))) %>% left_join(k.lo, by="CpG")
   mod <- as.data.frame(mod)
-  rownames(mod) <- mod$Name
+  rownames(mod) <- mod$CpG
 
   mod
 }

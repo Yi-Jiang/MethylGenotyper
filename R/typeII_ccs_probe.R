@@ -79,10 +79,12 @@ callGeno_typeII <- function(inData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
   # filter probes based on peak density and positions.
   if(train){
     mod <- getMod(beta, cpu=cpu)
-    beta <- beta[dplyr::filter(mod, h_0.1==TRUE, loc_pass==TRUE)$Name,]
+    beta <- beta[dplyr::filter(mod, h_0.1==TRUE, loc_pass==TRUE)$CpG,]
   }else{
-    mod <- dplyr::filter(probeInfo_typeII, h_0.1==TRUE, loc_pass==TRUE)
-    beta <- beta[rownames(beta) %in% dplyr::filter(probeInfo_typeII, h_0.1==TRUE, loc_pass==TRUE)$CpG,]
+    mod <- dplyr::filter(probeInfo_typeII, h_0.1==TRUE, loc_pass==TRUE) %>% 
+      dplyr::select(SNP, CpG, h_0.1, loc_pass, nmod, loc0, loc1, loc2)
+    rownames(mod) <- mod$CpG
+    beta <- beta[mod$CpG,]
   }
   
   # calculate RAI
@@ -99,6 +101,6 @@ callGeno_typeII <- function(inData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
                              R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
                              MAF_cutoff=MAF_cutoff, HWE_cutoff=HWE_cutoff, type="typeII_ccs_probe", 
                              pop=pop, plotAF=FALSE, platform=platform)
-  list(dosage=dosage, mod = mod, genotypes=genotypes)
+  list(dosage=dosage, mod=mod, genotypes=genotypes)
 }
 
