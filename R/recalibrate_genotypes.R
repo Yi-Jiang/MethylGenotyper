@@ -42,16 +42,17 @@ projection <- function(studyGeno, plotPCA=TRUE, cpu=1, platform="EPIC"){
 #' @param studyPC Top PCs in study samples
 #' @param platform EPIC or 450K.
 #' @param GP_cutoff Genotypes with the highest genotype probability < GP_cutoff will be treated as missing. Only non-missing genotypes will be used to calculate MAF, R2, and HWE p value.
-#' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned matrix, variants with R-square outside this range will be removed.
-#' @param MAF_cutoff A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
-#' @param HWE_cutoff HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with HWE p value below the cutoff will be removed.
+#' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned dosage matrix, variants with R-square outside this range will be removed.
+#' @param MAF_cutoff A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with MAF below the cutoff will be removed.
+#' @param HWE_cutoff HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with HWE p value below the cutoff will be removed.
+#' @param missing_cutoff Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.
 #' @return A list of recalibrated genotypes containing
 #' \item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with the highest genotype probability < GP_cutoff will be marked as NA.}
 #' \item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), and genotype probability (GP)}
 #' \item{indAF}{A matrix of individual-specific AFs.}
 #' @export
 recal_Geno <- function(genotypes, type, refPC, studyPC, platform="EPIC", GP_cutoff=0.9, 
-                       R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6){
+                       R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, missing_cutoff=0.1){
   if(platform=="EPIC"){
     data(cpg2snp)
     data(snp2cpg)
@@ -85,7 +86,7 @@ recal_Geno <- function(genotypes, type, refPC, studyPC, platform="EPIC", GP_cuto
   genotypes_recal$dosage <- format_genotypes(genotypes_recal$genotypes, vcf=T, GP_cutoff=GP_cutoff,
                                              vcfName=paste0("genotypes.recal.", type, ".vcf"),
                                              R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
-                                             MAF_cutoff=MAF_cutoff, HWE_cutoff=HWE_cutoff,
+                                             MAF_cutoff=MAF_cutoff, HWE_cutoff=HWE_cutoff, missing_cutoff=missing_cutoff,
                                              type=type, plotAF=FALSE, platform=platform)
   genotypes_recal
 }

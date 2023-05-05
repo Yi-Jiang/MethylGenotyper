@@ -98,7 +98,7 @@ getHWE <- function(hardgeno){
 
 #' Filter by Hardy–Weinberg Equilibrium (HWE) p value
 #' 
-#' Variants with Hardy–Weinberg Equilibrium (HWE) p value < 1e-6 are recommended to remove.
+#' Variants with Hardy–Weinberg Equilibrium (HWE) p value < HWE_cutoff are recommended to remove.
 #' 
 #' @param hwe_p Hardy–Weinberg Equilibrium (HWE) p values
 #' @param HWE_cutoff A HWE p value cutoff to filter variants.
@@ -108,6 +108,23 @@ filter_by_HWE <- function(hwe_p, HWE_cutoff=1e-6){
   if(hwe_p < HWE_cutoff){
     #filter=paste0("P(HWE)<", HWE_cutoff)
     filter="HWE"
+  }else{
+    filter="PASS"
+  }
+  filter
+}
+
+#' Filter by missing rate
+#' 
+#' Variants with missing rate > missing_cutoff are recommended to remove.
+#' 
+#' @param missingrate Missing rates
+#' @param missing_cutoff Missing rate cutoff to filter variants.
+#' @return Whether the variant passed filtering.
+#' @export
+filter_by_missing <- function(missingrate, missing_cutoff=0.1){
+  if(missingrate > missing_cutoff){
+    filter="Missing"
   }else{
     filter="PASS"
   }
@@ -140,9 +157,10 @@ dosage2hard <- function(AA, AB, BB, GP_cutoff=0.9){
 #' @param vcf If TRUE, will write a VCF file in the current directory.
 #' @param vcfName VCF file name. Only effective when vcf=TRUE.
 #' @param GP_cutoff Genotypes with the highest genotype probability < GP_cutoff will be treated as missing. Only non-missing genotypes will be used to calculate MAF, R2, and HWE p value.
-#' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned matrix, variants with R-square outside this range will be removed.
-#' @param MAF_cutoff MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
-#' @param HWE_cutoff HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with HWE p value below the cutoff will be removed.
+#' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned dosage matrix, variants with R-square outside this range will be removed.
+#' @param MAF_cutoff MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with MAF below the cutoff will be removed.
+#' @param HWE_cutoff HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with HWE p value below the cutoff will be removed.
+#' @param missing_cutoff Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
 #' @param plotAF To plot the distribution of AFs in 1KGP and input data.
@@ -150,7 +168,7 @@ dosage2hard <- function(AA, AB, BB, GP_cutoff=0.9){
 #' @return A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with the highest genotype probability < GP_cutoff will be marked as NA.
 #' @export
 format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, R2_cutoff_up=1.1, R2_cutoff_down=0.75, 
-                             MAF_cutoff=0.01, HWE_cutoff=1e-6, pop="ALL", type, plotAF=FALSE, platform="EPIC"){
+                             MAF_cutoff=0.01, HWE_cutoff=1e-6, missing_cutoff=0.1, pop="ALL", type, plotAF=FALSE, platform="EPIC"){
   print(paste(Sys.time(), "Calculating AF, R2, and HWE."))
   dosage <- genotypes$GP$pAB + 2 * genotypes$GP$pBB
   probes <- rownames(dosage)
@@ -167,9 +185,10 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, R2_cu
   filter_AF <- sapply(AF, function(x) filter_by_AF(x, MAF_cutoff))
   filter_R2 <- sapply(R2, function(x) filter_by_R2(x, R2_cutoff_up, R2_cutoff_down))
   filter_HWE <- sapply(hwe_p, function(x) filter_by_HWE(x, HWE_cutoff))
-  filter <- paste(filter_AF, filter_R2, filter_HWE, sep=";")
-  filter[filter=="PASS;PASS;PASS"] <- "PASS"
-  filter[filter!="PASS;PASS;PASS"] <- gsub(";PASS", "", gsub("PASS;", "", filter[filter!="PASS;PASS;PASS"]))
+  filter_missing <- sapply(missing, function(x) filter_by_missing(x, missing_cutoff))
+  filter <- paste(filter_AF, filter_R2, filter_HWE, filter_missing, sep=";")
+  filter[filter=="PASS;PASS;PASS;PASS"] <- "PASS"
+  filter[filter!="PASS;PASS;PASS;PASS"] <- gsub(";PASS", "", gsub("PASS;", "", filter[filter!="PASS;PASS;PASS;PASS"]))
   AF <- sapply(AF, function(x) sprintf("%#.3g", x))
 
   ## Write into a VCF file

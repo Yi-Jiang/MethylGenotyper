@@ -15,5 +15,5 @@ filter_by_HWE(hwe_p, HWE_cutoff = 1e-06)
 Whether the variant passed filtering.
 }
 \description{
-Variants with Hardy–Weinberg Equilibrium (HWE) p value < 1e-6 are recommended to remove.
+Variants with Hardy–Weinberg Equilibrium (HWE) p value < HWE_cutoff are recommended to remove.
 }

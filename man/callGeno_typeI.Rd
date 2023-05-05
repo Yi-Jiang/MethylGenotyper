@@ -14,6 +14,7 @@ callGeno_typeI(
   R2_cutoff_down = 0.75,
   MAF_cutoff = 0.01,
   HWE_cutoff = 1e-06,
+  missing_cutoff = 0.1,
   train = TRUE,
   cpu = 1,
   pop = "EAS",
@@ -33,11 +34,13 @@ callGeno_typeI(
 
 \item{GP_cutoff}{Genotypes with the highest genotype probability < GP_cutoff will be treated as missing. Only non-missing genotypes will be used to calculate MAF, R2, and HWE p value.}
 
-\item{R2_cutoff_up, R2_cutoff_down}{R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the \code{FILTER} column. For the returned matrix, variants with R-square outside this range will be removed.}
+\item{R2_cutoff_up, R2_cutoff_down}{R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the \code{FILTER} column. For the returned dosage matrix, variants with R-square outside this range will be removed.}
 
-\item{MAF_cutoff}{A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with MAF below the cutoff will be removed.}
+\item{MAF_cutoff}{A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned dosage matrix, variants with MAF below the cutoff will be removed.}
 
-\item{HWE_cutoff}{HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with HWE p value below the cutoff will be removed.}
+\item{HWE_cutoff}{HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the \code{FILTER} column. For the returned dosage matrix, variants with HWE p value below the cutoff will be removed.}
+
+\item{missing_cutoff}{Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the \code{FILTER} column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.}
 
 \item{train}{If TRUE, will fit the distribution of RAI (Ratio of Alternative allele Intensity) and filter probes by number of peaks. If FALSE, will use predefined probe list.}
 

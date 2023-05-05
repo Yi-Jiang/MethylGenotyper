@@ -7,9 +7,10 @@
 #' @param vcf If TRUE, will write a VCF file in the current directory.
 #' @param vcfName VCF file name. Only effective when vcf=TRUE.
 #' @param GP_cutoff Genotypes with the highest genotype probability < GP_cutoff will be treated as missing. Only non-missing genotypes will be used to calculate MAF, R2, and HWE p value.
-#' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned matrix, variants with R-square outside this range will be removed.
-#' @param MAF_cutoff A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with MAF below the cutoff will be removed.
-#' @param HWE_cutoff HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the `FILTER` column. For the returned matrix, variants with HWE p value below the cutoff will be removed.
+#' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned dosage matrix, variants with R-square outside this range will be removed.
+#' @param MAF_cutoff A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with MAF below the cutoff will be removed.
+#' @param HWE_cutoff HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with HWE p value below the cutoff will be removed.
+#' @param missing_cutoff Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.
 #' @param train If TRUE, will fit the distribution of RAI (Ratio of Alternative allele Intensity) and filter probes by number of peaks. If FALSE, will use predefined probe list.
 #' @param cpu Number of CPU. Only effective when train=TRUE.
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
@@ -23,7 +24,7 @@
 #' \item{methyl_recalc}{Re-calculated methylation levels on reference alleles. A list containing shapes of the mixed beta distributions and true methylation level (pM) for each probe.}
 #' @export
 callGeno_typeII <- function(inData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeII_ccs_probe.vcf", 
-                            GP_cutoff=0.9, R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, 
+                            GP_cutoff=0.9, R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, missing_cutoff=0.1, 
                             train=TRUE, cpu=1, pop="EAS", maxiter=50, bayesian=TRUE, platform="EPIC", verbose=1){
   if(!train & platform!="EPIC"){
     print("Error: train=FALSE only works with platform=EPIC.")
@@ -99,8 +100,8 @@ callGeno_typeII <- function(inData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
   if(plotBeta){plot_beta_distribution(genotypes, type="typeII_ccs_probe")}
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, GP_cutoff=GP_cutoff,
                              R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
-                             MAF_cutoff=MAF_cutoff, HWE_cutoff=HWE_cutoff, type="typeII_ccs_probe", 
-                             pop=pop, plotAF=FALSE, platform=platform)
+                             MAF_cutoff=MAF_cutoff, HWE_cutoff=HWE_cutoff, missing_cutoff=missing_cutoff, 
+                             type="typeII_ccs_probe", pop=pop, plotAF=FALSE, platform=platform)
   list(dosage=dosage, mod=mod, genotypes=genotypes)
 }
 
