@@ -4,7 +4,7 @@
 \alias{dosage2hard}
 \title{Get hard genotypes from genotype probabilities}
 \usage{
-dosage2hard(AA, AB, BB, GP_cutoff = 0.9)
+dosage2hard(AA, AB, BB)
 }
 \arguments{
 \item{AA}{Genotype probability of AA or 0/0.}
@@ -12,8 +12,6 @@ dosage2hard(AA, AB, BB, GP_cutoff = 0.9)
 \item{AB}{Genotype probability of AB or 0/1.}
 
 \item{BB}{Genotype probability of BB or 1/1.}
-
-\item{GP_cutoff}{Genotypes with the highest genotype probability < GP_cutoff will be set as NA.}
 }
 \value{
 A matrix of hard genotypes.

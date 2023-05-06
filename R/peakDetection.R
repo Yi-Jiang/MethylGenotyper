@@ -39,6 +39,7 @@ getMod <- function(RAI, cpu=1){
     height3 <- c()
   }
   height <- bind_rows(height2, height3)
+  colnames(height) <- paste0("height", 1:ncol(height))
   hfilter <- rowSums(height>0.1, na.rm=T)>1
   nhfilter <- rowSums(height>0.1, na.rm=T)
   mod <- left_join(mod, tibble(CpG=names(hfilter), h_0.1=hfilter, nh_0.1=nhfilter))
@@ -46,8 +47,10 @@ getMod <- function(RAI, cpu=1){
   # Filter mode location
   if(length(out2)>0){
     lo2 <- as.data.frame(do.call(rbind, list.map(out2, locations))) %>% dplyr::select(V1, V3)
-    k.lo2.01 <- data.frame(dplyr::filter(lo2, V1<0.3&V3>0.3&V3<0.7), V5=NA_real_)
-    k.lo2.12 <- data.frame(V0=NA_real_, dplyr::filter(lo2, V1>0.3&V1<0.7&V3>0.7)); colnames(k.lo2.12) <- c("V1", "V3", "V5")
+    k.lo2.01 <- try(data.frame(dplyr::filter(lo2, V1<0.3&V3>0.3&V3<0.7), V5=NA_real_))
+    k.lo2.12 <- try(data.frame(V0=NA_real_, dplyr::filter(lo2, V1>0.3&V1<0.7&V3>0.7)))
+    if(class(k.lo2.01) %in% "try-error"){k.lo2.01<- c()}
+    if(class(k.lo2.12) %in% "try-error"){k.lo2.12<- c()}else{colnames(k.lo2.12) <- c("V1", "V3", "V5")}
   }else{
     k.lo2.01 <- c()
     k.lo2.12 <- c()
@@ -61,7 +64,9 @@ getMod <- function(RAI, cpu=1){
   k.lo <- bind_rows(k.lo2.01, k.lo2.12, k.lo3)
   colnames(k.lo) <- c("loc0", "loc1", "loc2")
   k.lo <- data.frame(CpG=rownames(k.lo), k.lo)
-  mod <- mutate(mod, loc_pass=(CpG %in% rownames(k.lo))) %>% left_join(k.lo, by="CpG")
+  mod <- mutate(mod, loc_pass=(CpG %in% rownames(k.lo))) %>% 
+    left_join(k.lo, by="CpG") %>% 
+    left_join(tibble(CpG=rownames(height), height), by="CpG")
   mod <- as.data.frame(mod)
   rownames(mod) <- mod$CpG
 

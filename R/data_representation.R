@@ -49,10 +49,8 @@ constrain_R2 <- function(R2){
 #' @export
 filter_by_R2 <- function(R2, R2_cutoff_up=1.1, R2_cutoff_down=0.75){
   if(R2>R2_cutoff_up){
-    #filter=paste0("R2>", R2_cutoff_up)
     filter="R2_high"
   }else if(R2<R2_cutoff_down){
-    #filter=paste0("R2<", R2_cutoff_down)
     filter="R2_low"
   }else{
     filter="PASS"
@@ -70,7 +68,6 @@ filter_by_R2 <- function(R2, R2_cutoff_up=1.1, R2_cutoff_down=0.75){
 #' @export
 filter_by_AF <- function(AF, MAF_cutoff=0.01){
   if(AF < MAF_cutoff | AF > (1-MAF_cutoff)){
-    #filter=paste0("MAF<", MAF_cutoff)
     filter="MAF"
   }else{
     filter="PASS"
@@ -106,7 +103,6 @@ getHWE <- function(hardgeno){
 #' @export
 filter_by_HWE <- function(hwe_p, HWE_cutoff=1e-6){
   if(hwe_p < HWE_cutoff){
-    #filter=paste0("P(HWE)<", HWE_cutoff)
     filter="HWE"
   }else{
     filter="PASS"
@@ -138,16 +134,15 @@ filter_by_missing <- function(missingrate, missing_cutoff=0.1){
 #' @param AA Genotype probability of AA or 0/0.
 #' @param AB Genotype probability of AB or 0/1.
 #' @param BB Genotype probability of BB or 1/1.
-#' @param GP_cutoff Genotypes with the highest genotype probability < GP_cutoff will be set as NA.
 #' @return A matrix of hard genotypes.
 #' @export
-dosage2hard <- function(AA, AB, BB, GP_cutoff=0.9){
+dosage2hard <- function(AA, AB, BB){
   pmax0 <- pmax(AA, AB, BB)
   hardgeno <- matrix(NA, nrow=nrow(AA), ncol=ncol(AA), dimnames=dimnames(AA))
   hardgeno[pmax0==AA] <- "0/0"
   hardgeno[pmax0==AB] <- "0/1"
   hardgeno[pmax0==BB] <- "1/1"
-  hardgeno[pmax0 < GP_cutoff] <- NA_real_
+  #hardgeno[pmax0 < GP_cutoff] <- NA_real_
   hardgeno
 }
 
@@ -156,31 +151,32 @@ dosage2hard <- function(AA, AB, BB, GP_cutoff=0.9){
 #' @param genotypes Genotype calls.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
 #' @param vcfName VCF file name. Only effective when vcf=TRUE.
-#' @param GP_cutoff Genotypes with the highest genotype probability < GP_cutoff will be treated as missing. Only non-missing genotypes will be used to calculate MAF, R2, and HWE p value.
+#' @param GP_cutoff When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.
+#' @param missing_cutoff Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.
 #' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned dosage matrix, variants with R-square outside this range will be removed.
 #' @param MAF_cutoff MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with MAF below the cutoff will be removed.
 #' @param HWE_cutoff HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with HWE p value below the cutoff will be removed.
-#' @param missing_cutoff Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
 #' @param plotAF To plot the distribution of AFs in 1KGP and input data.
 #' @param platform EPIC or 450K.
-#' @return A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with the highest genotype probability < GP_cutoff will be marked as NA.
+#' @return A matrix of genotype calls. Variants with R2s, HWE p values, MAFs, or missing rates beyond the cutoffs are removed.
 #' @export
-format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, R2_cutoff_up=1.1, R2_cutoff_down=0.75, 
-                             MAF_cutoff=0.01, HWE_cutoff=1e-6, missing_cutoff=0.1, pop="ALL", type, plotAF=FALSE, platform="EPIC"){
+format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, missing_cutoff=0.1, 
+                             R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, 
+                             pop="ALL", type, plotAF=FALSE, platform="EPIC"){
   print(paste(Sys.time(), "Calculating AF, R2, and HWE."))
   dosage <- genotypes$GP$pAB + 2 * genotypes$GP$pBB
   probes <- rownames(dosage)
   maxGP <- pmax(genotypes$GP$pAA, genotypes$GP$pAB, genotypes$GP$pBB, na.rm=TRUE)
-  dosage[maxGP < GP_cutoff] <- NA_real_
-  missing <- rowSums(is.na(dosage)) / ncol(dosage)
+  #dosage[maxGP < GP_cutoff] <- NA_real_
+  missing <- rowSums(maxGP < GP_cutoff) / ncol(maxGP)
   AF <- rowMeans(dosage, na.rm=T) / 2
   AF[is.na(AF)] <- 0
   R2 <- apply(dosage, 1, function(x) var(x, na.rm=T)) / (2 * AF * (1 - AF))
   R2[is.na(R2)] <- 0
   R2_constrained <- sapply(R2, constrain_R2)
-  hardgeno <- dosage2hard(genotypes$GP$pAA, genotypes$GP$pAB, genotypes$GP$pBB, GP_cutoff=GP_cutoff)
+  hardgeno <- dosage2hard(genotypes$GP$pAA, genotypes$GP$pAB, genotypes$GP$pBB)
   hwe_p <- getHWE(hardgeno)
   filter_AF <- sapply(AF, function(x) filter_by_AF(x, MAF_cutoff))
   filter_R2 <- sapply(R2, function(x) filter_by_R2(x, R2_cutoff_up, R2_cutoff_down))
@@ -194,9 +190,9 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, R2_cu
   ## Write into a VCF file
   if(vcf){
     ## format
-    hardgeno[is.na(hardgeno)] <- "./."
+    #hardgeno[is.na(hardgeno)] <- "./."
     dosage_chr <- round(dosage, 2)
-    dosage_chr[is.na(dosage_chr)] <- "."
+    #dosage_chr[is.na(dosage_chr)] <- "."
     genotypes$GP$pAA <- round(genotypes$GP$pAA, 2)
     genotypes$GP$pAB <- round(genotypes$GP$pAB, 2)
     genotypes$GP$pBB <- round(genotypes$GP$pBB, 2)
@@ -255,14 +251,15 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, R2_cu
     header <- paste(
       "##fileformat=VCFv4.2",
       paste(paste0("##contig=<ID=chr", 1:22, ">"), collapse="\n"),
-      paste0("##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele frequency. Genotypes with the highest genotype probability < ", GP_cutoff, " were not counted.\">"),
-      paste0("##INFO=<ID=R2,Number=1,Type=Float,Description=\"R-square, encoded as var(G)/2p(1-p), where G is dosage genotype and p is allele frequency. Variants with 1<R2<=1.1 are constrained to 1. Variants with R2>1.1 (marked as .) are recommended to remove. Genotypes with the highest genotype probability < ", GP_cutoff, " were not counted.\">"),
-      paste0("##INFO=<ID=HWE,Number=1,Type=Float,Description=\"Hardy-Weinberg Equilibrium p-value. Genotypes with the highest genotype probability < ", GP_cutoff, " were not counted.\">"),
+      paste0("##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele frequency.\">"),
+      paste0("##INFO=<ID=R2,Number=1,Type=Float,Description=\"R-square, encoded as var(G)/2p(1-p), where G is dosage genotype and p is allele frequency. Variants with 1<R2<=1.1 are constrained to 1. Variants with R2>1.1 (marked as .) are recommended to remove.\">"),
+      paste0("##INFO=<ID=HWE,Number=1,Type=Float,Description=\"Hardy-Weinberg Equilibrium p-value.\">"),
       paste0("##INFO=<ID=Missing,Number=1,Type=Float,Description=\"Missing rate, denoting the proportion of genotypes with the highest genotype probability < ", GP_cutoff, ".\">"),
       paste0("##FILTER=<ID=MAF,Description=\"MAF is below ", MAF_cutoff, "\">"),
       paste0("##FILTER=<ID=R2_low,Description=\"R2 is below ", R2_cutoff_down, "\">"),
       paste0("##FILTER=<ID=R2_high,Description=\"R2 is above ", R2_cutoff_up, "\">"),
       paste0("##FILTER=<ID=HWE,Description=\"Deviation from Hardy-Weinberg Equilibrium (HWE, p < 1E-6)\">"),
+      paste0("##FILTER=<ID=Missing,Description=\"Missing rate is above ", missing_cutoff, "\">"),
       "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
       "##FORMAT=<ID=DS,Number=1,Type=Float,Description=\"Genotype dosage\">",
       "##FORMAT=<ID=RAI,Number=1,Type=Float,Description=\"RAI (Ratio of Alternative allele Intensity)\">",
