@@ -114,12 +114,12 @@ filter_by_HWE <- function(hwe_p, HWE_cutoff=1e-6){
 #' 
 #' Variants with missing rate > missing_cutoff are recommended to remove.
 #' 
-#' @param missingrate Missing rates
+#' @param F_MISSING Fraction of missing genotypes
 #' @param missing_cutoff Missing rate cutoff to filter variants.
 #' @return Whether the variant passed filtering.
 #' @export
-filter_by_missing <- function(missingrate, missing_cutoff=0.1){
-  if(missingrate > missing_cutoff){
+filter_by_missing <- function(F_MISSING, missing_cutoff=0.1){
+  if(F_MISSING > missing_cutoff){
     filter="Missing"
   }else{
     filter="PASS"
@@ -239,7 +239,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, missi
     vcf <- cbind(
       probeInfo[probes, 1:6], 
       tibble(QUAL=".", FILTER=filter, 
-             INFO=paste0("AF=", AF, ";R2=", R2_constrained, ";HWE=", sprintf("%.3g", hwe_p), ";Missing=", sprintf("%.2g", missing)), 
+             INFO=paste0("AF=", AF, ";R2=", R2_constrained, ";HWE=", sprintf("%.3g", hwe_p), ";F_MISSING=", sprintf("%.2g", missing)), 
              FORMAT="GT:DS:RAI:GP")
     ) %>% left_join(geno, by=c("CpG"))
     vcf <- vcf[, -6]
@@ -251,15 +251,16 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, missi
     header <- paste(
       "##fileformat=VCFv4.2",
       paste(paste0("##contig=<ID=chr", 1:22, ">"), collapse="\n"),
-      paste0("##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele frequency.\">"),
-      paste0("##INFO=<ID=R2,Number=1,Type=Float,Description=\"R-square, encoded as var(G)/2p(1-p), where G is dosage genotype and p is allele frequency. Variants with 1<R2<=1.1 are constrained to 1. Variants with R2>1.1 (marked as .) are recommended to remove.\">"),
-      paste0("##INFO=<ID=HWE,Number=1,Type=Float,Description=\"Hardy-Weinberg Equilibrium p-value.\">"),
-      paste0("##INFO=<ID=Missing,Number=1,Type=Float,Description=\"Missing rate, denoting the proportion of genotypes with the highest genotype probability < ", GP_cutoff, ".\">"),
+      paste0("##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele frequency\">"),
+      paste0("##INFO=<ID=R2,Number=1,Type=Float,Description=\"R-square, encoded as var(G)/2p(1-p), where G is dosage genotype and p is allele frequency. Variants with 1<R2<=1.1 are constrained to 1. Variants with R2>1.1 (marked as .) are recommended to remove\">"),
+      paste0("##INFO=<ID=HWE,Number=1,Type=Float,Description=\"Hardy-Weinberg Equilibrium p-value\">"),
+      paste0("##INFO=<ID=F_MISSING,Number=1,Type=Float,Description=\"Fraction of missing genotypes, which is defined as genotypes with the highest genotype probability < ", GP_cutoff, "\">"),
+      paste0("##FILTER=<ID=PASS,Description=\"All filters passed\">"),
       paste0("##FILTER=<ID=MAF,Description=\"MAF is below ", MAF_cutoff, "\">"),
       paste0("##FILTER=<ID=R2_low,Description=\"R2 is below ", R2_cutoff_down, "\">"),
       paste0("##FILTER=<ID=R2_high,Description=\"R2 is above ", R2_cutoff_up, "\">"),
       paste0("##FILTER=<ID=HWE,Description=\"Deviation from Hardy-Weinberg Equilibrium (HWE, p < 1E-6)\">"),
-      paste0("##FILTER=<ID=Missing,Description=\"Missing rate is above ", missing_cutoff, "\">"),
+      paste0("##FILTER=<ID=Missing,Description=\"Fraction of missing genotypes is above ", missing_cutoff, "\">"),
       "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
       "##FORMAT=<ID=DS,Number=1,Type=Float,Description=\"Genotype dosage\">",
       "##FORMAT=<ID=RAI,Number=1,Type=Float,Description=\"RAI (Ratio of Alternative allele Intensity)\">",
