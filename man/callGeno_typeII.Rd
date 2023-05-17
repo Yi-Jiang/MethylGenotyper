@@ -5,23 +5,28 @@
 \title{Call genotypes for Type II CCS probes}
 \usage{
 callGeno_typeII(
-  rgData,
+  inData,
   input = "raw",
   plotBeta = FALSE,
   vcf = FALSE,
   vcfName = "genotypes.typeII_ccs_probe.vcf",
+  GP_cutoff = 0.9,
+  missing_cutoff = 0.1,
   R2_cutoff_up = 1.1,
   R2_cutoff_down = 0.75,
   MAF_cutoff = 0.01,
+  HWE_cutoff = 1e-06,
   train = TRUE,
   cpu = 1,
   pop = "EAS",
+  maxiter = 50,
   bayesian = TRUE,
-  platform = "EPIC"
+  platform = "EPIC",
+  verbose = 1
 )
 }
 \arguments{
-\item{rgData}{Noob and dye-bias corrected signals produced by using \code{correct_noob_dye}.}
+\item{inData}{If input="raw", provide rgData here (Noob and dye-bias corrected signals produced by using \code{correct_noob_dye}). Otherwise, provide beta or M-value matrix here.}
 
 \item{input}{Input data types. One of "raw", "beta", and "mval". If input is "beta" or "mval", please use probes as rows and samples as columns.}
 
@@ -31,9 +36,15 @@ callGeno_typeII(
 
 \item{vcfName}{VCF file name. Only effective when vcf=TRUE.}
 
-\item{R2_cutoff_up, R2_cutoff_down}{R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the \code{FILTER} column. For the returned matrix, variants with R-square outside this range will be removed.}
+\item{GP_cutoff}{When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.}
 
-\item{MAF_cutoff}{A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned matrix, variants with MAF below the cutoff will be removed.}
+\item{missing_cutoff}{Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the \code{FILTER} column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.}
+
+\item{R2_cutoff_up, R2_cutoff_down}{R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the \code{FILTER} column. For the returned dosage matrix, variants with R-square outside this range will be removed.}
+
+\item{MAF_cutoff}{A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the \code{FILTER} column. For the returned dosage matrix, variants with MAF below the cutoff will be removed.}
+
+\item{HWE_cutoff}{HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the \code{FILTER} column. For the returned dosage matrix, variants with HWE p value below the cutoff will be removed.}
 
 \item{train}{If TRUE, will fit the distribution of RAI (Ratio of Alternative allele Intensity) and filter probes by number of peaks. If FALSE, will use predefined probe list.}
 
@@ -41,14 +52,19 @@ callGeno_typeII(
 
 \item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.}
 
+\item{maxiter}{Maximal number of iterations for the EM algorithm.}
+
 \item{bayesian}{Use the Bayesian approach to calculate posterior genotype probabilities.}
 
 \item{platform}{EPIC or 450K.}
+
+\item{verbose}{Verbose mode: 0/1/2.}
 }
 \value{
 A list containing
-\item{dosage}{A matrix of genotype calls. Variants with R2 or MAF beyond the cutoffs are removed. Genotypes with genotype quality (GQ) < 20 will be marked as NA.}
-\item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), genotype probability (GP), Phred-scaled genotype likelihood (PL), and genotype quality (GQ).}
+\item{dosage}{A matrix of genotype calls. Variants with R2s, HWE p values, MAFs, or missing rates beyond the cutoffs are removed.}
+\item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), and genotype probability (GP).}
+\item{methyl_recalc}{Re-calculated methylation levels on reference alleles. A list containing shapes of the mixed beta distributions and true methylation level (pM) for each probe.}
 }
 \description{
 Call genotypes for Type II CCS probes

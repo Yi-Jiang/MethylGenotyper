@@ -9,17 +9,48 @@
 #' @param maxiter Maximal number of iterations for the EM algorithm.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
 #' @param platform EPIC or 450K.
+#' @param verbose Verbose mode: 0/1/2.
 #' @return  A list containing
 #' \item{RAI}{Ratio of Alternative allele Intensity}
 #' \item{shapes}{Shapes of the mixed beta distributions}
 #' \item{priors}{Prior probabilities that the RAI values belong to one of the three genotypes}
 #' \item{U}{Proportion of RAI values being outlier}
+#' \item{logLik}{Log-likelihood}
 #' \item{GP}{Posterior probabilities for the three genotypes}
-#' \item{PL}{Phred-scaled genotype likelihood}
-#' \item{GQ}{Genotype quality}
 #' @export
-call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE, platform="EPIC"){
+call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE, platform="EPIC", verbose=1){
+  # Fit mixed beta distribution based on EM
   print(paste(Sys.time(), "Running EM to fit beta distributions for RAI values."))
+  finalClusters <- fit_beta_em(RAI, maxiter=maxiter, verbose=verbose)
+
+  # Get posterior genotype probabilities
+  print(paste(Sys.time(), "Calculating genotype probabilities."))
+  probe2af <- get_AF(pop=pop, type=type, platform=platform)
+  AF <- matrix(rep(probe2af[rownames(RAI)], ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
+  GP <- get_GP(RAI, finalClusters$shapes[, c("shape1", "shape2")], bayesian=bayesian, AF)
+  
+  # return
+  list(RAI=RAI, 
+       shapes=finalClusters$shapes, 
+       priors=finalClusters$priors, 
+       U=finalClusters$U, 
+       GP=GP)
+}
+
+#' Estimate mixed beta distribution parameters based on EM algorithm
+#' 
+#' The Expectation–maximization (EM) algorithm is used to fit a mixture of three beta distributions representing the three genotypes (AA, AB, and BB) and one uniform distribution representing the outliers (adapted from ewastools).
+#'
+#' @param RAI A matrix of RAI (Ratio of Alternative allele Intensity) for probes. Provide probes as rows and samples as columns.
+#' @param maxiter Maximal number of iterations for the EM algorithm.
+#' @param verbose Verbose mode: 0/1/2.
+#' @return  A list containing
+#' \item{shapes}{Shapes of the mixed beta distributions}
+#' \item{priors}{Prior probabilities that the RAI values belong to one of the three genotypes}
+#' \item{U}{Proportion of RAI values being outlier}
+#' \item{logLik}{Log-likelihood}
+#' @export
+fit_beta_em <- function(RAI, maxiter=50, verbose=1){
   # Initialize
   assignments <- RAI %>% as.data.frame %>%
     mutate(Probe=rownames(.)) %>%
@@ -34,15 +65,15 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE, p
   U <- 0.01
   outliers <- rep(U, N)
   GP <- NA
-
+  
   e_step <- function(){
     GP <- (1 - U) * cbind(
       priors[1] * dbeta(assignments$RAI, shape1_1, shape2_1, log=F),
       priors[2] * dbeta(assignments$RAI, shape1_2, shape2_2, log=F),
       priors[3] * dbeta(assignments$RAI, shape1_3, shape2_3, log=F)
     )
-    tmp <- rowSums(GP)
-    GP <<- GP / tmp
+    tmp <- rowSums(GP, na.rm=T)
+    GP <<- GP / tmp # If RAI=0，the "dbeta" function above will produce three zeros, and leads to NA here.
     outliers <<- U / (U + tmp)
     logLik <- sum(log(U + tmp))
     return(logLik)
@@ -51,7 +82,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE, p
   m_step <- function(){
     GP <- GP * (1 - outliers)
     priors <- colSums(GP)
-    priors <<- priors / sum(priors)
+    priors <<- priors / sum(priors, na.rm=T)
     U <<- sum(outliers) / N
     # Moments estimator
     s1 <- eBeta(assignments$RAI, GP[,1])
@@ -79,39 +110,16 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE, p
       U = U,
       logLik = logLik
     )
-    print(paste0("EM: Iteration ", i, ", log-likelihood: ", round(logLik, 6)))
-    # print("Prior probabilities of the three genotypes: ")
-    # print(priors)
-    # print("Shapes:")
-    # print(shapes)
-    # print("Outlier:")
-    # print(U)
+    if(verbose>=1){
+      print(paste0("EM: Iteration ", i, ", log-likelihood: ", round(logLik, 6)))
+    }
     if(i>1){
       gain = logLik - iterations[[i-1]]$logLik
     }
     i=i+1
   }
   finalClusters <- iterations[[i-1]]
-  
-  # Get posterior genotype probabilities
-  print(paste(Sys.time(), "Running the Bayesian approach to get posterior genotype probabilities."))
-  probe2af <- get_AF(pop=pop, type=type, platform=platform)
-  AF <- matrix(rep(probe2af[rownames(RAI)], ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
-  GP <- get_GP(RAI, finalClusters$shapes[, c("shape1", "shape2")], bayesian=bayesian, AF)
-  
-  # PL, GQ
-  PL <- get_PL(GP)
-  GQ <- get_GQ(PL)
-  
-  # return
-  list(RAI=RAI, 
-       shapes=finalClusters$shapes, 
-       priors=finalClusters$priors, 
-       U=finalClusters$U, 
-       #iterations=iterations, 
-       GP=GP,
-       PL=PL,
-       GQ=GQ)
+  finalClusters
 }
 
 #' Moments estimator for beta distribution (adapted from ewastools)
@@ -122,7 +130,10 @@ eBeta = function(x,w){
   sample.mean =  mean(w*x)
   sample.var  = (mean(w*x^2)-sample.mean^2) * n/(n-1)
   v = sample.mean * (1-sample.mean)
-  if (sample.var < v){
+  if (is.na(sample.var) | is.na(v)) {
+    shape1 = Inf
+    shape2 = Inf
+  } else if (sample.var < v){
     shape1 = sample.mean * (v/sample.var - 1)
     shape2 = (1 - sample.mean) * (v/sample.var - 1)
   } else {
@@ -181,22 +192,24 @@ get_AF <- function(pop="EAS", type, platform="EPIC"){
 #' @param RAI A MxN matrix of RAI (Ratio of Alternative allele Intensity). Provide probes as rows and samples as columns.
 #' @param shapes A data frame (3x2) containing the two shapes for beta distributions of the three clusters. 
 #' @param bayesian Use the Bayesian approach or not.
-#' @param AF A MxN matrix of AFs. Provide SNPs as rows and samples as columns.
+#' @param AF A MxN matrix of AFs. Provide SNPs as rows and samples as columns. Only effective when bayesian=TRUE.
 #' @return  A list containing
 #' \item{pAA}{Posterior genotype probability of AA}
 #' \item{pAB}{Posterior genotype probability of AB}
 #' \item{pBB}{Posterior genotype probability of BB}
 #' @export
 get_GP <- function(RAI, shapes, bayesian=TRUE, AF){
-  probes <- intersect(rownames(RAI), rownames(AF))
-  samples <- intersect(colnames(RAI), colnames(AF))
-  RAI <- RAI[probes, samples]
   shapes$mean <- shapes$shape1 / (shapes$shape1 + shapes$shape2)
   shapes <- as.matrix(shapes[order(shapes$mean),]) # row1 to row3: AA, AB, BB
   pD_AA <- apply(RAI, 1:2, function(x) dbeta(x, shapes[1, 1], shapes[1, 2])) # probability of data given genotype AA
   pD_AB <- apply(RAI, 1:2, function(x) dbeta(x, shapes[2, 1], shapes[2, 2]))
   pD_BB <- apply(RAI, 1:2, function(x) dbeta(x, shapes[3, 1], shapes[3, 2]))
   if(bayesian==TRUE){
+    probes <- intersect(rownames(RAI), rownames(AF))
+    samples <- intersect(colnames(RAI), colnames(AF))
+    pD_AA <- pD_AA[probes, samples]
+    pD_AB <- pD_AB[probes, samples]
+    pD_BB <- pD_BB[probes, samples]
     AF <- AF[probes, samples]
     pAA_prior <- (1 - AF) ^2 # Prior genotype probability of AA
     pAB_prior <- 2 * AF * (1 - AF)
@@ -212,48 +225,5 @@ get_GP <- function(RAI, shapes, bayesian=TRUE, AF){
     pBB <- pD_BB / pD
   }
   return(list(pAA=pAA, pAB=pAB, pBB=pBB))
-}
-
-#' Calculate Phred-scaled genotype likelihood (PL)
-#'
-#' @param GP A list of posterior genotype probabilities of genotype AA, AB, and BB.
-#' @return A list of Phred-scaled genotype likelihoods containing PL(AA), PL(AB), and PL(BB).
-#' @export
-get_PL <- function(GP){
-  print(paste(Sys.time(), "Calculating Phred-scaled genotype likelihood (PL)."))
-  GP$pAA[GP$pAA < 1e-300] <- 1e-300
-  GP$pAB[GP$pAB < 1e-300] <- 1e-300
-  GP$pBB[GP$pBB < 1e-300] <- 1e-300
-  PL_AA <- -10 * log10(GP$pAA)
-  PL_AB <- -10 * log10(GP$pAB)
-  PL_BB <- -10 * log10(GP$pBB)
-  PL_min <- base::pmin(PL_AA, PL_AB, PL_BB)
-  PL_AA <- PL_AA - PL_min
-  PL_AB <- PL_AB - PL_min
-  PL_BB <- PL_BB - PL_min
-  list(AA = PL_AA, AB = PL_AB, BB = PL_BB)
-}
-
-#' Calculate genotype quality (GQ)
-#'
-#' @param PL A list of Phred-scaled genotype likelihoods containing PL(AA), PL(AB), and PL(BB).
-#' @return A matrix of genotype qualities
-#' @export
-get_GQ <- function(PL){
-  print(paste(Sys.time(), "Calculating genotype quality (GQ)."))
-  PL_AA <- PL$AA
-  PL_AB <- PL$AB
-  PL_BB <- PL$BB
-  PL_AA[PL_AA==0] <- NA_real_
-  PL_AB[PL_AB==0] <- NA_real_
-  PL_BB[PL_BB==0] <- NA_real_
-  nNA <- matrix(
-    mapply(function(x,y,z){sum(is.na(c(x,y,z)))}, PL_AA, PL_AB, PL_BB), 
-    nrow=nrow(PL_AA), ncol=ncol(PL_AA), dimnames = dimnames(PL_AA)
-  )
-  GQ <- base::pmin(PL_AA, PL_AB, PL_BB, na.rm=T)
-  GQ[nNA>1] <- 0
-  GQ[GQ>99] <- 99
-  GQ
 }
 

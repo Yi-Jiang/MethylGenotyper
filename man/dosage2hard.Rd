@@ -4,10 +4,14 @@
 \alias{dosage2hard}
 \title{Get hard genotypes from genotype probabilities}
 \usage{
-dosage2hard(genotypes)
+dosage2hard(AA, AB, BB)
 }
 \arguments{
-\item{genotypes}{Genotype calls.}
+\item{AA}{Genotype probability of AA or 0/0.}
+
+\item{AB}{Genotype probability of AB or 0/1.}
+
+\item{BB}{Genotype probability of BB or 1/1.}
 }
 \value{
 A matrix of hard genotypes.
