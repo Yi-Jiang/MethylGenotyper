@@ -207,10 +207,7 @@ get_AF <- function(pop="EAS", type, platform="EPIC"){
 get_GP <- function(RAI, priors, shapes, bayesian=TRUE, AF){
   # shapes$mean <- shapes$shape1 / (shapes$shape1 + shapes$shape2)
   # shapes <- as.matrix(shapes[order(shapes$mean),]) # row1 to row3: AA, AB, BB
-  # pD_AA <- apply(RAI, 1:2, function(x) dbeta(x, shapes[1, 1], shapes[1, 2])) # probability of data given genotype AA
-  # pD_AB <- apply(RAI, 1:2, function(x) dbeta(x, shapes[2, 1], shapes[2, 2]))
-  # pD_BB <- apply(RAI, 1:2, function(x) dbeta(x, shapes[3, 1], shapes[3, 2]))
-  pD_AA <- t(sapply(1:nrow(RAI), function(x) priors[x,1] * dbeta(RAI[x,], shapes[1,1], shapes[1,2])))
+  pD_AA <- t(sapply(1:nrow(RAI), function(x) priors[x,1] * dbeta(RAI[x,], shapes[1,1], shapes[1,2]))) # probability of data given genotype AA
   pD_AB <- t(sapply(1:nrow(RAI), function(x) priors[x,2] * dbeta(RAI[x,], shapes[2,1], shapes[2,2])))
   pD_BB <- t(sapply(1:nrow(RAI), function(x) priors[x,3] * dbeta(RAI[x,], shapes[3,1], shapes[3,2])))
   rownames(pD_AA) <- rownames(RAI); colnames(pD_AA) <- colnames(RAI)

@@ -91,8 +91,8 @@ callGeno_typeII <- function(inData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
   # calculate RAI
   mod$pM <- sapply(2 * mod$loc1, function(x) min(x, 1))
   RAI <- 1 - ( beta / matrix(rep(mod[rownames(beta), "pM", drop=TRUE], ncol(beta)), nrow=nrow(beta)) )
-  RAI[RAI < 0.01] <- 0.01 # if set to zero, it will fail in fitting beta distribution as GP will be NA in call_genotypes_bayesian.R:: GP <<- GP / tmp
-  RAI[RAI > 1] <- 1
+  RAI[RAI < 0.01] <- 0.01 # if set to 0 or 1, it will fail in fitting beta distribution as GP will be NA in call_genotypes_bayesian.R:: GP <<- GP / tmp
+  RAI[RAI > 0.99] <- 0.99
   
   # call genotypes
   genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeII_ccs_probe", maxiter=maxiter, 
