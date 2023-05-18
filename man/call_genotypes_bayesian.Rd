@@ -31,10 +31,10 @@ call_genotypes_bayesian(
 }
 \value{
 A list containing
-\item{q}{Allele frequencies estimated from the data}
+\item{phi}{Allele frequencies estimated from the data}
 \item{RAI}{Ratio of Alternative allele Intensity}
 \item{shapes}{Shapes of the mixed beta distributions}
-\item{priors}{Prior probabilities that the RAI values belong to one of the three genotypes}
+\item{weights}{Prior probabilities that the RAI values belong to one of the three genotypes}
 \item{U}{Proportion of RAI values being outlier}
 \item{logLik}{Log-likelihood}
 \item{GP}{Posterior probabilities for the three genotypes}

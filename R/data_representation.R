@@ -170,13 +170,15 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, missi
   probes <- rownames(dosage)
   maxGP <- pmax(genotypes$GP$pAA, genotypes$GP$pAB, genotypes$GP$pBB, na.rm=TRUE)
   #dosage[maxGP < GP_cutoff] <- NA_real_
-  missing <- rowSums(maxGP < GP_cutoff) / ncol(maxGP)
+  dosage[genotypes$outliers > 0.2] <- NA_real_
+  missing <- rowSums(maxGP < GP_cutoff | is.na(dosage)) / ncol(maxGP)
   AF <- rowMeans(dosage, na.rm=T) / 2
   AF[is.na(AF)] <- 0
   R2 <- apply(dosage, 1, function(x) var(x, na.rm=T)) / (2 * AF * (1 - AF))
   R2[is.na(R2)] <- 0
   R2_constrained <- sapply(R2, constrain_R2)
   hardgeno <- dosage2hard(genotypes$GP$pAA, genotypes$GP$pAB, genotypes$GP$pBB)
+  hardgeno[is.na(dosage)] <- NA_real_
   hwe_p <- getHWE(hardgeno)
   filter_AF <- sapply(AF, function(x) filter_by_AF(x, MAF_cutoff))
   filter_R2 <- sapply(R2, function(x) filter_by_R2(x, R2_cutoff_up, R2_cutoff_down))
@@ -190,9 +192,9 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, missi
   ## Write into a VCF file
   if(vcf){
     ## format
-    #hardgeno[is.na(hardgeno)] <- "./."
+    hardgeno[is.na(hardgeno)] <- "./."
     dosage_chr <- round(dosage, 2)
-    #dosage_chr[is.na(dosage_chr)] <- "."
+    dosage_chr[is.na(dosage_chr)] <- "."
     genotypes$GP$pAA <- round(genotypes$GP$pAA, 2)
     genotypes$GP$pAB <- round(genotypes$GP$pAB, 2)
     genotypes$GP$pBB <- round(genotypes$GP$pBB, 2)

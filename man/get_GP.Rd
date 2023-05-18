@@ -4,12 +4,12 @@
 \alias{get_GP}
 \title{Infer posterior genotype probabilities based on the Bayesian approach}
 \usage{
-get_GP(RAI, priors, shapes, bayesian = TRUE, AF)
+get_GP(RAI, weights, shapes, bayesian = TRUE, AF)
 }
 \arguments{
 \item{RAI}{A MxN matrix of RAI (Ratio of Alternative allele Intensity). Provide probes as rows and samples as columns.}
 
-\item{priors}{Prior probabilities that the RAI values belong to one of the three genotypes.}
+\item{weights}{Prior probabilities that the RAI values belong to one of the three genotypes.}
 
 \item{shapes}{A data frame (3x2) containing the two shapes for beta distributions of the three clusters.}
 

@@ -11,10 +11,10 @@
 #' @param platform EPIC or 450K.
 #' @param verbose Verbose mode: 0/1/2.
 #' @return  A list containing
-#' \item{q}{Allele frequencies estimated from the data}
+#' \item{phi}{Allele frequencies estimated from the data}
 #' \item{RAI}{Ratio of Alternative allele Intensity}
 #' \item{shapes}{Shapes of the mixed beta distributions}
-#' \item{priors}{Prior probabilities that the RAI values belong to one of the three genotypes}
+#' \item{weights}{Prior probabilities that the RAI values belong to one of the three genotypes}
 #' \item{U}{Proportion of RAI values being outlier}
 #' \item{logLik}{Log-likelihood}
 #' \item{GP}{Posterior probabilities for the three genotypes}
@@ -28,15 +28,17 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE, p
   print(paste(Sys.time(), "Calculating genotype probabilities."))
   probe2af <- get_AF(pop=pop, type=type, platform=platform)
   AF <- matrix(rep(probe2af[rownames(RAI)], ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
-  GP <- get_GP(RAI, finalClusters$priors, finalClusters$shapes[, c("shape1", "shape2")], bayesian=bayesian, AF)
+  GP <- get_GP(RAI, finalClusters$weights, finalClusters$shapes[, c("shape1", "shape2")], bayesian=bayesian, AF)
   
   # return
   list(RAI=RAI, 
-       q=finalClusters$q, 
-       shapes=finalClusters$shapes, 
-       priors=finalClusters$priors, 
-       U=finalClusters$U, 
-       GP=GP)
+       phi = finalClusters$phi, 
+       shapes = finalClusters$shapes, 
+       weights = finalClusters$weights, 
+       U = finalClusters$U, 
+       outliers = finalClusters$outliers,
+       logLiks = finalClusters$logLiks,
+       GP = GP)
 }
 
 #' Estimate mixed beta distribution parameters based on EM algorithm
@@ -47,9 +49,9 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE, p
 #' @param maxiter Maximal number of iterations for the EM algorithm.
 #' @param verbose Verbose mode: 0/1/2.
 #' @return  A list containing
-#' \item{q}{Allele frequencies estimated from the data}
+#' \item{phi}{Allele frequencies estimated from the data}
 #' \item{shapes}{Shapes of the mixed beta distributions}
-#' \item{priors}{Prior probabilities that the RAI values belong to one of the three genotypes}
+#' \item{weights}{Prior probabilities that the RAI values belong to one of the three genotypes}
 #' \item{U}{Proportion of RAI values being outlier}
 #' \item{logLik}{Log-likelihood}
 #' @export
@@ -61,8 +63,8 @@ fit_beta_em <- function(RAI, maxiter=50, verbose=1){
   N <- length(RAI_flat)
   
   # EM
-  q <- rep(0.2, m) # AF
-  priors <- sapply(0:2, function(k) choose(2,k) * q^k * (1-q)^(2-k))
+  phi <- rep(0.2, m) # AF
+  weights <- sapply(0:2, function(k) choose(2,k) * phi^k * (1-phi)^(2-k))
   shapes <- as.data.frame(matrix(
     c(5, 30, 60, 60, 30, 5),
     nrow=3, dimnames=list(paste0("Cluster", 0:2), c("shape1", "shape2"))
@@ -73,9 +75,9 @@ fit_beta_em <- function(RAI, maxiter=50, verbose=1){
   
   e_step <- function(){
     GP <- (1 - U) * cbind(
-      as.vector(t(sapply(1:m, function(x) priors[x,1] * dbeta(RAI[x,], shapes[1,1], shapes[1,2])))),
-      as.vector(t(sapply(1:m, function(x) priors[x,2] * dbeta(RAI[x,], shapes[2,1], shapes[2,2])))),
-      as.vector(t(sapply(1:m, function(x) priors[x,3] * dbeta(RAI[x,], shapes[3,1], shapes[3,2]))))
+      as.vector(t(sapply(1:m, function(x) weights[x,1] * dbeta(RAI[x,], shapes[1,1], shapes[1,2])))),
+      as.vector(t(sapply(1:m, function(x) weights[x,2] * dbeta(RAI[x,], shapes[2,1], shapes[2,2])))),
+      as.vector(t(sapply(1:m, function(x) weights[x,3] * dbeta(RAI[x,], shapes[3,1], shapes[3,2]))))
     )
     tmp <- rowSums(GP, na.rm=T)
     GP <<- GP / tmp # If RAI=0，the "dbeta" function above will produce three zeros, and leads to NA here.
@@ -87,8 +89,8 @@ fit_beta_em <- function(RAI, maxiter=50, verbose=1){
   m_step <- function(){
     GP <- GP * (1 - outliers)
     DS <- matrix(GP[,1] + 2 * GP[,2], nrow=m)
-    q <<- rowMeans(DS, na.rm=TRUE) / 2
-    priors <<- sapply(0:2, function(k) choose(2,k) * q^k * (1-q)^(2-k))
+    phi <<- rowMeans(DS, na.rm=TRUE) / 2
+    weights <<- sapply(0:2, function(k) choose(2,k) * phi^k * (1-phi)^(2-k))
     U <<- sum(outliers) / N
     # Moments estimator
     s1 <- eBeta(RAI_flat, GP[,1])
@@ -99,32 +101,37 @@ fit_beta_em <- function(RAI, maxiter=50, verbose=1){
     return(NA)
   }
   
-  iterations <- list()
+  logLiks <- c()
   gain <- Inf
   i <- 1
   while(i <= maxiter & gain > 1e-4){
     logLik <- e_step()
     m_step()
-    names(q) <- rownames(RAI)
-    rownames(priors) <- rownames(RAI)
-    colnames(priors) <- paste0("Cluster", 0:2)
-    iterations[[i]] <- list(
-      q = q,
-      priors = priors,
-      shapes = shapes,
-      U = U,
-      logLik = logLik
-    )
+    names(phi) <- rownames(RAI)
+    rownames(weights) <- rownames(RAI)
+    colnames(weights) <- paste0("Cluster", 0:2)
+    logLiks <- c(logLiks, logLik)
     if(verbose>=1){
       print(paste0("EM: Iteration ", i, ", log-likelihood: ", round(logLik, 6)))
     }
     if(i>1){
-      gain = logLik - iterations[[i-1]]$logLik
+      gain = logLik - logLiks[i-1]
     }
     i=i+1
   }
-  finalClusters <- iterations[[i-1]]
-  finalClusters
+  outliers <- matrix(outliers, nrow=m)
+  rownames(outliers) <- rownames(RAI)
+  colnames(outliers) <- colnames(RAI)
+  names(logLiks) <- paste0("Iter", 1:length(logLiks))
+  iteration <- list(
+    phi = phi,
+    weights = weights,
+    shapes = shapes,
+    U = U,
+    outliers = outliers,
+    logLiks = logLiks
+  )
+  iteration
 }
 
 #' Moments estimator for beta distribution (adapted from ewastools)
@@ -195,7 +202,7 @@ get_AF <- function(pop="EAS", type, platform="EPIC"){
 #' Prior genotype probabilities were inferred from AFs. The AFs can be in population level or individual-specific level. For population level AFs, they can be extracted from the matched population in the 1000 Genomes Project (1KGP). For individual-specific AFs, they can be calculated according to the top four PCs.
 #'
 #' @param RAI A MxN matrix of RAI (Ratio of Alternative allele Intensity). Provide probes as rows and samples as columns.
-#' @param priors Prior probabilities that the RAI values belong to one of the three genotypes.
+#' @param weights Prior probabilities that the RAI values belong to one of the three genotypes.
 #' @param shapes A data frame (3x2) containing the two shapes for beta distributions of the three clusters. 
 #' @param bayesian Use the Bayesian approach or not.
 #' @param AF A MxN matrix of AFs. Provide SNPs as rows and samples as columns. Only effective when bayesian=TRUE.
@@ -204,12 +211,12 @@ get_AF <- function(pop="EAS", type, platform="EPIC"){
 #' \item{pAB}{Posterior genotype probability of AB}
 #' \item{pBB}{Posterior genotype probability of BB}
 #' @export
-get_GP <- function(RAI, priors, shapes, bayesian=TRUE, AF){
+get_GP <- function(RAI, weights, shapes, bayesian=TRUE, AF){
   # shapes$mean <- shapes$shape1 / (shapes$shape1 + shapes$shape2)
   # shapes <- as.matrix(shapes[order(shapes$mean),]) # row1 to row3: AA, AB, BB
-  pD_AA <- t(sapply(1:nrow(RAI), function(x) priors[x,1] * dbeta(RAI[x,], shapes[1,1], shapes[1,2]))) # probability of data given genotype AA
-  pD_AB <- t(sapply(1:nrow(RAI), function(x) priors[x,2] * dbeta(RAI[x,], shapes[2,1], shapes[2,2])))
-  pD_BB <- t(sapply(1:nrow(RAI), function(x) priors[x,3] * dbeta(RAI[x,], shapes[3,1], shapes[3,2])))
+  pD_AA <- t(sapply(1:nrow(RAI), function(x) weights[x,1] * dbeta(RAI[x,], shapes[1,1], shapes[1,2]))) # probability of data given genotype AA
+  pD_AB <- t(sapply(1:nrow(RAI), function(x) weights[x,2] * dbeta(RAI[x,], shapes[2,1], shapes[2,2])))
+  pD_BB <- t(sapply(1:nrow(RAI), function(x) weights[x,3] * dbeta(RAI[x,], shapes[3,1], shapes[3,2])))
   rownames(pD_AA) <- rownames(RAI); colnames(pD_AA) <- colnames(RAI)
   rownames(pD_AB) <- rownames(RAI); colnames(pD_AB) <- colnames(RAI)
   rownames(pD_BB) <- rownames(RAI); colnames(pD_BB) <- colnames(RAI)

@@ -15,9 +15,9 @@ fit_beta_em(RAI, maxiter = 50, verbose = 1)
 }
 \value{
 A list containing
-\item{q}{Allele frequencies estimated from the data}
+\item{phi}{Allele frequencies estimated from the data}
 \item{shapes}{Shapes of the mixed beta distributions}
-\item{priors}{Prior probabilities that the RAI values belong to one of the three genotypes}
+\item{weights}{Prior probabilities that the RAI values belong to one of the three genotypes}
 \item{U}{Proportion of RAI values being outlier}
 \item{logLik}{Log-likelihood}
 }
