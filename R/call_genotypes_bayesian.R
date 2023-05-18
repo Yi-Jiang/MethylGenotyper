@@ -11,6 +11,7 @@
 #' @param platform EPIC or 450K.
 #' @param verbose Verbose mode: 0/1/2.
 #' @return  A list containing
+#' \item{q}{Allele frequencies estimated from the data}
 #' \item{RAI}{Ratio of Alternative allele Intensity}
 #' \item{shapes}{Shapes of the mixed beta distributions}
 #' \item{priors}{Prior probabilities that the RAI values belong to one of the three genotypes}
@@ -27,10 +28,11 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE, p
   print(paste(Sys.time(), "Calculating genotype probabilities."))
   probe2af <- get_AF(pop=pop, type=type, platform=platform)
   AF <- matrix(rep(probe2af[rownames(RAI)], ncol(RAI)), ncol=ncol(RAI), dimnames=list(rownames(RAI), colnames(RAI)))
-  GP <- get_GP(RAI, finalClusters$shapes[, c("shape1", "shape2")], bayesian=bayesian, AF)
+  GP <- get_GP(RAI, finalClusters$priors, finalClusters$shapes[, c("shape1", "shape2")], bayesian=bayesian, AF)
   
   # return
   list(RAI=RAI, 
+       q=finalClusters$q, 
        shapes=finalClusters$shapes, 
        priors=finalClusters$priors, 
        U=finalClusters$U, 
@@ -45,6 +47,7 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE, p
 #' @param maxiter Maximal number of iterations for the EM algorithm.
 #' @param verbose Verbose mode: 0/1/2.
 #' @return  A list containing
+#' \item{q}{Allele frequencies estimated from the data}
 #' \item{shapes}{Shapes of the mixed beta distributions}
 #' \item{priors}{Prior probabilities that the RAI values belong to one of the three genotypes}
 #' \item{U}{Proportion of RAI values being outlier}
@@ -52,25 +55,27 @@ call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE, p
 #' @export
 fit_beta_em <- function(RAI, maxiter=50, verbose=1){
   # Initialize
-  assignments <- RAI %>% as.data.frame %>%
-    mutate(Probe=rownames(.)) %>%
-    tidyr::gather(key="Sample", value="RAI", -Probe) %>% tibble
-  N <- nrow(assignments)
+  RAI_flat <- as.vector(RAI) # 1-dimension
+  m <- nrow(RAI) # number of probes
+  n <- ncol(RAI) # number of samples
+  N <- length(RAI_flat)
   
   # EM
-  priors <- rep(1/3, 3)
-  shape1_1 <- 5; shape2_1 <- 60
-  shape1_2 <- 30; shape2_2 <- 30
-  shape1_3 <- 60; shape2_3 <- 5
+  q <- rep(0.2, m) # AF
+  priors <- sapply(0:2, function(k) choose(2,k) * q^k * (1-q)^(2-k))
+  shapes <- as.data.frame(matrix(
+    c(5, 30, 60, 60, 30, 5),
+    nrow=3, dimnames=list(paste0("Cluster", 0:2), c("shape1", "shape2"))
+  ))
   U <- 0.01
   outliers <- rep(U, N)
   GP <- NA
   
   e_step <- function(){
     GP <- (1 - U) * cbind(
-      priors[1] * dbeta(assignments$RAI, shape1_1, shape2_1, log=F),
-      priors[2] * dbeta(assignments$RAI, shape1_2, shape2_2, log=F),
-      priors[3] * dbeta(assignments$RAI, shape1_3, shape2_3, log=F)
+      as.vector(t(sapply(1:m, function(x) priors[x,1] * dbeta(RAI[x,], shapes[1,1], shapes[1,2])))),
+      as.vector(t(sapply(1:m, function(x) priors[x,2] * dbeta(RAI[x,], shapes[2,1], shapes[2,2])))),
+      as.vector(t(sapply(1:m, function(x) priors[x,3] * dbeta(RAI[x,], shapes[3,1], shapes[3,2]))))
     )
     tmp <- rowSums(GP, na.rm=T)
     GP <<- GP / tmp # If RAI=0，the "dbeta" function above will produce three zeros, and leads to NA here.
@@ -81,15 +86,16 @@ fit_beta_em <- function(RAI, maxiter=50, verbose=1){
   
   m_step <- function(){
     GP <- GP * (1 - outliers)
-    priors <- colSums(GP)
-    priors <<- priors / sum(priors, na.rm=T)
+    DS <- matrix(GP[,1] + 2 * GP[,2], nrow=m)
+    q <<- rowMeans(DS, na.rm=TRUE) / 2
+    priors <<- sapply(0:2, function(k) choose(2,k) * q^k * (1-q)^(2-k))
     U <<- sum(outliers) / N
     # Moments estimator
-    s1 <- eBeta(assignments$RAI, GP[,1])
-    s2 <- eBeta(assignments$RAI, GP[,2])
-    s3 <- eBeta(assignments$RAI, GP[,3])
-    shape1_1 <<- s1$shape1; shape1_2 <<- s2$shape1; shape1_3 <<- s3$shape1
-    shape2_1 <<- s1$shape2; shape2_2 <<- s2$shape2; shape2_3 <<- s3$shape2
+    s1 <- eBeta(RAI_flat, GP[,1])
+    s2 <- eBeta(RAI_flat, GP[,2])
+    s3 <- eBeta(RAI_flat, GP[,3])
+    shapes[1,1] <<- s1$shape1; shapes[2,1] <<- s2$shape1; shapes[3,1] <<- s3$shape1
+    shapes[1,2] <<- s1$shape2; shapes[2,2] <<- s2$shape2; shapes[3,2] <<- s3$shape2
     return(NA)
   }
   
@@ -99,12 +105,11 @@ fit_beta_em <- function(RAI, maxiter=50, verbose=1){
   while(i <= maxiter & gain > 1e-4){
     logLik <- e_step()
     m_step()
-    shapes <- as.data.frame(matrix(
-      c(shape1_1, shape1_2, shape1_3, shape2_1, shape2_2, shape2_3),
-      nrow=3,
-      dimnames=list(paste0("Cluster", 1:3), c("shape1", "shape2"))
-    ))
+    names(q) <- rownames(RAI)
+    rownames(priors) <- rownames(RAI)
+    colnames(priors) <- paste0("Cluster", 0:2)
     iterations[[i]] <- list(
+      q = q,
       priors = priors,
       shapes = shapes,
       U = U,
@@ -190,6 +195,7 @@ get_AF <- function(pop="EAS", type, platform="EPIC"){
 #' Prior genotype probabilities were inferred from AFs. The AFs can be in population level or individual-specific level. For population level AFs, they can be extracted from the matched population in the 1000 Genomes Project (1KGP). For individual-specific AFs, they can be calculated according to the top four PCs.
 #'
 #' @param RAI A MxN matrix of RAI (Ratio of Alternative allele Intensity). Provide probes as rows and samples as columns.
+#' @param priors Prior probabilities that the RAI values belong to one of the three genotypes.
 #' @param shapes A data frame (3x2) containing the two shapes for beta distributions of the three clusters. 
 #' @param bayesian Use the Bayesian approach or not.
 #' @param AF A MxN matrix of AFs. Provide SNPs as rows and samples as columns. Only effective when bayesian=TRUE.
@@ -198,12 +204,18 @@ get_AF <- function(pop="EAS", type, platform="EPIC"){
 #' \item{pAB}{Posterior genotype probability of AB}
 #' \item{pBB}{Posterior genotype probability of BB}
 #' @export
-get_GP <- function(RAI, shapes, bayesian=TRUE, AF){
-  shapes$mean <- shapes$shape1 / (shapes$shape1 + shapes$shape2)
-  shapes <- as.matrix(shapes[order(shapes$mean),]) # row1 to row3: AA, AB, BB
-  pD_AA <- apply(RAI, 1:2, function(x) dbeta(x, shapes[1, 1], shapes[1, 2])) # probability of data given genotype AA
-  pD_AB <- apply(RAI, 1:2, function(x) dbeta(x, shapes[2, 1], shapes[2, 2]))
-  pD_BB <- apply(RAI, 1:2, function(x) dbeta(x, shapes[3, 1], shapes[3, 2]))
+get_GP <- function(RAI, priors, shapes, bayesian=TRUE, AF){
+  # shapes$mean <- shapes$shape1 / (shapes$shape1 + shapes$shape2)
+  # shapes <- as.matrix(shapes[order(shapes$mean),]) # row1 to row3: AA, AB, BB
+  # pD_AA <- apply(RAI, 1:2, function(x) dbeta(x, shapes[1, 1], shapes[1, 2])) # probability of data given genotype AA
+  # pD_AB <- apply(RAI, 1:2, function(x) dbeta(x, shapes[2, 1], shapes[2, 2]))
+  # pD_BB <- apply(RAI, 1:2, function(x) dbeta(x, shapes[3, 1], shapes[3, 2]))
+  pD_AA <- t(sapply(1:nrow(RAI), function(x) priors[x,1] * dbeta(RAI[x,], shapes[1,1], shapes[1,2])))
+  pD_AB <- t(sapply(1:nrow(RAI), function(x) priors[x,2] * dbeta(RAI[x,], shapes[2,1], shapes[2,2])))
+  pD_BB <- t(sapply(1:nrow(RAI), function(x) priors[x,3] * dbeta(RAI[x,], shapes[3,1], shapes[3,2])))
+  rownames(pD_AA) <- rownames(RAI); colnames(pD_AA) <- colnames(RAI)
+  rownames(pD_AB) <- rownames(RAI); colnames(pD_AB) <- colnames(RAI)
+  rownames(pD_BB) <- rownames(RAI); colnames(pD_BB) <- colnames(RAI)
   if(bayesian==TRUE){
     probes <- intersect(rownames(RAI), rownames(AF))
     samples <- intersect(colnames(RAI), colnames(AF))

@@ -62,14 +62,14 @@ callGeno_typeII <- function(inData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
   # for(i in 1:nrow(beta)){
   #   CpG <- rownames(beta)[i]
   #   finalClusters <- fit_beta_em(beta[i,,drop=F], maxiter=maxiter, verbose=verbose-2)
-  #   shapes[[CpG]] <- c(cluster1_shape1=finalClusters$shapes["Cluster1", "shape1"], cluster1_shape2=finalClusters$shapes["Cluster1", "shape2"],
+  #   shapes[[CpG]] <- c(cluster0_shape1=finalClusters$shapes["Cluster0", "shape1"], cluster0_shape2=finalClusters$shapes["Cluster0", "shape2"],
+  #                      cluster1_shape1=finalClusters$shapes["Cluster1", "shape1"], cluster1_shape2=finalClusters$shapes["Cluster1", "shape2"],
   #                      cluster2_shape1=finalClusters$shapes["Cluster2", "shape1"], cluster2_shape2=finalClusters$shapes["Cluster2", "shape2"],
-  #                      cluster3_shape1=finalClusters$shapes["Cluster3", "shape1"], cluster3_shape2=finalClusters$shapes["Cluster3", "shape2"],
   #                      U=finalClusters$U)
-  #   cluster2 <- finalClusters$shapes["Cluster2", c("shape1", "shape2"), drop=T]
-  #   cluster2_mean <- cluster2$shape1 / (cluster2$shape1 + cluster2$shape2)
-  #   if(is.na(cluster2_mean)){cluster2_mean <- 0.5} # it's NA when the shapes are Inf.
-  #   pM[CpG] <- min(2 * cluster2_mean, 1)
+  #   cluster1 <- finalClusters$shapes["Cluster1", c("shape1", "shape2"), drop=T]
+  #   cluster1_mean <- cluster1$shape1 / (cluster1$shape1 + cluster1$shape2)
+  #   if(is.na(cluster1_mean)){cluster1_mean <- 0.5} # it's NA when the shapes are Inf.
+  #   pM[CpG] <- min(2 * cluster1_mean, 1)
   #   if(verbose>=2){print(paste("Estimating true methylation level for Type II CCS probe", CpG, paste0("(", i, "/", nCpG, "):"), "pM =", pM[CpG]))}
   # }
   # RAI <- 1 - ( beta / matrix(rep(pM, ncol(beta)), nrow=nCpG) )
