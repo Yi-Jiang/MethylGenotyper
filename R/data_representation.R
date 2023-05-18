@@ -152,6 +152,7 @@ dosage2hard <- function(AA, AB, BB){
 #' @param vcf If TRUE, will write a VCF file in the current directory.
 #' @param vcfName VCF file name. Only effective when vcf=TRUE.
 #' @param GP_cutoff When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.
+#' @param outlier_cutoff Genotypers with probability of being outliers > outlier_cutoff will be set as missing.
 #' @param missing_cutoff Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.
 #' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned dosage matrix, variants with R-square outside this range will be removed.
 #' @param MAF_cutoff MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with MAF below the cutoff will be removed.
@@ -162,7 +163,7 @@ dosage2hard <- function(AA, AB, BB){
 #' @param platform EPIC or 450K.
 #' @return A matrix of genotype calls. Variants with R2s, HWE p values, MAFs, or missing rates beyond the cutoffs are removed.
 #' @export
-format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, missing_cutoff=0.1, 
+format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, outlier_cutoff=0.2, missing_cutoff=0.1, 
                              R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, 
                              pop="ALL", type, plotAF=FALSE, platform="EPIC"){
   print(paste(Sys.time(), "Calculating AF, R2, and HWE."))
@@ -170,7 +171,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, missi
   probes <- rownames(dosage)
   maxGP <- pmax(genotypes$GP$pAA, genotypes$GP$pAB, genotypes$GP$pBB, na.rm=TRUE)
   #dosage[maxGP < GP_cutoff] <- NA_real_
-  dosage[genotypes$outliers > 0.2] <- NA_real_
+  dosage[genotypes$outliers > outlier_cutoff] <- NA_real_
   missing <- rowSums(maxGP < GP_cutoff | is.na(dosage)) / ncol(maxGP)
   AF <- rowMeans(dosage, na.rm=T) / 2
   AF[is.na(AF)] <- 0

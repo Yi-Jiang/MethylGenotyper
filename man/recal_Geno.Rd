@@ -11,6 +11,7 @@ recal_Geno(
   studyPC,
   platform = "EPIC",
   GP_cutoff = 0.9,
+  outlier_cutoff = 0.2,
   missing_cutoff = 0.1,
   R2_cutoff_up = 1.1,
   R2_cutoff_down = 0.75,
@@ -30,6 +31,8 @@ recal_Geno(
 \item{platform}{EPIC or 450K.}
 
 \item{GP_cutoff}{When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.}
+
+\item{outlier_cutoff}{Genotypers with probability of being outliers > outlier_cutoff will be set as missing.}
 
 \item{missing_cutoff}{Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the \code{FILTER} column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.}
 
