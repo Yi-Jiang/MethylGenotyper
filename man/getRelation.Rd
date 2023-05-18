@@ -7,7 +7,7 @@
 getRelation(phi)
 }
 \arguments{
-\item{Phi}{A vector of Phi.}
+\item{Phi}{A vector of kinship coefficient (Phi).}
 }
 \value{
 A vector of sample relationships.
