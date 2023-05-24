@@ -31,13 +31,13 @@ call_genotypes_bayesian(
 }
 \value{
 A list containing
-\item{phi}{Allele frequencies estimated from the data}
 \item{RAI}{Ratio of Alternative allele Intensity}
 \item{shapes}{Shapes of the mixed beta distributions}
 \item{weights}{Prior probabilities that the RAI values belong to one of the three genotypes}
-\item{U}{Proportion of RAI values being outlier}
+\item{U}{Overall probability of RAI values being outlier}
+\item{outliers}{Probability of each RAI value being outlier}
 \item{logLik}{Log-likelihood}
-\item{GP}{Posterior probabilities for the three genotypes}
+\item{GP}{Genotype probabilities of the three genotypes}
 }
 \description{
 The Expectation–maximization (EM) algorithm is used to fit a mixture of three beta distributions representing the three genotypes (AA, AB, and BB) and one uniform distribution representing the outliers (adapted from ewastools). Then, the Bayesian approach is used to get the genotype probabilities, with AFs of the matched population (the 1000 Genomes Project, 1KGP) being used to infer priors.
