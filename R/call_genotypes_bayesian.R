@@ -66,28 +66,34 @@ fit_beta_em <- function(RAI, maxiter=50, verbose=1){
   N <- length(RAI_flat)
   
   # EM
-  weights <- rep(1/3, 3)
-  shapes <- as.data.frame(matrix(c(5, 30, 60, 60, 30, 5), nrow=3, dimnames=list(paste0("Cluster", 0:2), c("shape1", "shape2"))))
+  phi <- rep(0.2, m) # AF
+  weights <- sapply(0:2, function(k) choose(2,k) * phi^k * (1-phi)^(2-k))
+  shapes <- as.data.frame(matrix(
+    c(5, 30, 60, 60, 30, 5),
+    nrow=3, dimnames=list(paste0("Cluster", 0:2), c("shape1", "shape2"))
+  ))
   U <- 0.01
   outliers <- rep(U, N)
-
-  e_step <- function(){
+  GP <- NA
+  
+  e_step <- function(i){
     GP <- (1 - U) * cbind(
-      weights[1] * dbeta(RAI_flat, shapes[1,1], shapes[1,2], log=F),
-      weights[2] * dbeta(RAI_flat, shapes[2,1], shapes[2,2], log=F),
-      weights[3] * dbeta(RAI_flat, shapes[3,1], shapes[3,2], log=F)
+      as.vector(t(sapply(1:m, function(x) weights[x,1] * dbeta(RAI[x,], shapes[1,1], shapes[1,2])))),
+      as.vector(t(sapply(1:m, function(x) weights[x,2] * dbeta(RAI[x,], shapes[2,1], shapes[2,2])))),
+      as.vector(t(sapply(1:m, function(x) weights[x,3] * dbeta(RAI[x,], shapes[3,1], shapes[3,2]))))
     )
     tmp <- rowSums(GP, na.rm=T)
     GP <<- GP / tmp # If RAI=0，the "dbeta" function above will produce three zeros, and leads to NA here.
     outliers <<- U / (U + tmp)
-    logLik <- sum(log(U + tmp))
+    logLik <- sum(log10(U + tmp))
     return(logLik)
   }
   
   m_step <- function(){
+    DS <- matrix(GP[,2] + 2 * GP[,3], nrow=m, ncol=n)
+    phi <<- rowMeans(DS, na.rm=TRUE) / 2
+    weights <<- sapply(0:2, function(k) choose(2,k) * phi^k * (1-phi)^(2-k))
     GP <- GP * (1 - outliers)
-    weights <- colSums(GP)
-    weights <<- weights / sum(weights, na.rm=T)
     U <<- sum(outliers) / N
     # Moments estimator
     s1 <- eBeta(RAI_flat, GP[,1])
@@ -102,23 +108,28 @@ fit_beta_em <- function(RAI, maxiter=50, verbose=1){
   gain <- Inf
   i <- 1
   while(i <= maxiter & gain > 1e-4){
-    logLik <- e_step()
+    logLik <- e_step(i)
     m_step()
     logLiks <- c(logLiks, logLik)
     if(verbose>=1){
-      print(paste0("EM: Iteration ", i, ", log-likelihood: ", round(logLik, 6)))
+      print(paste0("EM: Iteration ", i, ", log-likelihood: ", round(logLik, 6), ", Outlier probability: ", round(U, 6)))
     }
     if(i>1){
-      gain = logLik - logLiks[i-1]
+      gain <- logLik - logLiks[i-1]
     }
     i=i+1
   }
+  
   names(logLiks) <- paste0("Iter", 1:length(logLiks))
+  names(phi) <- rownames(RAI)
+  rownames(weights) <- rownames(RAI)
+  colnames(weights) <- paste0("Cluster", 0:2)
   outliers <- matrix(outliers, nrow=m, ncol=n, dimnames=list(rownames(RAI), colnames(RAI)))
   GP_AA <- matrix(GP[,1], nrow=m, ncol=n, dimnames=list(rownames(RAI), colnames(RAI)))
   GP_AB <- matrix(GP[,2], nrow=m, ncol=n, dimnames=list(rownames(RAI), colnames(RAI)))
   GP_BB <- matrix(GP[,3], nrow=m, ncol=n, dimnames=list(rownames(RAI), colnames(RAI)))
   iteration <- list(
+    phi = phi,
     weights = weights,
     shapes = shapes,
     U = U,
