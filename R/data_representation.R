@@ -289,8 +289,10 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, outli
   dosage <- dosage[filter=="PASS",,drop=F]
   
   ## Plots
-  probe2af <- get_AF(pop=pop, type=type, platform=platform)
-  if(plotAF){plotAF_func(AF_input=AF[rownames(dosage)], AF_1KGP=probe2af[rownames(dosage)], pop=pop, type=type)}
+  if(plotAF){
+    probe2af <- get_AF(pop=pop, type=type, platform=platform)
+    plotAF_func(AF_input=AF[rownames(dosage)], AF_1KGP=probe2af[rownames(dosage)], pop=pop, type=type)
+  }
   
   dosage
 }
