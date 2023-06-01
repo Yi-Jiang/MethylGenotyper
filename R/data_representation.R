@@ -82,23 +82,21 @@ filter_by_AF <- function(AF, MAF_cutoff=0.01){
 #' @export
 getHWE <- function(hardgeno){
   if(is.null(rownames(hardgeno))){
-    noName = TRUE
-    rownames(hardgeno) <- paste0("SNP", 1:nrow(hardgeno))
+    print("CAUTION: getHWE: It's recommended to provide rownames of the input matrix.")
   }
   hardgeno_sum <- t(apply(hardgeno, 1, function(x) table(x)[c("0/0", "0/1", "1/1")]))
   hardgeno_sum[is.na(hardgeno_sum)] <- 0
   colnames(hardgeno_sum) <- c("MM","MN","NN")
   hardgeno_sum_1 <- hardgeno_sum[rowSums(hardgeno_sum)!=0,]
-  #hardgeno_sum_0 <- hardgeno_sum[rowSums(hardgeno_sum)==0,]
   hwe <- suppressWarnings(HWChisqMat(hardgeno_sum_1, cc=0, verbose=FALSE))
-  hwe_p <- rep(0, nrow(hardgeno_sum))
-  names(hwe_p) <- rownames(hardgeno_sum)
-  hwe_p[rownames(hardgeno_sum_1)] <- hwe$pvalvec
-  if(noName){
-    return(as.numeric(hwe_p)) # remove names
+  if(is.null(rownames(hardgeno))){
+    hwe_p <- hwe$pvalvec
   }else{
-    return(hwe_p)
+    hwe_p <- rep(0, nrow(hardgeno_sum))
+    names(hwe_p) <- rownames(hardgeno_sum)
+    hwe_p[rownames(hardgeno_sum_1)] <- hwe$pvalvec
   }
+  hwe_p
 }
 
 #' Filter by Hardy–Weinberg Equilibrium (HWE) p value
