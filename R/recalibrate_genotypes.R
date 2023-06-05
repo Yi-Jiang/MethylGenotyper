@@ -80,7 +80,7 @@ recal_Geno <- function(genotypes, type, refPC, studyPC, platform="EPIC", GP_cuto
   
   ## Recalibrate posterior genotype probabilities
   print(paste(Sys.time(), "Recalibrating posterior genotype probabilities."))
-  GP <- get_GP(genotypes$genotypes$RAI, genotypes$genotypes$shapes[, c("shape1", "shape2")], bayesian=TRUE, indAF)
+  GP <- get_GP_bayesian(genotypes$genotypes$GP$pAA, genotypes$genotypes$GP$pAB, genotypes$genotypes$GP$pBB, indAF)
   genotypes_recal <- list(genotypes = genotypes$genotypes, indAF=indAF)
   genotypes_recal$genotypes$GP <- GP
   genotypes_recal$genotypes$RAI <- genotypes_recal$genotypes$RAI[rownames(GP$pAA), colnames(GP$pAA)]
