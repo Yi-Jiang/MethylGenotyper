@@ -23,7 +23,7 @@
 callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.snp_probe.vcf", 
                          GP_cutoff=0.9, outlier_cutoff="max", missing_cutoff=0.1, 
                          R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, 
-                         pop="EAS", bayesian=TRUE, platform="EPIC", verbose=1){
+                         pop="EAS", bayesian=FALSE, platform="EPIC", verbose=1){
   if(input=="raw"){
     RAI <- getRAI_snp(rgData, platform=platform)
   }else if(input=="beta"){
@@ -52,7 +52,7 @@ callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName
     print("Error: Input data type must be one of raw, beta, and mval.")
     return(NA)
   }
-  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="snp_probe", maxiter=50, bayesian=bayesian, platform=platform, verbose=verbose)
+  genotypes <- call_genotypes(RAI, pop=pop, type="snp_probe", maxiter=50, bayesian=bayesian, platform=platform, verbose=verbose)
   if(plotBeta){plot_beta_distribution(genotypes, type="snp_probe")}
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 
                              GP_cutoff=GP_cutoff, outlier_cutoff=outlier_cutoff, missing_cutoff=missing_cutoff, 

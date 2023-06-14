@@ -34,12 +34,35 @@ projection <- function(studyGeno, plotPCA=TRUE, cpu=1, platform="EPIC"){
   pc
 }
 
+#' Calculate individual-specific AFs
+#'
+#' @param snpvec A vector of SNP IDs.
+#' @param refPC Top PCs in the reference.
+#' @param studyPC Top PCs in study samples.
+#' @return A matrix of individual-specific AFs.
+#' @export
+get_indAF <- function(snpvec, refPC, studyPC){
+  print(paste(Sys.time(), "Modeling genotypes and PCs on reference samples."))
+  betas <- list()
+  for(snp in snpvec){
+    betas[[snp]] <- coefficients(lm(refGeno_1KGP3[snp,] ~ refPC))
+  }
+  betas <- do.call(rbind, betas)
+  colnames(betas) <- c("Intercept", paste0("RefPC", 1:4))
+  
+  print(paste(Sys.time(), "Calculating individual-specific AFs."))
+  studyPC <- cbind(Intercept=1, studyPC)
+  indAF <- betas %*% t(studyPC) / 2
+  indAF[indAF<0.001] <- 0.001 # constrain AFs to avoid out of boundary values
+  indAF[indAF>0.999] <- 0.999
+  indAF
+}
+
 #' Recalibrate genotypes for samples of mixed population
 #'
 #' @param genotypes A list returned by either `callGeno_snp`, `callGeno_typeI`, or `callGeno_typeII` function.
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
-#' @param refPC Top PCs in the reference
-#' @param studyPC Top PCs in study samples
+#' @param indAF A matrix of individual-specific AFs. Provide SNPs as rows and samples as columns.
 #' @param platform EPIC or 450K.
 #' @param GP_cutoff When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.
 #' @param outlier_cutoff "max" or a number ranging from 0 to 1. If outlier_cutoff="max", genotypes with outlier probability larger than all of the three genotype probabilities will be set as missing. If outlier_cutoff is a number, genotypes with outlier probability > outlier_cutoff will be set as missing.
@@ -52,31 +75,15 @@ projection <- function(studyGeno, plotPCA=TRUE, cpu=1, platform="EPIC"){
 #' \item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), and genotype probability (GP)}
 #' \item{indAF}{A matrix of individual-specific AFs.}
 #' @export
-recal_Geno <- function(genotypes, type, refPC, studyPC, platform="EPIC", GP_cutoff=0.9, outlier_cutoff="max", missing_cutoff=0.1, 
+recal_Geno <- function(genotypes, type, indAF, platform="EPIC", GP_cutoff=0.9, outlier_cutoff="max", missing_cutoff=0.1, 
                        R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6){
   if(platform=="EPIC"){
-    data(cpg2snp)
     data(snp2cpg)
   }else{
-    data(cpg2snp_450K); cpg2snp <- cpg2snp_450K
     data(snp2cpg_450K); snp2cpg <- snp2cpg_450K
   }
-  ## Model genotypes of the reference individuals as a linear function of PCs
-  print(paste(Sys.time(), "Modeling genotypes and PCs on reference samples."))
-  betas <- list()
-  for(snp in cpg2snp[rownames(genotypes$genotypes$RAI)]){
-    betas[[snp]] <- coefficients(lm(refGeno_1KGP3[snp,] ~ refPC))
-  }
-  betas <- do.call(rbind, betas)
-  colnames(betas) <- c("Intercept", paste0("RefPC", 1:4))
-  
-  ## Calculate individual-specific AFs
-  print(paste(Sys.time(), "Calculating individual-specific AFs."))
-  studyPC <- cbind(Intercept=1, studyPC)
-  indAF <- betas %*% t(studyPC) / 2
-  indAF[indAF<0.001] <- 0.001 # constrain AFs to avoid out of boundary values
-  indAF[indAF>0.999] <- 0.999
   rownames(indAF) <- snp2cpg[rownames(indAF)]
+  indAF <- indAF[rownames(genotypes$genotypes$GP$pAA), colnames(genotypes$genotypes$GP$pAA)]
   
   ## Recalibrate posterior genotype probabilities
   print(paste(Sys.time(), "Recalibrating posterior genotype probabilities."))

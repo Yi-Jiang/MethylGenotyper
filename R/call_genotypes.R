@@ -1,7 +1,7 @@
 
-#' Call genotypes based on EM algorithm and Bayesian approach
+#' Call genotypes based on EM algorithm
 #' 
-#' The Expectation–maximization (EM) algorithm is used to fit a mixture of three beta distributions representing the three genotypes (AA, AB, and BB) and one uniform distribution representing the outliers (adapted from ewastools). Then, the Bayesian approach is used to get the genotype probabilities, with AFs of the matched population (the 1000 Genomes Project, 1KGP) being used to infer priors.
+#' The Expectation–maximization (EM) algorithm is used to fit a mixture of three beta distributions representing the three genotypes (AA, AB, and BB) and one uniform distribution representing the outliers (adapted from ewastools). Probe-specific weights were used in the EM algorithm.
 #'
 #' @param RAI A matrix of RAI (Ratio of Alternative allele Intensity) for probes. Provide probes as rows and samples as columns.
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
@@ -19,7 +19,7 @@
 #' \item{logLik}{Log-likelihood}
 #' \item{GP}{Genotype probabilities of the three genotypes}
 #' @export
-call_genotypes_bayesian <- function(RAI, pop, type, maxiter=50, bayesian=TRUE, platform="EPIC", verbose=1){
+call_genotypes <- function(RAI, pop, type, maxiter=50, bayesian=FALSE, platform="EPIC", verbose=1){
   # Fit mixed beta distribution based on EM
   print(paste(Sys.time(), "Running EM to fit beta distributions for RAI values."))
   finalClusters <- fit_beta_em(RAI, maxiter=maxiter, verbose=verbose)

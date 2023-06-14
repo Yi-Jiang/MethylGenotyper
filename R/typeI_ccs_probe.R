@@ -24,7 +24,7 @@
 callGeno_typeI <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeI_ccs_probe.vcf", 
                            GP_cutoff=0.9, outlier_cutoff="max", missing_cutoff=0.1, 
                            R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, 
-                           train=TRUE, cpu=1, pop="EAS", bayesian=TRUE, platform="EPIC", verbose=1){
+                           train=TRUE, cpu=1, pop="EAS", bayesian=FALSE, platform="EPIC", verbose=1){
   if(!train & platform!="EPIC"){
     print("Error: train=FALSE only works with platform=EPIC.")
     return(NA)
@@ -68,7 +68,7 @@ callGeno_typeI <- function(rgData, plotBeta=FALSE, vcf=FALSE, vcfName="genotypes
   }
   
   # call genotypes
-  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeI_ccs_probe", maxiter=50, 
+  genotypes <- call_genotypes(RAI, pop=pop, type="typeI_ccs_probe", maxiter=50, 
                                        bayesian=bayesian, platform=platform, verbose=verbose)
   if(plotBeta){plot_beta_distribution(genotypes, type="typeI_ccs_probe")}
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 

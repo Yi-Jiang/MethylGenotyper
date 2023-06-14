@@ -27,7 +27,7 @@
 callGeno_typeII <- function(inData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.typeII_ccs_probe.vcf", 
                             GP_cutoff=0.9, outlier_cutoff="max", missing_cutoff=0.1, 
                             R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, 
-                            train=TRUE, cpu=1, pop="EAS", maxiter=50, bayesian=TRUE, platform="EPIC", verbose=1){
+                            train=TRUE, cpu=1, pop="EAS", maxiter=50, bayesian=FALSE, platform="EPIC", verbose=1){
   if(!train & platform!="EPIC"){
     print("Error: train=FALSE only works with platform=EPIC.")
     return(NA)
@@ -56,29 +56,6 @@ callGeno_typeII <- function(inData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
     return(NA)
   }
   
-  # # calculate RAI
-  # print(paste(Sys.time(), "Calculating RAI values for type II CCS probes."))
-  # nCpG <- nrow(beta)
-  # pM <- c()
-  # shapes <- list()
-  # for(i in 1:nrow(beta)){
-  #   CpG <- rownames(beta)[i]
-  #   finalClusters <- fit_beta_em(beta[i,,drop=F], maxiter=maxiter, verbose=verbose-2)
-  #   shapes[[CpG]] <- c(cluster0_shape1=finalClusters$shapes["Cluster0", "shape1"], cluster0_shape2=finalClusters$shapes["Cluster0", "shape2"],
-  #                      cluster1_shape1=finalClusters$shapes["Cluster1", "shape1"], cluster1_shape2=finalClusters$shapes["Cluster1", "shape2"],
-  #                      cluster2_shape1=finalClusters$shapes["Cluster2", "shape1"], cluster2_shape2=finalClusters$shapes["Cluster2", "shape2"],
-  #                      U=finalClusters$U)
-  #   cluster1 <- finalClusters$shapes["Cluster1", c("shape1", "shape2"), drop=T]
-  #   cluster1_mean <- cluster1$shape1 / (cluster1$shape1 + cluster1$shape2)
-  #   if(is.na(cluster1_mean)){cluster1_mean <- 0.5} # it's NA when the shapes are Inf.
-  #   pM[CpG] <- min(2 * cluster1_mean, 1)
-  #   if(verbose>=2){print(paste("Estimating true methylation level for Type II CCS probe", CpG, paste0("(", i, "/", nCpG, "):"), "pM =", pM[CpG]))}
-  # }
-  # RAI <- 1 - ( beta / matrix(rep(pM, ncol(beta)), nrow=nCpG) )
-  # RAI[RAI < 0.01] <- 0.01 # if set to zero, it will fail in fitting beta distribution as GP will be NA in call_genotypes_bayesian.R:: GP <<- GP / tmp
-  # RAI[RAI > 1] <- 1
-  # methyl_recalc <- list(shapes = do.call(rbind, shapes), trueMethyl = pM)
-
   # filter probes based on peak density and positions.
   if(train){
     mod <- getMod(beta, cpu=cpu)
@@ -93,11 +70,11 @@ callGeno_typeII <- function(inData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfN
   # calculate RAI
   mod$pM <- sapply(2 * mod$loc1, function(x) min(x, 1))
   RAI <- 1 - ( beta / matrix(rep(mod[rownames(beta), "pM", drop=TRUE], ncol(beta)), nrow=nrow(beta)) )
-  RAI[RAI < 0.01] <- 0.01 # if set to 0 or 1, it will fail in fitting beta distribution as GP will be NA in call_genotypes_bayesian.R:: GP <<- GP / tmp
+  RAI[RAI < 0.01] <- 0.01 # if set to 0 or 1, it will fail in fitting beta distribution as GP will be NA in call_genotypes.R:: GP <<- GP / tmp
   RAI[RAI > 0.99] <- 0.99
   
   # call genotypes
-  genotypes <- call_genotypes_bayesian(RAI, pop=pop, type="typeII_ccs_probe", maxiter=maxiter, 
+  genotypes <- call_genotypes(RAI, pop=pop, type="typeII_ccs_probe", maxiter=maxiter, 
                                        bayesian=bayesian, platform=platform, verbose=verbose)
   if(plotBeta){plot_beta_distribution(genotypes, type="typeII_ccs_probe")}
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 
