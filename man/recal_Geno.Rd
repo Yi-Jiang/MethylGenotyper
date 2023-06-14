@@ -7,8 +7,7 @@
 recal_Geno(
   genotypes,
   type,
-  refPC,
-  studyPC,
+  indAF,
   platform = "EPIC",
   GP_cutoff = 0.9,
   outlier_cutoff = "max",
@@ -24,9 +23,7 @@ recal_Geno(
 
 \item{type}{One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.}
 
-\item{refPC}{Top PCs in the reference}
-
-\item{studyPC}{Top PCs in study samples}
+\item{indAF}{A matrix of individual-specific AFs. Provide SNPs as rows and samples as columns.}
 
 \item{platform}{EPIC or 450K.}
 

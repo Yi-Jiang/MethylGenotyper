@@ -2,16 +2,18 @@
 % Please edit documentation in R/post_genotype_calling.R
 \name{getKinship}
 \alias{getKinship}
-\title{Get kinship coefficients using the SEEKIN estimator}
+\title{Get kinship coefficients and inbreeding coefficients using the SEEKIN estimator}
 \usage{
 getKinship(dosage)
 }
 \arguments{
-\item{dosage}{Dosage genotypes.}
+\item{dosage}{A matrix of genotype calls. Provide probes as rows and samples as columns.}
 }
 \value{
-A data frame containing kinship coefficient (Phi) and sample relationships between each two samples.
+A list containing
+\item{kinship}{A data frame containing kinship coefficient (Phi) and sample relationships between each two samples.}
+\item{inbreed}{A vector of inbreeding coefficients.}
 }
 \description{
-For homogeneous samples. Only SNPs with missing rate < 10\% were used.
+Only SNPs with missing rate < 10\% were used.
 }

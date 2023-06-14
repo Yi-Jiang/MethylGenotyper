@@ -18,7 +18,7 @@ callGeno_snp(
   MAF_cutoff = 0.01,
   HWE_cutoff = 1e-06,
   pop = "EAS",
-  bayesian = TRUE,
+  bayesian = FALSE,
   platform = "EPIC",
   verbose = 1
 )

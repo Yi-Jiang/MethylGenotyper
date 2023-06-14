@@ -19,7 +19,7 @@ callGeno_typeI(
   train = TRUE,
   cpu = 1,
   pop = "EAS",
-  bayesian = TRUE,
+  bayesian = FALSE,
   platform = "EPIC",
   verbose = 1
 )

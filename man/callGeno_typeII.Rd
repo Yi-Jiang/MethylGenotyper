@@ -21,7 +21,7 @@ callGeno_typeII(
   cpu = 1,
   pop = "EAS",
   maxiter = 50,
-  bayesian = TRUE,
+  bayesian = FALSE,
   platform = "EPIC",
   verbose = 1
 )
