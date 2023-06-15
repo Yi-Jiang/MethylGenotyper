@@ -1,4 +1,4 @@
-# MethylGenotyper: To infer genotypes from SNP probes and CCS probes on Illumina methylation array
+# MethylGenotyper: Call genotypes from SNP probes and CCS probes on Illumina methylation array
 
 ## Installation:
 ```R
