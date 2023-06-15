@@ -10,9 +10,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<meta name="author" content="Minghan Qu, Yi Jiang, Chaolong Wang" />
+<meta name="author" content="Yi Jiang, Minghan Qu, Chaolong Wang" />
 
-<meta name="date" content="2023-03-02" />
+<meta name="date" content="2023-06-14" />
 
 <title>MethylGenotyper</title>
 
@@ -331,8 +331,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 <h1 class="title toc-ignore">MethylGenotyper</h1>
-<h4 class="author">Minghan Qu, Yi Jiang, Chaolong Wang</h4>
-<h4 class="date">2023-03-02</h4>
+<h4 class="author">Yi Jiang, Minghan Qu, Chaolong Wang</h4>
+<h4 class="date">2023-06-14</h4>
 
 
 
@@ -351,44 +351,39 @@ chromosomes (six in EPIC and eight on 450K) were removed. We aligned
 each probe sequence to reference genome and calculated RAI, which is
 defined as the proportion of probe signals supporting alternative
 allele.</li>
-<li><strong>Type I CCS probe:</strong> Training from our in-house data,
-we provide a list of 132 Type I CCS probes on EPIC array. It’s
-recommended to train your own models. These probes are type I probes
+<li><strong>Type I CCS probe:</strong> These probes are type I probes
 with SNPs at the extension bases resulting in CCS (A,T &lt;-&gt; C,G
 mutation). The signals for probes with CCS SNPs are called out-of-band
 signals. The RAI is defined as the proportion of out-of-band signals
 over total signals.</li>
 <li><strong>Type II CCS probe:</strong> For this probe type, we only
-focus on probes with SNPs at the extension bases (CpG target sites), the
-reference alleles for the SNPs are C/G, and the alternative alleles are
-A/T. Training from our in-house data, we provide a list of 4853 Type II
-CCS probes. It’s recommended to train your own models. The RAI is
-defined as the proportion of signals supporting alternative alleles over
-total signals.</li>
+focus on type II probes with SNPs at the extension bases (CpG target
+sites), the reference alleles for the SNPs are C/G, and the alternative
+alleles are A/T. The RAI is defined as the proportion of signals
+supporting alternative alleles over total signals.</li>
 </ul>
-<p>The genotypes are called in two steps: 1) We fit a mixture of three
-beta distribution for the three genotypes (reference homozygous,
-heterozygous, and alternative homozygous) based on the
-Expectation–maximization (EM) algorithm; 2) We use the Bayesian approach
-to get the genotype probabilities (<span class="math inline">\(P_0\)</span>, <span class="math inline">\(P_1\)</span>, and <span class="math inline">\(P_2\)</span> for reference homozygous,
-heterozygous, and alternative homozygous, respectively), with AFs of the
-matched population (the 1000 Genomes Project, 1KGP) being used as
-priors. For samples of mixed population, we provided an option to
-recalibrate genotype probabilities based on individual-specific AFs. A
-VCF file containing allele frequency (AF), <span class="math inline">\(R^2\)</span>, genotype probability, hard genotype,
-and dosage genotype (DS) will be produced:</p>
+<p>The RAI values are usually distributed with three peaks, representing
+the three genotypes (reference homozygous, heterozygous, and alternative
+homozygous). To call genotypes from the RAI values, we fit a mixture of
+three beta distributions for the three genotypes and a uniform
+distribution for outliers based on the Expectation–maximization (EM)
+algorithm. Probe-specific weights derived from allele frequencies (AFs)
+were used in the EM algorithm. A VCF file containing dosage genotype
+(<span class="math inline">\(\hat{D}_{ij}\)</span>), AF (<span class="math inline">\(\hat{q}_i\)</span>), and <span class="math inline">\(\hat{R}_i^2\)</span> will be produced:</p>
 <ul>
-<li><strong>DS:</strong> <span class="math inline">\(G = P_1 +
-2P_2\)</span></li>
-<li><strong>AF:</strong> <span class="math inline">\(q = \frac{\sum
-G}{2N}\)</span>, where <span class="math inline">\(N\)</span> is the
-sample size</li>
-<li><span class="math inline">\(R^2\)</span>: <span class="math inline">\(R^2 = \frac{\sigma^2}{2q(1-q)}\)</span>, where
-<span class="math inline">\(\sigma^2\)</span> is the variance of dosage
-genotypes</li>
+<li><span class="math inline">\(\hat{D}_{ij} =
+\sum_{k=0}^{2}{k\hat{P}_{ijk}}\)</span>, where <span class="math inline">\(\hat{P}_{ijk}\)</span> is the genotype
+probability</li>
+<li><span class="math inline">\(\hat{q}_i =
+\frac{\sum_{j=1}^n\hat{D}_{ij}}{2n}\)</span>, where <span class="math inline">\(n\)</span> is the sample size</li>
+<li><span class="math inline">\(\hat{R}_i^2 =
+\frac{Var(\hat{D}_{ij})}{2\hat{q}_i(1-\hat{q}_i)}\)</span></li>
 </ul>
-<p>As an option, we also provided several convenient tools for
-estimating kinships and sample contamination.</p>
+<p>For samples of mixed population, we provided an option to infer
+population structure and calculate individual-specific AFs, which can
+improve the accuracy of estimating kinship coefficients.</p>
+<p>We also provided functions to estimate kinship coefficients and
+sample contamination.</p>
 </div>
 <div id="recommended-workflow" class="section level2">
 <h2>Recommended workflow</h2>
@@ -428,25 +423,18 @@ the two color channels.</p>
 </div>
 <div id="call-genotypes" class="section level3">
 <h3>Call genotypes</h3>
-<p>You can call genotypes for SNP probes, Type I CCS probes, and Type II
-CCS probes. For each probe and each sample, an RAI will be calculated,
-which indicates the proportion of signals supporting the alternative
-allele. The RAI values can be classified into three clusters by fitting
-a mixture of three beta distributions. Based on the prior genotype
-probabilities inferred from AFs of the matched population, posterior
-genotype probabilities can be calculated by using a Bayesian
-approach.</p>
-<p>If you have samples of mixed population, please specify the
-population with the largest sample size. In the next section, we also
-provided an option to adjust for genotype probabilities based on
-individual-specific AFs for mixed population.</p>
+<p>The genotype-calling procedure can be done for SNP probes, Type I CCS
+probes, and Type II CCS probes, separately. You should specify the
+correct population (One of EAS, AMR, AFR, EUR, SAS, and ALL) for your
+samples to get accurate genotype calls. If you have samples of mixed
+population, please specify the population with the largest sample
+size.</p>
 <p>You can plot the distribution of the RAI values and produce a VCF
 file of the inferred genotypes by specifying <code>plotBeta=TRUE</code>
 and <code>vcf=TRUE</code>.</p>
-<p>You can also specify <span class="math inline">\(R^2\)</span> and MAF
-cutoffs to filter variants. Note that for VCF output, variants with
-<span class="math inline">\(R^2\)</span> or MAF beyond the cutoffs will
-be marked in the <code>FILTER</code> column.</p>
+<p>You can also specify cutoffs of <span class="math inline">\(R^2\)</span>, MAF, HWE, and missing rate to filter
+variants. Note that for VCF output, variants beyond the cutoffs will be
+marked in the <code>FILTER</code> column.</p>
 <p>We noted that in the example data, most of variants have <span class="math inline">\(R^2\)</span>=0. This is because we only used three
 samples here. We strongly recommend to use a larger sample size to test
 the code, such as <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE112179">GSE112179</a>.</p>
@@ -473,76 +461,65 @@ transformation.</p>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine genotypes inferred from the three probe types</span></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>dosage <span class="ot">&lt;-</span> <span class="fu">rbind</span>(genotype_snp<span class="sc">$</span>dosage, genotype_typeII<span class="sc">$</span>dosage)</span></code></pre></div>
 </div>
-<div id="recalibrate-genotypes-for-mixed-population" class="section level3">
-<h3>Recalibrate genotypes for mixed population</h3>
-<p>For samples from a mixed population, we recommend to recalibrate the
-genotype calls based on individual-specific AFs. This process can be
-done in three steps: 1) Project the study samples to reference ancestry
-space; 2) Estimate individual-specific AFs; 3) Recalibrate the posterior
-genotype probabilities based on the individual-specific AFs. Here are
-the detailed description of the three steps.</p>
-<ul>
-<li><p><strong>step 1:</strong> Principal Components Analyses (PCA) are
-conducted in 1KGP individuals and a combination of 1KGP individuals and
-each study sample. Then, Projection Procrustes analyses are conducted to
-project each study sample to reference ancestry space. This step was
-originally implemented by the TRACE software and we have adapted it in R
-(<a href="https://www.nature.com/articles/ng.2924">Wang et al. Nat Genet
+<div id="infer-population-structure-and-individual-specific-afs-for-mixed-population" class="section level3">
+<h3>Infer population structure and individual-specific AFs for mixed
+population</h3>
+<p><strong>Project the study samples to reference ancestral
+space:</strong> Principal Components Analyses (PCA) are conducted in
+1KGP individuals (the ancestral space) and a combination of 1KGP
+individuals and each study sample. Projection Procrustes analyses are
+then conducted to project each study sample to reference ancestral
+space. This step was originally implemented by the TRACE software and we
+have adapted it in R (<a href="https://www.nature.com/articles/ng.2924">Wang et al. Nat Genet
 2014</a>, <a href="http://dx.doi.org/10.1016/j.ajhg.2015.04.018">Wang et
-al. Am J Hum Genet 2015</a>).</p></li>
-<li><p><strong>Step 2:</strong> For each SNP, we model genotypes of the
-reference individuals as a linear function of top four PCs (<span class="math inline">\(v\)</span>): <span class="math inline">\(G\sim\beta_0+\beta_1v_1+\beta_2v_2+\beta_3v_3+\beta_4v_4\)</span>.
-Then, the individual AF (<span class="math inline">\(q\)</span>) for
-each SNP and each sample can be obtained by: <span class="math inline">\(\hat{q}=\frac{1}{2}(\hat{\beta_0}+\hat{\beta_1}\hat{v_1}+\hat{\beta_2}\hat{v_2}+\hat{\beta_3}\hat{v_3}+\hat{\beta_4}\hat{v_4})\)</span>.
-(<a href="https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021">Dou
-et al. PLoS Genet 2017</a>)</p></li>
-<li><p><strong>Step 3:</strong> This step is based on the Bayesian
-approach, which can be implemented by re-run the <code>get_GP</code>
-function.</p></li>
-</ul>
+al. Am J Hum Genet 2015</a>).</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># PCA and Procrustes analysis, based on genotypes of all probes passing QC</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>pc <span class="ot">&lt;-</span> <span class="fu">projection</span>(dosage, <span class="at">plotPCA=</span><span class="cn">TRUE</span>, <span class="at">cpu=</span><span class="dv">3</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Recalibrate genotypes for SNP probes, Type I CCS probes, and Type II CCS probes</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>genotype_snp_recal <span class="ot">&lt;-</span> <span class="fu">recal_Geno</span>(genotype_snp, <span class="at">type=</span><span class="st">&quot;snp_probe&quot;</span>, <span class="at">refPC=</span>pc<span class="sc">$</span>refPC, <span class="at">studyPC=</span>pc<span class="sc">$</span>studyPC, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>genotype_typeI_recal <span class="ot">&lt;-</span> <span class="fu">recal_Geno</span>(genotype_typeI, <span class="at">type=</span><span class="st">&quot;typeI_ccs_probe&quot;</span>, <span class="at">refPC=</span>pc<span class="sc">$</span>refPC, <span class="at">studyPC=</span>pc<span class="sc">$</span>studyPC, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>genotype_typeII_recal <span class="ot">&lt;-</span> <span class="fu">recal_Geno</span>(genotype_typeII, <span class="at">type=</span><span class="st">&quot;typeII_ccs_probe&quot;</span>, <span class="at">refPC=</span>pc<span class="sc">$</span>refPC, <span class="at">studyPC=</span>pc<span class="sc">$</span>studyPC, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine genotypes inferred from the three probe types</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>dosage_recal <span class="ot">&lt;-</span> <span class="fu">rbind</span>(genotype_snp_recal<span class="sc">$</span>dosage, genotype_typeI_recal<span class="sc">$</span>dosage, genotype_typeII_recal<span class="sc">$</span>dosage)</span></code></pre></div>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>pc <span class="ot">&lt;-</span> <span class="fu">projection</span>(dosage, <span class="at">plotPCA=</span><span class="cn">TRUE</span>, <span class="at">cpu=</span><span class="dv">3</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span></code></pre></div>
+<p><strong>Estimate individual-specific AFs:</strong> For each SNP, we
+model genotypes of the reference individuals as a linear function of top
+four PCs (<span class="math inline">\(v_\cdot\)</span>): <span class="math inline">\(G\sim\beta_0+\beta_1v_1+\beta_2v_2+\beta_3v_3+\beta_4v_4\)</span>.
+Then, the individual AF (<span class="math inline">\(q\)</span>) for
+each SNP and each sample can be obtained by: <span class="math inline">\(\hat{q}=\frac{1}{2}(\hat{\beta_0}+\hat{\beta_1}\hat{v_1}+\hat{\beta_2}\hat{v_2}+\hat{\beta_3}\hat{v_3}+\hat{\beta_4}\hat{v_4})\)</span>,
+where <span class="math inline">\(\hat{v}_\cdot\)</span> are top four
+PCs in study samples. (<a href="https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021">Dou
+et al. PLoS Genet 2017</a>)</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(cpg2snp)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>snpvec <span class="ot">&lt;-</span> cpg2snp[<span class="fu">c</span>(<span class="fu">rownames</span>(genotype_snp<span class="sc">$</span>genotypes<span class="sc">$</span>RAI), <span class="fu">rownames</span>(genotype_typeI<span class="sc">$</span>genotypes<span class="sc">$</span>RAI), <span class="fu">rownames</span>(genotype_typeII<span class="sc">$</span>genotypes<span class="sc">$</span>RAI))]</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>indAF <span class="ot">&lt;-</span> <span class="fu">get_indAF</span>(snpvec, pc<span class="sc">$</span>refPC, pc<span class="sc">$</span>studyPC)</span></code></pre></div>
+<!-- **Recalibrate genotype probabilities based on individual-specific AFs: ** This step is based on the Bayesian approach, which can be implemented by using the `get_GP_bayesian` function. -->
+<!-- ```{r recal_geno, eval=FALSE, warning=FALSE, message=FALSE} -->
+<!-- # Recalibrate genotypes for SNP probes, Type I CCS probes, and Type II CCS probes -->
+<!-- genotype_snp_recal <- recal_Geno(genotype_snp, type="snp_probe", indAF=indAF, platform="EPIC") -->
+<!-- genotype_typeI_recal <- recal_Geno(genotype_typeI, type="typeI_ccs_probe", indAF=indAF, platform="EPIC") -->
+<!-- genotype_typeII_recal <- recal_Geno(genotype_typeII, type="typeII_ccs_probe", indAF=indAF, platform="EPIC") -->
+<!-- # Combine genotypes inferred from the three probe types -->
+<!-- dosage_recal <- rbind(genotype_snp_recal$dosage, genotype_typeI_recal$dosage, genotype_typeII_recal$dosage) -->
+<!-- ``` -->
 </div>
-<div id="estimate-sample-relationships" class="section level3">
-<h3>Estimate sample relationships</h3>
+<div id="estimate-sample-relationships-and-sample-contamination" class="section level3">
+<h3>Estimate sample relationships and sample contamination</h3>
 <p>With the inferred genotypes, you can estimate sample relationships
-using the <code>getKinship</code> function. It produces a data frame
+and sample contamination using the <code>getKinship</code> function. The
+output of this function is a list of two elements: 1) a data frame
 containing kinship coefficient (<span class="math inline">\(\phi\)</span>) and sample relationships between
-each two samples.</p>
+each two samples; 2) a vector of inbreeding coefficients, which can be
+used to infer sample contamination.</p>
 <p>Kinship coefficient is calculated according to the SEEKIN software
 (<a href="https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021">Dou
 et al. PLoS Genet 2017</a>): <span class="math display">\[2\phi_{ij} =
 \frac{\sum_m(G_{im}-2p_m)(G_{jm}-2p_m)}{2p_m(1-p_m)(R^2)^2}\]</span>
 where <span class="math inline">\(\phi_{ij}\)</span> denotes the kinship
-coefficient between <span class="math inline">\(i\)</span>-th and <span class="math inline">\(j\)</span>-th sample. <span class="math inline">\(G_{im}\)</span> and <span class="math inline">\(G_{jm}\)</span> denotes genotypes of <span class="math inline">\(m\)</span>-th SNP for <span class="math inline">\(i\)</span>-th and <span class="math inline">\(j\)</span>-th sample. <span class="math inline">\(p_m\)</span> denotes allele frequency of <span class="math inline">\(m\)</span>-th SNP. <span class="math inline">\(R^2\)</span> is calculated as <span class="math inline">\(R^2 = \frac{\sigma^2}{2q(1-q)}\)</span>, where
-<span class="math inline">\(\sigma^2\)</span> is the variance of
-genotype.</p>
-<p>Sample relationships can be inferred according to kinship
-coefficients (<a href="https://academic.oup.com/bioinformatics/article/26/22/2867/228512">Manichaikul
-et al. Bioinformatics 2010</a>). Sample pairs with <span class="math inline">\(\phi \ge \frac{1}{2^\frac{3}{2}}\)</span> are
-duplicate samples or monozygotic twin. Sample pairs with <span class="math inline">\(\phi &lt; \frac{1}{2^\frac{3}{2}}\)</span> and
-<span class="math inline">\(\phi \ge \frac{1}{2^\frac{5}{2}}\)</span>
-are first-degree relatives. Sample pairs with <span class="math inline">\(\phi &lt; \frac{1}{2^\frac{5}{2}}\)</span> and
-<span class="math inline">\(\phi \ge \frac{1}{2^\frac{7}{2}}\)</span>
-are second-degree relatives. Sample pairs with <span class="math inline">\(\phi &lt; \frac{1}{2^\frac{7}{2}}\)</span> and
-<span class="math inline">\(\phi \ge \frac{1}{2^\frac{9}{2}}\)</span>
-are third-degree relatives. Sample pairs with <span class="math inline">\(\phi &lt; \frac{1}{2^\frac{9}{2}}\)</span> are
-unrelated.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>kinship <span class="ot">&lt;-</span> <span class="fu">getKinship</span>(dosage) <span class="co"># or input &quot;dosage_recal&quot; if available</span></span></code></pre></div>
-</div>
-<div id="estimate-sample-contamination" class="section level3">
-<h3>Estimate sample contamination</h3>
-<p>We provided a function to calculate inbreeding coefficients, which
-reflects sample contaminations.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>inbreed <span class="ot">&lt;-</span> <span class="fu">getInbreed</span>(dosage) <span class="co"># or input &quot;dosage_recal&quot; if available</span></span></code></pre></div>
+coefficient between <span class="math inline">\(i\)</span>-th and <span class="math inline">\(j\)</span>-th sample. <span class="math inline">\(G_{im}\)</span> and <span class="math inline">\(G_{jm}\)</span> denotes genotypes of <span class="math inline">\(m\)</span>-th SNP for <span class="math inline">\(i\)</span>-th and <span class="math inline">\(j\)</span>-th sample. <span class="math inline">\(p_m\)</span> denotes allele frequency of <span class="math inline">\(m\)</span>-th SNP. <span class="math inline">\(R^2\)</span> is calculated as <span class="math inline">\(R^2 = \frac{Var(D)}{2q(1-q)}\)</span>, where <span class="math inline">\(D\)</span> is the dosage genotype. We classified
+sample pairs as k-degree related if <span class="math inline">\(2^{-k-1.5} &lt; \phi_{ij} &lt; 2^{-k-0.5}\)</span>
+(<a href="https://academic.oup.com/bioinformatics/article/26/22/2867/228512">Manichaikul
+et al. Bioinformatics 2010</a>). A zero-degree related pair means
+monozygotic twins (MZ) or duplicates. Sample pairs more distant than 3rd
+degree are treated as unrelated.</p>
+<p>Inbreeding coefficients are calculated as: <span class="math inline">\(F=2\phi_{ii}-1\)</span>, where <span class="math inline">\(\phi_{ii}\)</span> is the self-kinship coefficient
+for sample <span class="math inline">\(i\)</span>.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">getKinship</span>(dosage)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>kinship <span class="ot">&lt;-</span> res<span class="sc">$</span>kinship <span class="co"># kinship coefficients</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>inbreed <span class="ot">&lt;-</span> res<span class="sc">$</span>inbreed <span class="co"># inbreeding coefficients</span></span></code></pre></div>
 </div>
 </div>
 

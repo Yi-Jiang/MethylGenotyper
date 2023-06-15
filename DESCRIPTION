@@ -1,9 +1,9 @@
 Package: MethylGenotyper
 Type: Package
-Title: Call genotypes for specific probes from Infinium MethylationEPIC (EPIC) BeadChip data
+Title: MethylGenotyper: Call genotypes from SNP probes and CCS probes on Illumina methylation array
 Version: 1.0
 RoxygenNote: 7.2.0
-Depends: R (>= 2.10), minfi, tidyverse, foreach, doParallel, HardyWeinberg, multimode, rlist, stats4, ggplot2, ggpubr
+Imports: minfi, tidyverse, foreach, doParallel, HardyWeinberg, multimode, rlist, stats4, ggplot2, ggpubr, ggsci
 LazyData: false
 VignetteBuilder: knitr
 Suggests: knitr, rmarkdown

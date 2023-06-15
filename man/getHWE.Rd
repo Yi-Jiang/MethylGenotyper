@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_representation.R
 \name{getHWE}
 \alias{getHWE}
-\title{Calculate Hardy–Weinberg Equilibrium (HWE) p value}
+\title{Calculate Hardy-Weinberg Equilibrium (HWE) p value}
 \usage{
 getHWE(hardgeno)
 }
@@ -13,5 +13,5 @@ getHWE(hardgeno)
 HWE p values.
 }
 \description{
-Calculate Hardy–Weinberg Equilibrium (HWE) p value
+Calculate Hardy-Weinberg Equilibrium (HWE) p value
 }

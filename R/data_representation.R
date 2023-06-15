@@ -4,18 +4,22 @@
 #' @param genotypes Genotype calls.
 #' @param type One of "snp_probe", "typeI_ccs_probe", and "typeII_ccs_probe".
 #' @export
-plot_beta_distribution <- function(genotypes, type){
+plot_RAI_distribution <- function(genotypes, type){
+  weights <- as.numeric(colMeans(genotypes$weights))
   shapes = as.matrix(genotypes$shapes[, c("shape1", "shape2")])
-  pdf(paste0("beta_distribution.", type, ".pdf"), width=5, height=5)
-  plot(
-    x=seq(0, 1, 0.01), 
-    y=dbeta(seq(0, 1, 0.01), shapes[1, "shape1"], shapes[1, "shape2"]), 
-    type="l", main="Fitting model", xlab="Beta", ylab="Density", 
-    cex.lab=1.8, cex.axis=1.5, xlim=c(0,1), ylim=c(0,30)
-  )
-  lines(x=seq(0, 1, 0.01), y=dbeta(seq(0, 1, 0.01), shapes[2, "shape1"], shapes[2, "shape2"]))
-  lines(x=seq(0, 1, 0.01), y=dbeta(seq(0, 1, 0.01), shapes[3, "shape1"], shapes[3, "shape2"]))
-  dev.off()
+  rai_melt <- as.data.frame(genotypes$RAI) %>% mutate(CpG=rownames(.)) %>% tidyr::gather(key="Sample", value="RAI", -CpG)
+  p <- ggplot() +
+    geom_histogram(aes(x=RAI, y=after_stat(density)), color="grey60", fill="grey70", data=rai_melt, alpha=0.3, position='identity', binwidth=0.02)+
+    geom_line(aes(x=seq(0,1,0.001), y=weights[1]*dbeta(seq(0,1,0.001), shapes[1,1], shapes[1,2]), color="0"), linewidth=0.5)+
+    geom_line(aes(x=seq(0,1,0.001), y=weights[2]*dbeta(seq(0,1,0.001), shapes[2,1], shapes[2,2]), color="1"), linewidth=0.5)+
+    geom_line(aes(x=seq(0,1,0.001), y=weights[3]*dbeta(seq(0,1,0.001), shapes[3,1], shapes[3,2]), color="2"), linewidth=0.5)+
+    scale_color_nejm(name="", 
+                     breaks=c("0", "1", "2"),  # values=c("#D78A7E", "#66AAD3", "#EDB77D"), 
+                     labels=c(paste0("Beta (", round(shapes[1,1], 2), ", ", round(shapes[1,2],2), ")\nWeight: ", round(weights[1],2)), 
+                              paste0("Beta (", round(shapes[2,1], 2), ", ", round(shapes[2,2],2), ")\nWeight: ", round(weights[2],2)), 
+                              paste0("Beta (", round(shapes[3,1], 2), ", ", round(shapes[3,2],2), ")\nWeight: ", round(weights[3],2))))+
+    labs(x="RAI", y="Density")+ theme_bw()
+  ggsave(filename=paste0("RAI_distribution.", type, ".pdf"), plot=p, width=4, height=3, units="in", scale=1.5)
 }
 
 #' Constrain R2
@@ -75,21 +79,27 @@ filter_by_AF <- function(AF, MAF_cutoff=0.01){
   filter
 }
 
-#' Calculate Hardy–Weinberg Equilibrium (HWE) p value
+#' Calculate Hardy-Weinberg Equilibrium (HWE) p value
 #' 
 #' @param hardgeno A matrix of hard genotypes, with each row indicates a SNP and each column indicates a sample.
 #' @return HWE p values.
 #' @export
 getHWE <- function(hardgeno){
+  if(is.null(rownames(hardgeno))){
+    print("CAUTION: getHWE: It's recommended to provide rownames of the input matrix.")
+  }
   hardgeno_sum <- t(apply(hardgeno, 1, function(x) table(x)[c("0/0", "0/1", "1/1")]))
   hardgeno_sum[is.na(hardgeno_sum)] <- 0
   colnames(hardgeno_sum) <- c("MM","MN","NN")
   hardgeno_sum_1 <- hardgeno_sum[rowSums(hardgeno_sum)!=0,]
-  #hardgeno_sum_0 <- hardgeno_sum[rowSums(hardgeno_sum)==0,]
   hwe <- suppressWarnings(HWChisqMat(hardgeno_sum_1, cc=0, verbose=FALSE))
-  hwe_p <- rep(0, nrow(hardgeno_sum))
-  names(hwe_p) <- rownames(hardgeno_sum)
-  hwe_p[rownames(hardgeno_sum_1)] <- hwe$pvalvec
+  if(is.null(rownames(hardgeno))){
+    hwe_p <- hwe$pvalvec
+  }else{
+    hwe_p <- rep(0, nrow(hardgeno_sum))
+    names(hwe_p) <- rownames(hardgeno_sum)
+    hwe_p[rownames(hardgeno_sum_1)] <- hwe$pvalvec
+  }
   hwe_p
 }
 
@@ -152,6 +162,7 @@ dosage2hard <- function(AA, AB, BB){
 #' @param vcf If TRUE, will write a VCF file in the current directory.
 #' @param vcfName VCF file name. Only effective when vcf=TRUE.
 #' @param GP_cutoff When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.
+#' @param outlier_cutoff "max" or a number ranging from 0 to 1. If outlier_cutoff="max", genotypes with outlier probability larger than all of the three genotype probabilities will be set as missing. If outlier_cutoff is a number, genotypes with outlier probability > outlier_cutoff will be set as missing.
 #' @param missing_cutoff Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.
 #' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned dosage matrix, variants with R-square outside this range will be removed.
 #' @param MAF_cutoff MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with MAF below the cutoff will be removed.
@@ -162,7 +173,7 @@ dosage2hard <- function(AA, AB, BB){
 #' @param platform EPIC or 450K.
 #' @return A matrix of genotype calls. Variants with R2s, HWE p values, MAFs, or missing rates beyond the cutoffs are removed.
 #' @export
-format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, missing_cutoff=0.1, 
+format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, outlier_cutoff="max", missing_cutoff=0.1, 
                              R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, 
                              pop="ALL", type, plotAF=FALSE, platform="EPIC"){
   print(paste(Sys.time(), "Calculating AF, R2, and HWE."))
@@ -170,13 +181,19 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, missi
   probes <- rownames(dosage)
   maxGP <- pmax(genotypes$GP$pAA, genotypes$GP$pAB, genotypes$GP$pBB, na.rm=TRUE)
   #dosage[maxGP < GP_cutoff] <- NA_real_
-  missing <- rowSums(maxGP < GP_cutoff) / ncol(maxGP)
+  if(outlier_cutoff=="max"){
+    dosage[genotypes$outliers > maxGP * (1 - genotypes$outliers)] <- NA_real_
+  }else{
+    dosage[genotypes$outliers > outlier_cutoff] <- NA_real_
+  }
+  missing <- rowSums(maxGP < GP_cutoff | is.na(dosage)) / ncol(maxGP)
   AF <- rowMeans(dosage, na.rm=T) / 2
   AF[is.na(AF)] <- 0
   R2 <- apply(dosage, 1, function(x) var(x, na.rm=T)) / (2 * AF * (1 - AF))
   R2[is.na(R2)] <- 0
   R2_constrained <- sapply(R2, constrain_R2)
   hardgeno <- dosage2hard(genotypes$GP$pAA, genotypes$GP$pAB, genotypes$GP$pBB)
+  hardgeno[is.na(dosage)] <- NA_real_
   hwe_p <- getHWE(hardgeno)
   filter_AF <- sapply(AF, function(x) filter_by_AF(x, MAF_cutoff))
   filter_R2 <- sapply(R2, function(x) filter_by_R2(x, R2_cutoff_up, R2_cutoff_down))
@@ -190,9 +207,9 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, missi
   ## Write into a VCF file
   if(vcf){
     ## format
-    #hardgeno[is.na(hardgeno)] <- "./."
+    hardgeno[is.na(hardgeno)] <- "./."
     dosage_chr <- round(dosage, 2)
-    #dosage_chr[is.na(dosage_chr)] <- "."
+    dosage_chr[is.na(dosage_chr)] <- "."
     genotypes$GP$pAA <- round(genotypes$GP$pAA, 2)
     genotypes$GP$pAB <- round(genotypes$GP$pAB, 2)
     genotypes$GP$pBB <- round(genotypes$GP$pBB, 2)
@@ -276,8 +293,10 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, missi
   dosage <- dosage[filter=="PASS",,drop=F]
   
   ## Plots
-  probe2af <- get_AF(pop=pop, type=type, platform=platform)
-  if(plotAF){plotAF_func(AF_input=AF[rownames(dosage)], AF_1KGP=probe2af[rownames(dosage)], pop=pop, type=type)}
+  if(plotAF){
+    probe2af <- get_AF(pop=pop, type=type, platform=platform)
+    plot_AF(AF_input=AF[rownames(dosage)], AF_1KGP=probe2af[rownames(dosage)], pop=pop, type=type)
+  }
   
   dosage
 }
@@ -289,7 +308,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, missi
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
 #' @export
-plotAF_func <- function(AF_input, AF_1KGP, pop, type){
+plot_AF <- function(AF_input, AF_1KGP, pop, type){
   probes <- intersect(names(AF_input), names(AF_1KGP))
   d <- data.frame(AF_input=AF_input[probes], AF_1KGP=AF_1KGP[probes])
   p <- ggplot(d) + 

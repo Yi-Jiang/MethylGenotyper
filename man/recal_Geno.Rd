@@ -7,10 +7,10 @@
 recal_Geno(
   genotypes,
   type,
-  refPC,
-  studyPC,
+  indAF,
   platform = "EPIC",
   GP_cutoff = 0.9,
+  outlier_cutoff = "max",
   missing_cutoff = 0.1,
   R2_cutoff_up = 1.1,
   R2_cutoff_down = 0.75,
@@ -23,13 +23,13 @@ recal_Geno(
 
 \item{type}{One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.}
 
-\item{refPC}{Top PCs in the reference}
-
-\item{studyPC}{Top PCs in study samples}
+\item{indAF}{A matrix of individual-specific AFs. Provide SNPs as rows and samples as columns.}
 
 \item{platform}{EPIC or 450K.}
 
 \item{GP_cutoff}{When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.}
+
+\item{outlier_cutoff}{"max" or a number ranging from 0 to 1. If outlier_cutoff="max", genotypes with outlier probability larger than all of the three genotype probabilities will be set as missing. If outlier_cutoff is a number, genotypes with outlier probability > outlier_cutoff will be set as missing.}
 
 \item{missing_cutoff}{Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the \code{FILTER} column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.}
 

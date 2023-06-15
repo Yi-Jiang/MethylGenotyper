@@ -7,17 +7,18 @@
 callGeno_snp(
   rgData,
   input = "raw",
-  plotBeta = FALSE,
+  plotRAI = FALSE,
   vcf = FALSE,
   vcfName = "genotypes.snp_probe.vcf",
   GP_cutoff = 0.9,
+  outlier_cutoff = "max",
   missing_cutoff = 0.1,
   R2_cutoff_up = 1.1,
   R2_cutoff_down = 0.75,
   MAF_cutoff = 0.01,
   HWE_cutoff = 1e-06,
   pop = "EAS",
-  bayesian = TRUE,
+  bayesian = FALSE,
   platform = "EPIC",
   verbose = 1
 )
@@ -27,13 +28,15 @@ callGeno_snp(
 
 \item{input}{Input data types. One of "raw", "beta", and "mval". If input is "beta" or "mval", please use probes as rows and samples as columns.}
 
-\item{plotBeta}{If TRUE, plot beta distributions for reference homozygous, heterozygous, and alternative homozygous.}
+\item{plotRAI}{If TRUE, plot distribution of RAIs.}
 
 \item{vcf}{If TRUE, will write a VCF file in the current directory.}
 
 \item{vcfName}{VCF file name. Only effective when vcf=TRUE.}
 
 \item{GP_cutoff}{When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.}
+
+\item{outlier_cutoff}{"max" or a number ranging from 0 to 1. If outlier_cutoff="max", genotypes with outlier probability larger than all of the three genotype probabilities will be set as missing. If outlier_cutoff is a number, genotypes with outlier probability > outlier_cutoff will be set as missing.}
 
 \item{missing_cutoff}{Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the \code{FILTER} column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.}
 

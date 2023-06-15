@@ -4,10 +4,10 @@
 \alias{filter_by_missing}
 \title{Filter by missing rate}
 \usage{
-filter_by_missing(missingrate, missing_cutoff = 0.1)
+filter_by_missing(F_MISSING, missing_cutoff = 0.1)
 }
 \arguments{
-\item{missingrate}{Missing rates}
+\item{F_MISSING}{Fraction of missing genotypes}
 
 \item{missing_cutoff}{Missing rate cutoff to filter variants.}
 }
