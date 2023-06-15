@@ -15,7 +15,7 @@
 #' \item{refPC}{Top PCs in the reference}
 #' \item{studyPC}{Top PCs in study samples}
 #' @export
-trace <- function(refGeno, studyGeno, MIN_LOCI=100, DIM=4, DIM_HIGH=20, MAX_ITER=10000, THRESHOLD=0.000001, cpu=1){
+TRACE <- function(refGeno, studyGeno, MIN_LOCI=100, DIM=4, DIM_HIGH=20, MAX_ITER=10000, THRESHOLD=0.000001, cpu=1){
   ## Get intersected probes
   probes <- intersect(rownames(refGeno), rownames(studyGeno))
   data(refGeno_1KGP3_SNP_failQC)

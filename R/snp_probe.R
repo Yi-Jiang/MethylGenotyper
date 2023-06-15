@@ -3,7 +3,7 @@
 #' 
 #' @param rgData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
 #' @param input Input data types. One of "raw", "beta", and "mval". If input is "beta" or "mval", please use probes as rows and samples as columns.
-#' @param plotBeta If TRUE, plot beta distributions for reference homozygous, heterozygous, and alternative homozygous.
+#' @param plotRAI If TRUE, plot distribution of RAIs.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
 #' @param vcfName VCF file name. Only effective when vcf=TRUE.
 #' @param GP_cutoff When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.
@@ -20,7 +20,7 @@
 #' \item{dosage}{A matrix of genotype calls. Variants with R2s, HWE p values, MAFs, or missing rates beyond the cutoffs are removed.}
 #' \item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), and genotype probability (GP).}
 #' @export
-callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName="genotypes.snp_probe.vcf", 
+callGeno_snp <- function(rgData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfName="genotypes.snp_probe.vcf", 
                          GP_cutoff=0.9, outlier_cutoff="max", missing_cutoff=0.1, 
                          R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, 
                          pop="EAS", bayesian=FALSE, platform="EPIC", verbose=1){
@@ -53,7 +53,7 @@ callGeno_snp <- function(rgData, input="raw", plotBeta=FALSE, vcf=FALSE, vcfName
     return(NA)
   }
   genotypes <- call_genotypes(RAI, pop=pop, type="snp_probe", maxiter=50, bayesian=bayesian, platform=platform, verbose=verbose)
-  if(plotBeta){plot_beta_distribution(genotypes, type="snp_probe")}
+  if(plotRAI){plot_RAI_distribution(genotypes, type="snp_probe")}
   dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 
                              GP_cutoff=GP_cutoff, outlier_cutoff=outlier_cutoff, missing_cutoff=missing_cutoff, 
                              R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 

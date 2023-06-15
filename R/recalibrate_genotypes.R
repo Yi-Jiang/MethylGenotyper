@@ -24,11 +24,11 @@ projection <- function(studyGeno, plotPCA=TRUE, cpu=1, platform="EPIC"){
   
   ## PCA and Procrustes analysis
   data(refGeno_1KGP3)
-  pc <- trace(refGeno_1KGP3, studyGeno, cpu=cpu)
+  pc <- TRACE(refGeno_1KGP3, studyGeno, cpu=cpu)
   
   ## Plot PCA
   if(plotPCA){
-    plotPCA(pc$refPC, pc$studyPC)
+    plot_PCA(pc$refPC, pc$studyPC)
   }
   
   pc
@@ -105,7 +105,7 @@ recal_Geno <- function(genotypes, type, indAF, platform="EPIC", GP_cutoff=0.9, o
 #' @param refPC Top PCs in the reference
 #' @param studyPC Top PCs in study samples
 #' @export
-plotPCA <- function(refPC, studyPC){
+plot_PCA <- function(refPC, studyPC){
   data(sam2pop)
   refPC <- data.frame(refPC, popID=sam2pop[rownames(refPC)])
   studyPC <- data.frame(studyPC, popID="Study")

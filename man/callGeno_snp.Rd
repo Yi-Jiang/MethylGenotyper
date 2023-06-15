@@ -7,7 +7,7 @@
 callGeno_snp(
   rgData,
   input = "raw",
-  plotBeta = FALSE,
+  plotRAI = FALSE,
   vcf = FALSE,
   vcfName = "genotypes.snp_probe.vcf",
   GP_cutoff = 0.9,
@@ -28,7 +28,7 @@ callGeno_snp(
 
 \item{input}{Input data types. One of "raw", "beta", and "mval". If input is "beta" or "mval", please use probes as rows and samples as columns.}
 
-\item{plotBeta}{If TRUE, plot beta distributions for reference homozygous, heterozygous, and alternative homozygous.}
+\item{plotRAI}{If TRUE, plot distribution of RAIs.}
 
 \item{vcf}{If TRUE, will write a VCF file in the current directory.}
 

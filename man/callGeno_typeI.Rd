@@ -6,7 +6,7 @@
 \usage{
 callGeno_typeI(
   rgData,
-  plotBeta = FALSE,
+  plotRAI = FALSE,
   vcf = FALSE,
   vcfName = "genotypes.typeI_ccs_probe.vcf",
   GP_cutoff = 0.9,
@@ -27,7 +27,7 @@ callGeno_typeI(
 \arguments{
 \item{rgData}{Noob and dye-bias corrected signals produced by using \code{correct_noob_dye}.}
 
-\item{plotBeta}{If TRUE, plot beta distributions for reference homozygous, heterozygous, and alternative homozygous.}
+\item{plotRAI}{If TRUE, plot distribution of RAIs.}
 
 \item{vcf}{If TRUE, will write a VCF file in the current directory.}
 

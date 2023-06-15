@@ -4,18 +4,22 @@
 #' @param genotypes Genotype calls.
 #' @param type One of "snp_probe", "typeI_ccs_probe", and "typeII_ccs_probe".
 #' @export
-plot_beta_distribution <- function(genotypes, type){
+plot_RAI_distribution <- function(genotypes, type){
+  weights <- as.numeric(colMeans(genotypes$weights))
   shapes = as.matrix(genotypes$shapes[, c("shape1", "shape2")])
-  pdf(paste0("beta_distribution.", type, ".pdf"), width=5, height=5)
-  plot(
-    x=seq(0, 1, 0.01), 
-    y=dbeta(seq(0, 1, 0.01), shapes[1, "shape1"], shapes[1, "shape2"]), 
-    type="l", main="Fitting model", xlab="Beta", ylab="Density", 
-    cex.lab=1.8, cex.axis=1.5, xlim=c(0,1), ylim=c(0,30)
-  )
-  lines(x=seq(0, 1, 0.01), y=dbeta(seq(0, 1, 0.01), shapes[2, "shape1"], shapes[2, "shape2"]))
-  lines(x=seq(0, 1, 0.01), y=dbeta(seq(0, 1, 0.01), shapes[3, "shape1"], shapes[3, "shape2"]))
-  dev.off()
+  rai_melt <- as.data.frame(genotypes$RAI) %>% mutate(CpG=rownames(.)) %>% tidyr::gather(key="Sample", value="RAI", -CpG)
+  p <- ggplot() +
+    geom_histogram(aes(x=RAI, y=after_stat(density)), color="grey60", fill="grey70", data=rai_melt, alpha=0.3, position='identity', binwidth=0.02)+
+    geom_line(aes(x=seq(0,1,0.001), y=weights[1]*dbeta(seq(0,1,0.001), shapes[1,1], shapes[1,2]), color="0"), linewidth=0.5)+
+    geom_line(aes(x=seq(0,1,0.001), y=weights[2]*dbeta(seq(0,1,0.001), shapes[2,1], shapes[2,2]), color="1"), linewidth=0.5)+
+    geom_line(aes(x=seq(0,1,0.001), y=weights[3]*dbeta(seq(0,1,0.001), shapes[3,1], shapes[3,2]), color="2"), linewidth=0.5)+
+    scale_color_nejm(name="", 
+                     breaks=c("0", "1", "2"),  # values=c("#D78A7E", "#66AAD3", "#EDB77D"), 
+                     labels=c(paste0("Beta (", round(shapes[1,1], 2), ", ", round(shapes[1,2],2), ")\nWeight: ", round(weights[1],2)), 
+                              paste0("Beta (", round(shapes[2,1], 2), ", ", round(shapes[2,2],2), ")\nWeight: ", round(weights[2],2)), 
+                              paste0("Beta (", round(shapes[3,1], 2), ", ", round(shapes[3,2],2), ")\nWeight: ", round(weights[3],2))))+
+    labs(x="RAI", y="Density")+ theme_bw()
+  ggsave(filename=paste0("RAI_distribution.", type, ".pdf"), plot=p, width=4, height=3, units="in", scale=1.5)
 }
 
 #' Constrain R2
@@ -291,7 +295,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, outli
   ## Plots
   if(plotAF){
     probe2af <- get_AF(pop=pop, type=type, platform=platform)
-    plotAF_func(AF_input=AF[rownames(dosage)], AF_1KGP=probe2af[rownames(dosage)], pop=pop, type=type)
+    plot_AF(AF_input=AF[rownames(dosage)], AF_1KGP=probe2af[rownames(dosage)], pop=pop, type=type)
   }
   
   dosage
@@ -304,7 +308,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, outli
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
 #' @export
-plotAF_func <- function(AF_input, AF_1KGP, pop, type){
+plot_AF <- function(AF_input, AF_1KGP, pop, type){
   probes <- intersect(names(AF_input), names(AF_1KGP))
   d <- data.frame(AF_input=AF_input[probes], AF_1KGP=AF_1KGP[probes])
   p <- ggplot(d) + 

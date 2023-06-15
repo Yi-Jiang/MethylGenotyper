@@ -1,9 +1,10 @@
 .onAttach <- function(libname, pkgname) {
-  # message("Loading package: ", pkgname)
-  # message("Located in library: ", libname)
-  # packageStartupMessage("Welcome to my package")
+  message("Loading package: ", pkgname)
+  message("Located in library: ", libname)
+  # packageStartupMessage("Welcome")
   
   suppressMessages({
+    library(MethylGenotyper)
     library(minfi)
     library(tidyverse)
     library(foreach)
@@ -14,5 +15,6 @@
     library(stats4)
     library(ggplot2)
     library(ggpubr)
+    library(ggsci)
   })
 }
