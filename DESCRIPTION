@@ -8,3 +8,5 @@ LazyData: false
 VignetteBuilder: knitr
 Suggests: knitr, rmarkdown
 Roxygen: list(markdown = TRUE)
+Depends: 
+    R (>= 2.10)

@@ -6,6 +6,7 @@
 #' @param plotRAI If TRUE, plot distribution of RAIs.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
 #' @param vcfName VCF file name. Only effective when vcf=TRUE.
+#' @param type Call genotypes for specific alternative alleles. Use "AT" or "CG".
 #' @param GP_cutoff When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.
 #' @param outlier_cutoff "max" or a number ranging from 0 to 1. If outlier_cutoff="max", genotypes with outlier probability larger than all of the three genotype probabilities will be set as missing. If outlier_cutoff is a number, genotypes with outlier probability > outlier_cutoff will be set as missing.
 #' @param missing_cutoff Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.
@@ -24,7 +25,7 @@
 #' \item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), and genotype probability (GP).}
 #' \item{methyl_recalc}{Re-calculated methylation levels on reference alleles. A list containing shapes of the mixed beta distributions and true methylation level (pM) for each probe.}
 #' @export
-callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfName="genotypes.typeII_ccs_probe.vcf", 
+callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfName="genotypes.typeII_ccs_probe.vcf", type="AT",
                             GP_cutoff=0.9, outlier_cutoff="max", missing_cutoff=0.1, 
                             R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, 
                             train=TRUE, cpu=1, pop="EAS", maxiter=50, bayesian=FALSE, platform="EPIC", verbose=1){
@@ -37,9 +38,21 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   }
   tag_af <- paste0(pop, "_AF")
   if(platform=="EPIC"){
-    data(probeInfo_typeII)
+    if(type=="AT"){
+      data(probeInfo_typeII)
+    }else if(type=="CG"){
+      data(probeInfo_typeII_CG); probeInfo_typeII <- probeInfo_typeII_CG
+    }else{
+      stop("Error: wrong type specified!")
+    }
   }else{
-    data(probeInfo_typeII_450K); probeInfo_typeII <- probeInfo_typeII_450K
+    if(type=="AT"){
+      data(probeInfo_typeII_450K); probeInfo_typeII <- probeInfo_typeII_450K
+    }else if(type=="CG"){
+      data(probeInfo_typeII_CG_450K); probeInfo_typeII <- probeInfo_typeII_CG_450K
+    }else{
+      stop("Error: wrong type specified!")
+    }
   }
   
   # calculate beta values
@@ -68,8 +81,16 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   }
   
   # calculate RAI
-  mod$pM <- sapply(2 * mod$loc1, function(x) min(x, 1))
-  RAI <- 1 - ( beta / matrix(rep(mod[rownames(beta), "pM", drop=TRUE], ncol(beta)), nrow=nrow(beta)) )
+  if(type=="AT"){
+    mod$pM <- sapply(2 * mod$loc1, function(x) min(x, 1))
+    RAI <- 1 - ( beta / matrix(rep(mod[rownames(beta), "pM", drop=TRUE], ncol(beta)), nrow=nrow(beta)) )
+  }else if(type=="CG"){
+    mod$pM <- sapply(2 * mod$loc1 - 1, function(x) max(x, 0))
+    pM_matrix <- matrix(rep(mod[rownames(beta), "pM", drop=TRUE], ncol(beta)), nrow=nrow(beta))
+    RAI <- ( beta - pM_matrix ) / ( 1 - pM_matrix )
+  }else{
+    stop("Error: wrong type specified!")
+  }
   RAI[RAI < 0.01] <- 0.01 # if set to 0 or 1, it will fail in fitting beta distribution as GP will be NA in call_genotypes.R:: GP <<- GP / tmp
   RAI[RAI > 0.99] <- 0.99
   
