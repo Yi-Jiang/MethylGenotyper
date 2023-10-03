@@ -69,17 +69,14 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
     return(NA)
   }
   
-  # filter probes based on peak density and positions.
+  # get positions of the central modes
   if(train){
     mod <- getMod(beta, cpu=cpu)
-    beta <- beta[dplyr::filter(mod, h_0.1==TRUE, loc_pass==TRUE, nmod==3)$CpG,]
   }else{
-    mod <- dplyr::filter(probeInfo_typeII, h_0.1==TRUE, loc_pass==TRUE, nmod==3) %>% 
-      dplyr::select(SNP, CpG, h_0.1, loc_pass, nmod, loc0, loc1, loc2)
+    mod <- probeInfo_typeII %>% dplyr::select(SNP, CpG, h_0.1, loc_pass, nmod, loc0, loc1, loc2)
     rownames(mod) <- mod$CpG
-    beta <- beta[mod$CpG,]
   }
-  
+
   # calculate RAI
   if(a2=="AT"){
     mod$pM <- sapply(2 * mod$loc1, function(x) min(x, 1))
@@ -93,6 +90,17 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   }
   RAI[RAI < 0.01] <- 0.01 # if set to 0 or 1, it will fail in fitting beta distribution as GP will be NA in call_genotypes.R:: GP <<- GP / tmp
   RAI[RAI > 0.99] <- 0.99
+  
+  # filter probes based on peak density and positions.
+  if(train){
+    mod <- getMod(RAI, cpu=cpu)
+    RAI <- RAI[dplyr::filter(mod, h_0.1==TRUE, loc_pass==TRUE, nmod==3)$CpG,]
+  }else{
+    mod <- dplyr::filter(probeInfo_typeII, h_0.1==TRUE, loc_pass==TRUE, nmod==3) %>% 
+      dplyr::select(SNP, CpG, h_0.1, loc_pass, nmod, loc0, loc1, loc2)
+    rownames(mod) <- mod$CpG
+    RAI <- RAI[mod$CpG,]
+  }
   
   # call genotypes
   genotypes <- call_genotypes(RAI, pop=pop, type="typeII_ccs_probe", maxiter=maxiter, 
