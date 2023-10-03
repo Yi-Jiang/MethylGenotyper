@@ -76,8 +76,10 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
     mod <- probeInfo_typeII %>% dplyr::select(SNP, CpG, h_0.1, loc_pass, nmod, loc0, loc1, loc2)
     rownames(mod) <- mod$CpG
   }
+  mod <- mod[mod$loc_pass,]
 
   # calculate RAI
+  beta <- beta[rownames(beta) %in% rownames(mod), ]
   if(a2=="AT"){
     mod$pM <- sapply(2 * mod$loc1, function(x) min(x, 1))
     RAI <- 1 - ( beta / matrix(rep(mod[rownames(beta), "pM", drop=TRUE], ncol(beta)), nrow=nrow(beta)) )
