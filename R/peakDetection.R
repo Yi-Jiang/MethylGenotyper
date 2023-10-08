@@ -39,6 +39,10 @@ getMod <- function(x, minDens=0.01, cpu=1){
   stopImplicitCluster()
   stopCluster(cl)
   modRes <- as.data.frame(do.call(rbind, modRes))
+  modRes$nmod <- as.numeric(modRes$nmod)
+  modRes$loc0 <- as.numeric(modRes$loc0)
+  modRes$loc1 <- as.numeric(modRes$loc1)
+  modRes$loc2 <- as.numeric(modRes$loc2)
   rownames(modRes) <- modRes$CpG
   modRes
 }
