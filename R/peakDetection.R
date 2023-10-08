@@ -1,77 +1,86 @@
 
-#' Filter probes according to the number and position of peaks
+#' Estimate mode location for each probe
 #' 
-#' @param RAI Matrix of RAI (Ratio of Alternative allele Intensity).
+#' @param x Matrix of beta or RAI values. Row names must be supplied.
+#' @param minDens Minimum density for a valid peak.
 #' @param cpu Number of CPU.
-#' @return Probe filtering results
+#' @return A data frame of mode locations.
 #' @export
-getMod <- function(RAI, cpu=1){
-  print(paste(Sys.time(), "Running mod test."))
-  # Estimate number of modes for each probe
-  n <- apply(RAI, 1, function(x) (nmodes(x, 0.05, lowsup=0, uppsup=1)))
-  mod <- tibble(CpG=names(n), nmod=n)
-  mod[mod$nmod>3, "nmod"] <- 3
-  
-  # Estimate mode location for each probe
+getMod <- function(x, minDens=0.01, cpu=1){
+  print(paste(Sys.time(), "Running mode test."))
   cl<- makeCluster(cpu)
   registerDoParallel(cl) 
-  out <- foreach(i=mod$CpG, .packages=c("tidyverse","multimode")) %dopar% {
+  modRes <- foreach(cpg=rownames(x), .packages=c("tidyverse","multimode"), 
+                    .export=c("findCentralFromTwoPeaks", "findCentralFromTwoPeaks")) %dopar% {
     tryCatch({
-      a <- locmodes(RAI[i, ], mod0=dplyr::filter(mod, CpG==i)$nmod)
-      a
-    }, error = function(e) return(paste0("The variable '", i, "'", " caused the error: '", e, "'")))
+      # Estimate number of modes for each probe
+      nMod <- nmodes(x[cpg,], 0.04, lowsup=0, uppsup=1)
+      loc <- locmodes(x[cpg,], mod0=nMod)
+      idx <- seq(1, length(loc$locations), 2)
+      modes <- data.frame(loc=loc$locations[idx], dens=loc$fvalue[idx])
+      modes <- modes[modes$dens>minDens,]
+      if(nrow(modes)==2){
+        loc012 <- findCentralFromTwoPeaks(modes$loc)
+      }else if(nrow(modes)==3){
+        loc012 <- sort(modes$loc)
+      }else if(nrow(modes)>3){
+        while(nrow(modes)>3){
+          modes <- rmSmallerFromClosestPeaks(modes)
+        }
+        loc012 <- sort(modes$loc)
+      }else{
+        print(paste0("Escape ", cpg, " as <2 valid peaks detected."))
+        return(c(CpG=cpg, nmod=nrow(modes), loc_pass=FALSE, loc0=NA, loc1=NA, loc2=NA))
+      }
+      if(loc012[2]>0.3 & loc012[2]<0.7){loc_pass=TRUE}else{loc_pass=FALSE}
+      return(c(CpG=cpg, nmod=nrow(modes), loc_pass=loc_pass, loc012[1], loc012[2], loc012[3]))
+    }, error = function(e) return(paste0("Escape ", cpg, " with error: ", e)))
   }
   stopImplicitCluster()
   stopCluster(cl)
-  names(out) <- mod$CpG
-  out2 <- out[dplyr::filter(mod, nmod==2)$CpG]
-  out3 <- out[dplyr::filter(mod, nmod==3)$CpG]
-  
-  # Filter mode density height (>0.1)
-  if(length(out2)>0){
-    height2 <- as.data.frame(do.call(rbind, list.map(out2, fvalue))) %>% dplyr::select(V1, V3)
-  }else{
-    height2 <- c()
-  }
-  if(length(out3)>0){
-    height3 <- as.data.frame(do.call(rbind, list.map(out3, fvalue))) %>% dplyr::select(V1, V3, V5)
-  }else{
-    height3 <- c()
-  }
-  height <- bind_rows(height2, height3)
-  colnames(height) <- paste0("height", 1:ncol(height))
-  hfilter <- rowSums(height>0.1, na.rm=T)>1
-  nhfilter <- rowSums(height>0.1, na.rm=T)
-  mod <- left_join(mod, tibble(CpG=names(hfilter), h_0.1=hfilter, nh_0.1=nhfilter))
-  
-  # Filter mode location
-  if(length(out2)>0){
-    lo2 <- as.data.frame(do.call(rbind, list.map(out2, locations))) %>% dplyr::select(V1, V3)
-    k.lo2.01 <- try(data.frame(dplyr::filter(lo2, V1<0.3&V3>0.3&V3<0.7), V5=NA_real_))
-    k.lo2.12 <- try(data.frame(V0=NA_real_, dplyr::filter(lo2, V1>0.3&V1<0.7&V3>0.7)))
-    if(class(k.lo2.01) %in% "try-error"){k.lo2.01<- c()}
-    if(class(k.lo2.12) %in% "try-error"){k.lo2.12<- c()}else{colnames(k.lo2.12) <- c("V1", "V3", "V5")}
-  }else{
-    k.lo2.01 <- c()
-    k.lo2.12 <- c()
-  }
-  if(length(out3)>0){
-    lo3 <- as.data.frame(do.call(rbind, list.map(out3, locations))) %>% dplyr::select(V1, V3, V5)
-    k.lo3 <- dplyr::filter(lo3, V1<0.3, V3>0.3, V3<0.7, V5>0.7)
-  }else{
-    k.lo3 <- c()
-  }
-  k.lo <- bind_rows(k.lo2.01, k.lo2.12, k.lo3)
-  colnames(k.lo) <- c("loc0", "loc1", "loc2")
-  k.lo <- data.frame(CpG=rownames(k.lo), k.lo)
-  mod <- mutate(mod, loc_pass=(CpG %in% rownames(k.lo))) %>% 
-    left_join(k.lo, by="CpG") %>% 
-    left_join(tibble(CpG=rownames(height), height), by="CpG")
-  mod <- as.data.frame(mod)
-  rownames(mod) <- mod$CpG
-
-  mod
+  modRes <- as.data.frame(do.call(rbind, modRes))
+  rownames(modRes) <- modRes$CpG
+  modRes
 }
 
+#' Find the central peak from a distribution of two peaks
+#' 
+#' @param locations A vector of two, indicating the locations of the two peaks.
+#' @return A vector of three, with the central one being the location of the central peak.
+#' @export
+findCentralFromTwoPeaks <- function(locations){
+  if(length(locations)!=2){
+    print("Error: findCentralFromTwoPeaks() only accept a vector of two as input.")
+    return(NA)
+  }
+  locations <- c(NA, locations, NA)
+  distance <- abs(locations - 0.5)
+  if(distance[2] < distance[3]){
+    loc012 <- locations[1:3]
+  }else{
+    loc012 <- locations[2:4]
+  }
+  names(loc012) <- paste0("loc", 0:2)
+  loc012
+}
+
+#' Find the closest peaks and remove the smaller one
+#' 
+#' @param modes A matrix of two columns (col names: loc, dens) and at least two rows. 
+#' @return The same matrix with one row deleted.
+#' @export
+rmSmallerFromClosestPeaks <- function(modes){
+  if(intersect(c("loc", "dens"), colnames(modes))!=2 | nrow(modes)<2){
+    print("Error: rmSmallerFromClosestPeaks() requres a matrix of two columns and at least two rows as input.")
+    return(NA)
+  }
+  closest <- which.min(diff(modes$loc))
+  if(which.min(modes[c(closest, closest+1), "dens"])==1){
+    modes <- modes[-closest, ]
+  }else{
+    modes <- modes[-(closest+1), ]
+  }
+  modes
+}
 
 

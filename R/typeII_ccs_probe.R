@@ -73,10 +73,10 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   if(train){
     mod <- getMod(beta, cpu=cpu)
   }else{
-    mod <- probeInfo_typeII %>% dplyr::select(SNP, CpG, h_0.1, loc_pass, nmod, loc0, loc1, loc2)
+    mod <- probeInfo_typeII %>% dplyr::select(SNP, CpG, loc_pass, nmod, loc0, loc1, loc2)
     rownames(mod) <- mod$CpG
   }
-  mod <- mod[mod$loc_pass,]
+  mod <- mod[mod$nmod > 1,]
 
   # calculate RAI
   beta <- beta[rownames(beta) %in% rownames(mod), ]
@@ -96,10 +96,10 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   # filter probes based on peak density and positions.
   if(train){
     mod <- getMod(RAI, cpu=cpu)
-    RAI <- RAI[dplyr::filter(mod, h_0.1==TRUE, loc_pass==TRUE, nmod==3)$CpG,]
+    RAI <- RAI[dplyr::filter(mod, loc_pass==TRUE, nmod > 1)$CpG,]
   }else{
-    mod <- dplyr::filter(probeInfo_typeII, h_0.1==TRUE, loc_pass==TRUE, nmod==3) %>% 
-      dplyr::select(SNP, CpG, h_0.1, loc_pass, nmod, loc0, loc1, loc2)
+    mod <- dplyr::filter(probeInfo_typeII, loc_pass==TRUE, nmod > 1) %>% 
+      dplyr::select(SNP, CpG, loc_pass, nmod, loc0, loc1, loc2)
     rownames(mod) <- mod$CpG
     RAI <- RAI[mod$CpG,]
   }
@@ -108,7 +108,7 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   genotypes <- call_genotypes(RAI, pop=pop, type="typeII_ccs_probe", maxiter=maxiter, 
                                        bayesian=bayesian, platform=platform, verbose=verbose)
   if(plotRAI){plot_RAI_distribution(genotypes, type="typeII_ccs_probe")}
-  dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, 
+  dosage <- format_genotypes(genotypes, vcf=vcf, vcfName=vcfName, a2=a2,
                              GP_cutoff=GP_cutoff, outlier_cutoff=outlier_cutoff, missing_cutoff=missing_cutoff,
                              R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
                              MAF_cutoff=MAF_cutoff, HWE_cutoff=HWE_cutoff, 
