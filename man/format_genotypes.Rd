@@ -8,6 +8,7 @@ format_genotypes(
   genotypes,
   vcf = FALSE,
   vcfName,
+  a2 = "AT",
   GP_cutoff = 0.9,
   outlier_cutoff = "max",
   missing_cutoff = 0.1,
@@ -27,6 +28,8 @@ format_genotypes(
 \item{vcf}{If TRUE, will write a VCF file in the current directory.}
 
 \item{vcfName}{VCF file name. Only effective when vcf=TRUE.}
+
+\item{a2}{Call genotypes for specific alternative alleles. Use "AT" or "CG".}
 
 \item{GP_cutoff}{When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.}
 
