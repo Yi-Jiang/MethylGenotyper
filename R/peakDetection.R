@@ -3,33 +3,58 @@
 #' 
 #' @param x Matrix of beta or RAI values. Row names must be supplied.
 #' @param minDens Minimum density for a valid peak.
+#' @param maxProp_antimode If the proportion of antimode density on mode density exceed this threshold, the two peaks will be merged.
 #' @param cpu Number of CPU.
 #' @return A data frame of mode locations.
 #' @export
-getMod <- function(x, minDens=0.01, cpu=1){
-  print(paste(Sys.time(), "Running mode test."))
+getMod <- function(x, minDens=0.01, maxProp_antimode=0.5, cpu=1){
   cl<- makeCluster(cpu)
   registerDoParallel(cl) 
   modRes <- foreach(cpg=rownames(x), .packages=c("tidyverse","multimode"), 
                     .export=c("findCentralFromTwoPeaks", "findCentralFromTwoPeaks")) %dopar% {
     tryCatch({
-      # Estimate number of modes for each probe
+      # Get mode location and density
       nMod <- nmodes(x[cpg,], 0.04, lowsup=0, uppsup=1)
       loc <- locmodes(x[cpg,], mod0=nMod)
       idx <- seq(1, length(loc$locations), 2)
+      idx2 <- seq(2, length(loc$locations), 2)
       modes <- data.frame(loc=loc$locations[idx], dens=loc$fvalue[idx])
-      modes <- modes[modes$dens>minDens,]
+      antimodes <- data.frame(loc=loc$locations[idx2], dens=loc$fvalue[idx2])
+      
+      # Remove modes with low density. For the two nearby antimodes, remove the higher one.
+      lowDens <- modes$dens <= minDens
+      modes <- modes[!lowDens,]
+      antimodes <- antimodes[!lowDens[-1],]
+      if(lowDens[1]){antimodes <- antimodes[-1,]}
+      
+      # Merge peaks if antimode density > 1/2 of mode density
+      antimodes$pLeft <- antimodes$dens / modes$dens[-nrow(modes)]
+      antimodes$pRight <- antimodes$dens / modes$dens[-1]
+      if(max(antimodes[,c("pLeft", "pRight")]) > maxProp_antimode){
+        for(i in nrow(antimodes):1){
+          if(max(antimodes[i, c("pLeft", "pRight")]) > maxProp_antimode){
+            antimodes <- antimodes[-i,]
+            if(modes[i, "dens"] > modes[i+1, "dens"]){
+              modes <- modes[-(i+1),]
+            }else{
+              modes <- modes[-i,]
+            }
+          }
+        }
+      }
+
+      # Detect the central mode
       if(nrow(modes)==2){
         loc012 <- findCentralFromTwoPeaks(modes$loc)
       }else if(nrow(modes)==3){
         loc012 <- sort(modes$loc)
-      }else if(nrow(modes)>3){
-        while(nrow(modes)>3){
-          modes <- rmSmallerFromClosestPeaks(modes)
-        }
-        loc012 <- sort(modes$loc)
+      # }else if(nrow(modes)>3){
+      #   while(nrow(modes)>3){
+      #     modes <- rmSmallerFromClosestPeaks(modes)
+      #   }
+      #   loc012 <- sort(modes$loc)
       }else{
-        print(paste0("Escape ", cpg, " as <2 valid peaks detected."))
+        print(paste0("Escape ", cpg, " as <2 or >3 valid peaks detected."))
         return(c(CpG=cpg, nmod=nrow(modes), loc_pass=FALSE, loc0=NA, loc1=NA, loc2=NA))
       }
       if(loc012[2]>0.3 & loc012[2]<0.7){loc_pass=TRUE}else{loc_pass=FALSE}
