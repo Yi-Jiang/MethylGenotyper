@@ -16,6 +16,10 @@ getMod <- function(x, minDens=0.01, maxProp_antimode=0.5, cpu=1){
       # Get mode location and density
       nMod <- nmodes(x[cpg,], 0.04, lowsup=0, uppsup=1)
       loc <- locmodes(x[cpg,], mod0=nMod)
+      if(length(loc$locations) < 2){
+        print(paste0("Escape ", cpg, " as <2 valid peaks detected."))
+        return(c(CpG=cpg, nmod=length(loc$locations), loc_pass=FALSE, loc0=NA, loc1=NA, loc2=NA))
+      }
       idx <- seq(1, length(loc$locations), 2)
       idx2 <- seq(2, length(loc$locations), 2)
       modes <- data.frame(loc=loc$locations[idx], dens=loc$fvalue[idx])
