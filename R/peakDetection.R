@@ -62,7 +62,7 @@ getMod <- function(x, minDens=0.01, maxProp_antimode=0.5, cpu=1){
         return(c(CpG=cpg, nmod=nrow(modes), loc_pass=FALSE, loc0=NA, loc1=NA, loc2=NA))
       }
       if(loc012[2]>0.3 & loc012[2]<0.7){loc_pass=TRUE}else{loc_pass=FALSE}
-      return(c(CpG=cpg, nmod=nrow(modes), loc_pass=loc_pass, loc012[1], loc012[2], loc012[3]))
+      return(c(CpG=cpg, nmod=nrow(modes), loc_pass=loc_pass, loc0=loc012[1], loc1=loc012[2], loc2=loc012[3]))
     }, error = function(e) return(paste0("Escape ", cpg, " with error: ", e)))
   }
   stopImplicitCluster()
@@ -93,7 +93,6 @@ findCentralFromTwoPeaks <- function(locations){
   }else{
     loc012 <- locations[2:4]
   }
-  names(loc012) <- paste0("loc", 0:2)
   loc012
 }
 
