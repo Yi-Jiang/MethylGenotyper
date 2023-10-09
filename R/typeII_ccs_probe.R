@@ -78,7 +78,7 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
     rownames(mod) <- mod$CpG
   }
   mod_beta_all <- mod
-  mod_beta <- mod[mod$nmod==3,]
+  mod_beta <- mod[mod$nmod>=2,]
 
   # calculate RAI
   beta <- beta[rownames(beta) %in% rownames(mod_beta), ]
@@ -99,9 +99,9 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   if(train){
     print(paste(Sys.time(), "Running mode test for RAI values."))
     mod_RAI <- getMod(RAI, cpu=cpu)
-    RAI <- RAI[dplyr::filter(mod_RAI, loc_pass==TRUE, nmod > 1)$CpG,]
+    RAI <- RAI[dplyr::filter(mod_RAI, loc_pass==TRUE, nmod>=2)$CpG,]
   }else{
-    mod_RAI <- dplyr::filter(probeInfo_typeII, loc_pass==TRUE, nmod > 1) %>% 
+    mod_RAI <- dplyr::filter(probeInfo_typeII, loc_pass==TRUE, nmod>=2) %>% 
       dplyr::select(SNP, CpG, loc_pass, nmod, loc0, loc1, loc2)
     rownames(mod_RAI) <- mod_RAI$CpG
     RAI <- RAI[mod_RAI$CpG,]
