@@ -16,6 +16,8 @@
 #' @param train If TRUE, will fit the distribution of RAI (Ratio of Alternative allele Intensity) and filter probes by number of peaks. If FALSE, will use predefined probe list.
 #' @param cpu Number of CPU. Only effective when train=TRUE.
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
+#' @param minDens A parameter for mode test. Minimum density for a valid peak.
+#' @param maxProp_antimode A parameter for mode test. If the proportion of antimode density on mode density exceed this threshold, the two peaks will be merged.
 #' @param maxiter Maximal number of iterations for the EM algorithm.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
 #' @param platform EPIC or 450K.
@@ -26,6 +28,7 @@
 #' \item{methyl_recalc}{Re-calculated methylation levels on reference alleles. A list containing shapes of the mixed beta distributions and true methylation level (pM) for each probe.}
 #' @export
 callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfName="genotypes.typeII_ccs_probe.vcf", a2="AT",
+                            minDens=0.01, maxProp_antimode=0.5,
                             GP_cutoff=0.9, outlier_cutoff="max", missing_cutoff=0.1, 
                             R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, 
                             train=TRUE, cpu=1, pop="EAS", maxiter=50, bayesian=FALSE, platform="EPIC", verbose=1){
@@ -72,9 +75,9 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   # get positions of the central modes
   if(train){
     print(paste(Sys.time(), "Running mode test for beta values."))
-    mod <- getMod(beta, cpu=cpu)
+    mod <- getMod(beta, minDens=minDens, maxProp_antimode=maxProp_antimode, cpu=cpu)
   }else{
-    mod <- probeInfo_typeII %>% dplyr::select(SNP, CpG, loc_pass, nmod, nmod_001, loc0, loc1, loc2)
+    mod <- probeInfo_typeII %>% dplyr::select(SNP, CpG, loc_pass, nmod, loc0, loc1, loc2)
     rownames(mod) <- mod$CpG
   }
   mod_beta_all <- mod
@@ -98,11 +101,11 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   # filter probes based on peak density and positions.
   if(train){
     print(paste(Sys.time(), "Running mode test for RAI values."))
-    mod_RAI <- getMod(RAI, cpu=cpu)
-    RAI <- RAI[dplyr::filter(mod_RAI, loc_pass==TRUE, nmod==3, nmod_001>=2)$CpG,]
+    mod_RAI <- getMod(RAI, minDens=minDens, maxProp_antimode=maxProp_antimode, cpu=cpu)
+    RAI <- RAI[dplyr::filter(mod_RAI, loc_pass==TRUE, nmod==3)$CpG,]
   }else{
-    mod_RAI <- dplyr::filter(probeInfo_typeII, loc_pass==TRUE, nmod==3, nmod_001>=2) %>% 
-      dplyr::select(SNP, CpG, loc_pass, nmod, nmod_001, loc0, loc1, loc2)
+    mod_RAI <- dplyr::filter(probeInfo_typeII, loc_pass==TRUE, nmod==3) %>% 
+      dplyr::select(SNP, CpG, loc_pass, nmod, loc0, loc1, loc2)
     rownames(mod_RAI) <- mod_RAI$CpG
     RAI <- RAI[mod_RAI$CpG,]
   }
