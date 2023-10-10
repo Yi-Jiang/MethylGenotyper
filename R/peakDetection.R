@@ -52,13 +52,19 @@ getMod <- function(x, minDens=0.01, maxProp_antimode=0.5, cpu=1){
         loc012 <- findCentralFromTwoPeaks(modes$loc)
       }else if(nrow(modes)==3){
         loc012 <- sort(modes$loc)
-      # }else if(nrow(modes)>3){
-      #   while(nrow(modes)>3){
-      #     modes <- rmSmallerFromClosestPeaks(modes)
-      #   }
-      #   loc012 <- sort(modes$loc)
+      }else if(nrow(modes)>3){ # remove the lowest peaks as they are mostly noise
+        while(nrow(modes)>3){
+          lowest <- which.min(modes$dens)
+          if(lowest==1){
+            antimodes <- antimodes[-1,]
+          }else{
+            antimodes <- antimodes[-(lowest - 1),]
+          }
+          modes <- modes[-lowest,]
+        }
+        loc012 <- sort(modes$loc)
       }else{
-        print(paste0("Escape ", cpg, " as <2 or >3 valid peaks detected."))
+        print(paste0("Escape ", cpg, " as <2 valid peaks detected."))
         return(c(CpG=cpg, nmod=nrow(modes), loc_pass=FALSE, loc0=NA, loc1=NA, loc2=NA))
       }
       if(loc012[2]>0.3 & loc012[2]<0.7){loc_pass=TRUE}else{loc_pass=FALSE}
