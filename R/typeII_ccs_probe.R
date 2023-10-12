@@ -95,8 +95,8 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   }else{
     stop("Error: wrong a2 specified!")
   }
-  RAI[RAI < 0.001] <- 0.001 # if set to 0 or 1, it will fail in fitting beta distribution as GP will be NA in call_genotypes.R:: GP <<- GP / tmp
-  RAI[RAI > 0.999] <- 0.999
+  RAI[RAI < 0.01] <- 0.01 # if set to 0 or 1, it will fail in fitting beta distribution as GP will be NA in call_genotypes.R:: GP <<- GP / tmp
+  RAI[RAI > 0.99] <- 0.99
   
   # filter probes based on peak density and positions.
   # if(train){
