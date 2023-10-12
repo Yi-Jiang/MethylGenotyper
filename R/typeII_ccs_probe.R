@@ -119,6 +119,6 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
                              R2_cutoff_up=R2_cutoff_up, R2_cutoff_down=R2_cutoff_down, 
                              MAF_cutoff=MAF_cutoff, HWE_cutoff=HWE_cutoff, 
                              type="typeII_ccs_probe", pop=pop, plotAF=FALSE, platform=platform)
-  list(dosage=dosage, mod_beta_all=mod_beta_all, mod_RAI=mod_RAI, genotypes=genotypes)
+  list(dosage=dosage, mod_beta_all=mod_beta_all, mod_beta=mod_beta, genotypes=genotypes)
 }
 
