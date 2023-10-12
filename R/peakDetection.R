@@ -31,21 +31,22 @@ getMod <- function(x, minDens=0.01, maxProp_antimode=0.5, cpu=1){
       antimodes <- antimodes[!lowDens[-1],]
       if(lowDens[1]){antimodes <- antimodes[-1,]}
       
-      # Merge peaks if antimode density > 1/2 of mode density
-      antimodes$pLeft <- antimodes$dens / modes$dens[-nrow(modes)]
-      antimodes$pRight <- antimodes$dens / modes$dens[-1]
-      if(max(antimodes[,c("pLeft", "pRight")]) > maxProp_antimode){
-        for(i in nrow(antimodes):1){
-          if(max(antimodes[i, c("pLeft", "pRight")]) > maxProp_antimode){
-            antimodes <- antimodes[-i,]
-            if(modes[i, "dens"] > modes[i+1, "dens"]){
-              modes <- modes[-(i+1),]
-            }else{
-              modes <- modes[-i,]
-            }
-          }
-        }
-      }
+      # # Merge peaks if antimode density > 1/2 of mode density
+      # # Not dealing well with low density peaks, like rs556 (cg14655569).
+      # antimodes$pLeft <- antimodes$dens / modes$dens[-nrow(modes)]
+      # antimodes$pRight <- antimodes$dens / modes$dens[-1]
+      # if(max(antimodes[,c("pLeft", "pRight")]) > maxProp_antimode){
+      #   for(i in nrow(antimodes):1){
+      #     if(max(antimodes[i, c("pLeft", "pRight")]) > maxProp_antimode){
+      #       antimodes <- antimodes[-i,]
+      #       if(modes[i, "dens"] > modes[i+1, "dens"]){
+      #         modes <- modes[-(i+1),]
+      #       }else{
+      #         modes <- modes[-i,]
+      #       }
+      #     }
+      #   }
+      # }
 
       # Detect the central mode
       if(nrow(modes)==2){
