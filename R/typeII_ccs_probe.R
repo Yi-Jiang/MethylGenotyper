@@ -86,8 +86,7 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   # calculate RAI
   beta <- beta[rownames(beta) %in% rownames(mod_beta), ]
   if(a2=="AT"){
-    #mod_beta$pM <- sapply(2 * mod_beta$loc1, function(x) min(x, 1))
-    mod_beta$pM <- 2 * mod_beta$loc1
+    mod_beta$pM <- sapply(2 * mod_beta$loc1, function(x) min(x, 1))
     RAI <- 1 - ( beta / matrix(rep(mod_beta[rownames(beta), "pM", drop=TRUE], ncol(beta)), nrow=nrow(beta)) )
   }else if(a2=="CG"){
     mod_beta$pM <- sapply(2 * mod_beta$loc1 - 1, function(x) max(x, 0))
