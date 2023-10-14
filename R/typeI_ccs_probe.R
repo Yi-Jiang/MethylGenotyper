@@ -14,6 +14,9 @@
 #' @param train If TRUE, will fit the distribution of RAI (Ratio of Alternative allele Intensity) and filter probes by number of peaks. If FALSE, will use predefined probe list.
 #' @param cpu Number of CPU. Only effective when train=TRUE.
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
+#' @param bw band width.
+#' @param minDens A parameter for mode test. Minimum density for a valid peak.
+#' @param maxProp_antimode A parameter for mode test. If the proportion of antimode density on mode density exceed this threshold, the two peaks will be merged.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
 #' @param platform EPIC or 450K.
 #' @param verbose Verbose mode: 0/1/2.
@@ -22,6 +25,7 @@
 #' \item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), and genotype probability (GP).}
 #' @export
 callGeno_typeI <- function(rgData, plotRAI=FALSE, vcf=FALSE, vcfName="genotypes.typeI_ccs_probe.vcf", 
+                           bw=0.04, minDens=0.01, maxProp_antimode=0.5,
                            GP_cutoff=0.9, outlier_cutoff="max", missing_cutoff=0.1, 
                            R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, 
                            train=TRUE, cpu=1, pop="EAS", bayesian=FALSE, platform="EPIC", verbose=1){
@@ -58,10 +62,10 @@ callGeno_typeI <- function(rgData, plotRAI=FALSE, vcf=FALSE, vcfName="genotypes.
   
   # filter probes based on peak density and positions.
   if(train){
-    mod <- getMod(RAI, cpu=cpu)
-    RAI <- RAI[dplyr::filter(mod, h_0.1==TRUE, loc_pass==TRUE)$CpG,]
+    mod <- getMod(RAI, bw=bw, minDens=minDens, maxProp_antimode=maxProp_antimode, cpu=cpu)
+    RAI <- RAI[dplyr::filter(mod, loc_pass==TRUE, nmod==3)$CpG,]
   }else{
-    mod <- dplyr::filter(probeInfo_typeI, h_0.1==TRUE, loc_pass==TRUE) %>%
+    mod <- dplyr::filter(probeInfo_typeI, loc_pass==TRUE, nmod>=2) %>%
       dplyr::select(SNP, CpG, h_0.1, loc_pass, nmod, loc0, loc1, loc2)
     rownames(mod) <- mod$CpG
     RAI <- RAI[mod$CpG,]

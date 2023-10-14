@@ -2,19 +2,20 @@
 #' Estimate mode location for each probe
 #' 
 #' @param x Matrix of beta or RAI values. Row names must be supplied.
+#' @param bw band width.
 #' @param minDens Minimum density for a valid peak.
 #' @param maxProp_antimode If the proportion of antimode density on mode density exceed this threshold, the two peaks will be merged.
 #' @param cpu Number of CPU.
 #' @return A data frame of mode locations.
 #' @export
-getMod <- function(x, minDens=0.01, maxProp_antimode=0.5, cpu=1){
+getMod <- function(x, bw=0.04, minDens=0.01, maxProp_antimode=0.5, cpu=1){
   cl<- makeCluster(cpu)
   registerDoParallel(cl) 
   modRes <- foreach(cpg=rownames(x), .packages=c("tidyverse","multimode"), 
                     .export=c("findCentralFromTwoPeaks", "findCentralFromTwoPeaks")) %dopar% {
     tryCatch({
       # Get mode location and density
-      nMod <- nmodes(x[cpg,], 0.04, lowsup=0, uppsup=1)
+      nMod <- nmodes(x[cpg,], bw, lowsup=0, uppsup=1)
       loc <- locmodes(x[cpg,], mod0=nMod)
       if(length(loc$locations) < 2){
         print(paste0("Escape ", cpg, " as <2 valid peaks detected."))
@@ -53,25 +54,25 @@ getMod <- function(x, minDens=0.01, maxProp_antimode=0.5, cpu=1){
         loc012 <- findCentralFromTwoPeaks(modes$loc)
       }else if(nrow(modes)==3){
         loc012 <- sort(modes$loc)
-      }else if(nrow(modes)>3){ # remove the lowest peaks as they are mostly noise
-        while(nrow(modes)>3){
-          lowest <- which.min(modes$dens)
-          if(lowest==1){
-            antimodes <- antimodes[-1,]
-          }else{
-            antimodes <- antimodes[-(lowest - 1),]
-          }
-          modes <- modes[-lowest,]
-        }
-        loc012 <- sort(modes$loc)
+      # }else if(nrow(modes)>3){ # remove the lowest peaks as they are mostly noise
+      #   while(nrow(modes)>3){
+      #     lowest <- which.min(modes$dens)
+      #     if(lowest==1){
+      #       antimodes <- antimodes[-1,]
+      #     }else{
+      #       antimodes <- antimodes[-(lowest - 1),]
+      #     }
+      #     modes <- modes[-lowest,]
+      #   }
+      #   loc012 <- sort(modes$loc)
       }else{
         print(paste0("Escape ", cpg, " as <2 valid peaks detected."))
         return(c(CpG=cpg, nmod=nrow(modes), loc_pass=FALSE, loc0=NA, loc1=NA, loc2=NA))
       }
       if(loc012[2]>0.3 & loc012[2]<0.7){
-        #if(all(c(loc012[1]<.3, loc012[3]>.7), na.rm=TRUE)){
+        if(all(c(loc012[1]<.3, loc012[3]>.7), na.rm=TRUE)){
           loc_pass=TRUE
-        #}else{loc_pass=FALSE}
+        }else{loc_pass=FALSE}
       }else{loc_pass=FALSE}
       return(c(CpG=cpg, nmod=nrow(modes), loc_pass=loc_pass, loc0=loc012[1], loc1=loc012[2], loc2=loc012[3]))
     }, error = function(e) return(paste0("Escape ", cpg, " with error: ", e)))

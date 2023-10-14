@@ -11,6 +11,9 @@ callGeno_typeII(
   vcf = FALSE,
   vcfName = "genotypes.typeII_ccs_probe.vcf",
   a2 = "AT",
+  bw = 0.04,
+  minDens = 0.01,
+  maxProp_antimode = 0.5,
   GP_cutoff = 0.9,
   outlier_cutoff = "max",
   missing_cutoff = 0.1,
@@ -39,6 +42,12 @@ callGeno_typeII(
 \item{vcfName}{VCF file name. Only effective when vcf=TRUE.}
 
 \item{a2}{Call genotypes for specific alternative alleles. Use "AT" or "CG".}
+
+\item{bw}{band width.}
+
+\item{minDens}{A parameter for mode test. Minimum density for a valid peak.}
+
+\item{maxProp_antimode}{A parameter for mode test. If the proportion of antimode density on mode density exceed this threshold, the two peaks will be merged.}
 
 \item{GP_cutoff}{When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.}
 

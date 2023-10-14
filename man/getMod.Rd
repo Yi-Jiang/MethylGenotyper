@@ -4,10 +4,12 @@
 \alias{getMod}
 \title{Estimate mode location for each probe}
 \usage{
-getMod(x, minDens = 0.01, maxProp_antimode = 0.5, cpu = 1)
+getMod(x, bw = 0.04, minDens = 0.01, maxProp_antimode = 0.5, cpu = 1)
 }
 \arguments{
 \item{x}{Matrix of beta or RAI values. Row names must be supplied.}
+
+\item{bw}{band width.}
 
 \item{minDens}{Minimum density for a valid peak.}
 
