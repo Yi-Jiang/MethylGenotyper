@@ -69,11 +69,11 @@ getMod <- function(x, bw=0.04, minDens=0.01, maxProp_antimode=0.5, cpu=1){
         print(paste0("Escape ", cpg, " as <2 valid peaks detected."))
         return(c(CpG=cpg, nmod=nrow(modes), loc_pass=FALSE, loc0=NA, loc1=NA, loc2=NA))
       }
-      #if(loc012[2]>0.3 & loc012[2]<0.7){
+      if(loc012[2]>0.3 & loc012[2]<0.7){
         #if(all(c(loc012[1]<.3, loc012[3]>.7), na.rm=TRUE)){
           loc_pass=TRUE
         #}else{loc_pass=FALSE}
-      #}else{loc_pass=FALSE}
+      }else{loc_pass=FALSE}
       return(c(CpG=cpg, nmod=nrow(modes), loc_pass=loc_pass, loc0=loc012[1], loc1=loc012[2], loc2=loc012[3]))
     }, error = function(e) return(paste0("Escape ", cpg, " with error: ", e)))
   }
