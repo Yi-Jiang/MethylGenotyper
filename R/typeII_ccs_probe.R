@@ -59,6 +59,9 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
     }
   }
   
+  # remove probes if they have common SNPs (MAF>0.01 in corresponding population) within 5bps
+  probeInfo_typeII <- probeInfo_typeII[!is.na(probeInfo_typeII[,tag_af]),]
+  
   # calculate beta values
   if(input=="raw"){
     cg <- rownames(inData[["AR"]])

@@ -43,6 +43,9 @@ callGeno_typeI <- function(rgData, plotRAI=FALSE, vcf=FALSE, vcfName="genotypes.
     data(probeInfo_typeI_450K); probeInfo_typeI <- probeInfo_typeI_450K
   }
   
+  # remove probes if they have common SNPs (MAF>0.01 in corresponding population) within 5bps
+  probeInfo_typeI <- probeInfo_typeI[!is.na(probeInfo_typeI[,tag_af]),]
+  
   # calculate RAI
   df <- dplyr::filter(probeInfo_typeI, .data[["CpG"]] %in% rownames(rgData[["AR"]]) & .data[[tag_af]]>0.01 & .data[[tag_af]]<0.99)
   dR <- dplyr::filter(df, Color=="Red")
