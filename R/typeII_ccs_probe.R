@@ -84,8 +84,7 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
     mod <- probeInfo_typeII %>% dplyr::select(SNP, CpG, loc_pass, nmod, loc0, loc1, loc2)
     rownames(mod) <- mod$CpG
   }
-  mod_beta <- mod
-  #mod_beta <- mod %>% dplyr::filter(loc_pass==TRUE, nmod==3)
+  mod_beta <- mod %>% dplyr::filter(nmod>=2)
 
   # calculate RAI
   beta <- beta[rownames(beta) %in% rownames(mod_beta), ]
