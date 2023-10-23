@@ -66,7 +66,7 @@ callGeno_typeI <- function(rgData, plotRAI=FALSE, vcf=FALSE, vcfName="genotypes.
   # filter probes based on peak density and positions.
   if(train){
     mod <- getMod(RAI, bw=bw, minDens=minDens, maxProp_antimode=maxProp_antimode, cpu=cpu)
-    RAI <- RAI[dplyr::filter(mod, loc_pass==TRUE, nmod>=2)$CpG,]
+    RAI <- RAI[dplyr::filter(mod, loc_pass==TRUE, nmod>=3)$CpG,]
   }else{
     mod <- dplyr::filter(probeInfo_typeI, loc_pass==TRUE, nmod>=2) %>%
       dplyr::select(SNP, CpG, h_0.1, loc_pass, nmod, loc0, loc1, loc2)
