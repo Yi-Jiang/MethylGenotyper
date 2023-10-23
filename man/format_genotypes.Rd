@@ -8,7 +8,6 @@ format_genotypes(
   genotypes,
   vcf = FALSE,
   vcfName,
-  a2 = "AT",
   GP_cutoff = 0.9,
   outlier_cutoff = "max",
   missing_cutoff = 0.1,
@@ -29,8 +28,6 @@ format_genotypes(
 
 \item{vcfName}{VCF file name. Only effective when vcf=TRUE.}
 
-\item{a2}{Call genotypes for specific alternative alleles. Use "AT" or "CG".}
-
 \item{GP_cutoff}{When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.}
 
 \item{outlier_cutoff}{"max" or a number ranging from 0 to 1. If outlier_cutoff="max", genotypes with outlier probability larger than all of the three genotype probabilities will be set as missing. If outlier_cutoff is a number, genotypes with outlier probability > outlier_cutoff will be set as missing.}
@@ -45,7 +42,7 @@ format_genotypes(
 
 \item{pop}{Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.}
 
-\item{type}{One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.}
+\item{type}{One of snp_probe, typeI_probe, and typeII_probe.}
 
 \item{plotAF}{To plot the distribution of AFs in 1KGP and input data.}
 

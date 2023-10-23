@@ -81,9 +81,9 @@
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
 "probeInfo_snp_450K"
 
-#' Type I CCS probe information for EPIC
+#' Type I probe information for EPIC
 #' 
-#' A dataset containing Type I CCS probe information.
+#' A dataset containing Type I probe information.
 #' 
 #' @usage data(probeInfo_typeI)
 #' @format A data frame with 715 rows and 16 columns:
@@ -102,15 +102,14 @@
 #'  \item{AFR_AF}{Allele frequency of African}
 #'  \item{EUR_AF}{Allele frequency of European}
 #'  \item{SAS_AF}{Allele frequency of South Asian}
-#'  \item{h_0.1}{Passed peak density test or not}
 #'  \item{loc_pass}{Passed peak position test or not}
 #' }
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
 "probeInfo_typeI"
 
-#' Type I CCS probe information for 450K
+#' Type I probe information for 450K
 #' 
-#' A dataset containing Type I CCS probe information.
+#' A dataset containing Type I probe information.
 #' 
 #' @usage data(probeInfo_typeI_450K)
 #' @format A data frame with 712 rows and 14 columns:
@@ -133,9 +132,9 @@
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
 "probeInfo_typeI_450K"
 
-#' Type II CCS probe information for EPIC
+#' Type II probe information for EPIC
 #' 
-#' A dataset containing information of Type II CCS probes with SNPs at the extension bases. We only consider the situation that the alternative allele is A/T and the reference allele is C/G.
+#' A dataset containing information of Type II probes with SNPs at the extension bases. We only consider the situation that the alternative allele is A/T and the reference allele is C/G.
 #' 
 #' @usage data(probeInfo_typeII)
 #' @format A data frame with 26420 rows and 16 columns:
@@ -154,15 +153,14 @@
 #'  \item{AFR_AF}{Allele frequency of African}
 #'  \item{EUR_AF}{Allele frequency of European}
 #'  \item{SAS_AF}{Allele frequency of South Asian}
-#'  \item{h_0.1}{Passed peak density test or not}
 #'  \item{loc_pass}{Passed peak position test or not}
 #' }
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
 "probeInfo_typeII"
 
-#' Type II CCS probe information for 450K
+#' Type II probe information for 450K
 #' 
-#' A dataset containing information of Type II CCS probes with SNPs at the extension bases. We only consider the situation that the alternative allele is A/T and the reference allele is C/G.
+#' A dataset containing information of Type II probes with SNPs at the extension bases. We only consider the situation that the alternative allele is A/T and the reference allele is C/G.
 #' 
 #' @usage data(probeInfo_typeII_450K)
 #' @format A data frame with 11875 rows and 14 columns:
@@ -187,7 +185,7 @@
 
 #' Probe list for EPIC
 #' 
-#' A dataset containing the list of 53 SNP probes on autosomes, 715 Type I CCS probes, and 26420 type II CCS probes.
+#' A dataset containing the list of 53 SNP probes on autosomes, 715 Type I probes, and 26420 type II probes.
 #' 
 #' @usage data(probelist)
 #' @format A data frame with 27188 rows and 2 columns:
@@ -200,7 +198,7 @@
 
 #' Probe list for 450K
 #' 
-#' A dataset containing the list of 53 SNP probes on autosomes, 712 Type I CCS probes, and 11875 type II CCS probes.
+#' A dataset containing the list of 53 SNP probes on autosomes, 712 Type I probes, and 11875 type II probes.
 #' 
 #' @usage data(probelist_450K)
 #' @format A data frame with 12644 rows and 2 columns:

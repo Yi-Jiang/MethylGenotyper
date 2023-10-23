@@ -21,7 +21,7 @@ recal_Geno(
 \arguments{
 \item{genotypes}{A list returned by either \code{callGeno_snp}, \code{callGeno_typeI}, or \code{callGeno_typeII} function.}
 
-\item{type}{One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.}
+\item{type}{One of snp_probe, typeI_probe, and typeII_probe.}
 
 \item{indAF}{A matrix of individual-specific AFs. Provide SNPs as rows and samples as columns.}
 

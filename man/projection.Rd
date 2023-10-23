@@ -7,7 +7,7 @@
 projection(studyGeno, plotPCA = TRUE, cpu = 1, platform = "EPIC")
 }
 \arguments{
-\item{studyGeno}{A matrix of genotypes of study samples. Provide probes as rows and samples as columns. Include all SNP probes, type I CCS probes, and type II CCS probes if available.}
+\item{studyGeno}{A matrix of genotypes of study samples. Provide probes as rows and samples as columns. Include all SNP probes, type I probes, and type II probes if available.}
 
 \item{plotPCA}{To plot the projection of study samples in reference ancestry space.}
 

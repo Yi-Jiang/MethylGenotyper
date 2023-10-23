@@ -3,7 +3,7 @@
 \docType{data}
 \name{probeInfo_typeII}
 \alias{probeInfo_typeII}
-\title{Type II CCS probe information for EPIC}
+\title{Type II probe information for EPIC}
 \format{
 A data frame with 26420 rows and 16 columns:
 \describe{
@@ -21,7 +21,6 @@ A data frame with 26420 rows and 16 columns:
 \item{AFR_AF}{Allele frequency of African}
 \item{EUR_AF}{Allele frequency of European}
 \item{SAS_AF}{Allele frequency of South Asian}
-\item{h_0.1}{Passed peak density test or not}
 \item{loc_pass}{Passed peak position test or not}
 }
 }
@@ -32,6 +31,6 @@ A data frame with 26420 rows and 16 columns:
 data(probeInfo_typeII)
 }
 \description{
-A dataset containing information of Type II CCS probes with SNPs at the extension bases. We only consider the situation that the alternative allele is A/T and the reference allele is C/G.
+A dataset containing information of Type II probes with SNPs at the extension bases. We only consider the situation that the alternative allele is A/T and the reference allele is C/G.
 }
 \keyword{datasets}

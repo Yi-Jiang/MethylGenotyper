@@ -4,15 +4,14 @@
 #' @param x Matrix of beta or RAI values. Row names must be supplied.
 #' @param bw band width.
 #' @param minDens Minimum density for a valid peak.
-#' @param maxProp_antimode If the proportion of antimode density on mode density exceed this threshold, the two peaks will be merged.
 #' @param cpu Number of CPU.
 #' @return A data frame of mode locations.
 #' @export
-getMod <- function(x, bw=0.04, minDens=0.01, maxProp_antimode=0.5, cpu=1){
+getMod <- function(x, bw=0.04, minDens=0.001, cpu=1){
   cl<- makeCluster(cpu)
   registerDoParallel(cl) 
   modRes <- foreach(cpg=rownames(x), .packages=c("tidyverse","multimode"), 
-                    .export=c("findCentralFromTwoPeaks", "findCentralFromTwoPeaks")) %dopar% {
+                    .export=c("findCentralFromTwoPeaks")) %dopar% {
     tryCatch({
       # Get mode location and density
       nMod <- nmodes(x[cpg,], bw, lowsup=0, uppsup=1)
@@ -31,23 +30,6 @@ getMod <- function(x, bw=0.04, minDens=0.01, maxProp_antimode=0.5, cpu=1){
       modes <- modes[!lowDens,]
       antimodes <- antimodes[!lowDens[-1],]
       if(lowDens[1]){antimodes <- antimodes[-1,]}
-      
-      # # Merge peaks if antimode density > 1/2 of mode density
-      # # Not dealing well with low density peaks, like rs556 (cg14655569).
-      # antimodes$pLeft <- antimodes$dens / modes$dens[-nrow(modes)]
-      # antimodes$pRight <- antimodes$dens / modes$dens[-1]
-      # if(max(antimodes[,c("pLeft", "pRight")]) > maxProp_antimode){
-      #   for(i in nrow(antimodes):1){
-      #     if(max(antimodes[i, c("pLeft", "pRight")]) > maxProp_antimode){
-      #       antimodes <- antimodes[-i,]
-      #       if(modes[i, "dens"] > modes[i+1, "dens"]){
-      #         modes <- modes[-(i+1),]
-      #       }else{
-      #         modes <- modes[-i,]
-      #       }
-      #     }
-      #   }
-      # }
 
       # Detect the central mode
       if(nrow(modes)==2){
@@ -69,11 +51,11 @@ getMod <- function(x, bw=0.04, minDens=0.01, maxProp_antimode=0.5, cpu=1){
         print(paste0("Escape ", cpg, " as <2 valid peaks detected."))
         return(c(CpG=cpg, nmod=nrow(modes), loc_pass=FALSE, loc0=NA, loc1=NA, loc2=NA))
       }
-      #if(loc012[2]>0.3 & loc012[2]<0.7){
+      if(loc012[2]>0.3 & loc012[2]<0.7){
         #if(all(c(loc012[1]<.3, loc012[3]>.7), na.rm=TRUE)){
           loc_pass=TRUE
         #}else{loc_pass=FALSE}
-      #}else{loc_pass=FALSE}
+      }else{loc_pass=FALSE}
       return(c(CpG=cpg, nmod=nrow(modes), loc_pass=loc_pass, loc0=loc012[1], loc1=loc012[2], loc2=loc012[3]))
     }, error = function(e) return(paste0("Escape ", cpg, " with error: ", e)))
   }
@@ -106,25 +88,6 @@ findCentralFromTwoPeaks <- function(locations){
     loc012 <- locations[2:4]
   }
   loc012
-}
-
-#' Find the closest peaks and remove the smaller one
-#' 
-#' @param modes A matrix of two columns (col names: loc, dens) and at least two rows. 
-#' @return The same matrix with one row deleted.
-#' @export
-rmSmallerFromClosestPeaks <- function(modes){
-  if(intersect(c("loc", "dens"), colnames(modes))!=2 | nrow(modes)<2){
-    print("Error: rmSmallerFromClosestPeaks() requres a matrix of two columns and at least two rows as input.")
-    return(NA)
-  }
-  closest <- which.min(diff(modes$loc))
-  if(which.min(modes[c(closest, closest+1), "dens"])==1){
-    modes <- modes[-closest, ]
-  }else{
-    modes <- modes[-(closest+1), ]
-  }
-  modes
 }
 
 

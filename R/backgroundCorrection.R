@@ -68,7 +68,7 @@ correct_noob_dye <- function(target, platform="EPIC", cpu=1){
         rgData0$BR_noob <- normExpSignal(fitR$mu, fitR$sigma, fitR$alpha, rgData0$BR) + 15
         rgData0$AR_noob <- normExpSignal(fitR$mu, fitR$sigma, fitR$alpha, rgData0$AR) + 15
         
-        ## Only keep candidate SNP probes, Type I CCS probes, and Type II CCS probes
+        ## Only keep candidate SNP probes, Type I probes, and Type II probes
         rgData0 <- rgData0[rgData0$Name %in% probelist$CpG,]
         
         ## Fit linear regression of red and green channel

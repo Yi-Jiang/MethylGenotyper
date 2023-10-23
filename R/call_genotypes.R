@@ -5,7 +5,7 @@
 #'
 #' @param RAI A matrix of RAI (Ratio of Alternative allele Intensity) for probes. Provide probes as rows and samples as columns.
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
-#' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
+#' @param type One of snp_probe, typeI_probe, and typeII_probe.
 #' @param maxiter Maximal number of iterations for the EM algorithm.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
 #' @param platform EPIC or 450K.
@@ -165,7 +165,7 @@ eBeta = function(x,w){
 #'
 #' @param platform EPIC or 450K.
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
-#' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
+#' @param type One of snp_probe, typeI_probe, and typeII_probe.
 #' @param platform EPIC or 450K.
 #' @return A vector of AFs
 #' @export
@@ -181,7 +181,7 @@ get_AF <- function(pop="EAS", type, platform="EPIC"){
     }
     probe2af <- probeInfo_snp[, paste0(pop, "_AF")]
     names(probe2af) <- probeInfo_snp$CpG
-  }else if(type=="typeI_ccs_probe"){
+  }else if(type=="typeI_probe"){
     if(platform=="EPIC"){
       data(probeInfo_typeI)
     }else{
@@ -189,7 +189,7 @@ get_AF <- function(pop="EAS", type, platform="EPIC"){
     }
     probe2af <- probeInfo_typeI[, paste0(pop, "_AF")]
     names(probe2af) <- probeInfo_typeI$CpG
-  }else if(type=="typeII_ccs_probe"){
+  }else if(type=="typeII_probe"){
     if(platform=="EPIC"){
       data(probeInfo_typeII)
     }else{
