@@ -105,7 +105,7 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   if(train){
     print(paste(Sys.time(), "Running mode test for RAI values."))
     mod_RAI <- getMod(RAI, bw=bw, minDens=minDens, maxProp_antimode=maxProp_antimode, cpu=cpu)
-    RAI <- RAI[dplyr::filter(mod_RAI, loc_pass==TRUE, nmod==3)$CpG,]
+    RAI <- RAI[dplyr::filter(mod_RAI, loc_pass==TRUE, nmod==2)$CpG,]
   }else{
     mod_RAI <- dplyr::filter(probeInfo_typeII, loc_pass==TRUE, nmod==3) %>%
       dplyr::select(SNP, CpG, loc_pass, nmod, loc0, loc1, loc2)
