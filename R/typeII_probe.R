@@ -41,8 +41,10 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   tag_af <- paste0(pop, "_AF")
   if(platform=="EPIC"){
     data(probeInfo_typeII)
+    data(probelist)
   }else{
     data(probeInfo_typeII_450K); probeInfo_typeII <- probeInfo_typeII_450K
+    data(probelist_450K); probelist <- probelist_450K
   }
   
   # remove probes if they have common SNPs (MAF>0.01 in corresponding population) within 5bps
@@ -70,19 +72,19 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
     mod <- probeInfo_typeII %>% dplyr::select(SNP, CpG, nmod, loc0, loc1, loc2)
     rownames(mod) <- mod$CpG
   }
-  mod_beta_AT <- mod %>% dplyr::filter(nmod>=2, CpG %in% probelist[probelist$A2=="AT", "CpG"])
-  mod_beta_CG <- mod %>% dplyr::filter(nmod>=2, CpG %in% probelist[probelist$A2=="G", "CpG"])
+  mod_beta_AT <- mod %>% dplyr::filter(nmod>=2, CpG %in% as.character(unlist(probelist[probelist$A2=="AT", "CpG"])))
+  mod_beta_CG <- mod %>% dplyr::filter(nmod>=2, CpG %in% as.character(unlist(probelist[probelist$A2=="G", "CpG"])))
 
   # calculate RAI
   # A2 is A or T
-  beta <- beta[rownames(beta) %in% rownames(mod_beta_AT), ]
+  beta_AT <- beta[rownames(beta) %in% rownames(mod_beta_AT), ]
   mod_beta_AT$pM <- sapply(2 * mod_beta_AT$loc1, function(x) min(x, 1))
-  RAI_AT <- 1 - ( beta / matrix(rep(mod_beta_AT[rownames(beta), "pM", drop=TRUE], ncol(beta)), nrow=nrow(beta)) )
+  RAI_AT <- 1 - ( beta_AT / matrix(rep(mod_beta_AT[rownames(beta_AT), "pM", drop=TRUE], ncol(beta_AT)), nrow=nrow(beta_AT)) )
   # A2 is G
-  beta <- beta[rownames(beta) %in% rownames(mod_beta_CG), ]
+  beta_CG <- beta[rownames(beta) %in% rownames(mod_beta_CG), ]
   mod_beta_CG$pM <- sapply(2 * mod_beta_CG$loc1 - 1, function(x) max(x, 0))
-  pM_matrix <- matrix(rep(mod_beta_CG[rownames(beta), "pM", drop=TRUE], ncol(beta)), nrow=nrow(beta))
-  RAI_CG <- ( beta - pM_matrix ) / ( 1 - pM_matrix )
+  pM_matrix <- matrix(rep(mod_beta_CG[rownames(beta_CG), "pM", drop=TRUE], ncol(beta_CG)), nrow=nrow(beta_CG))
+  RAI_CG <- ( beta_CG - pM_matrix ) / ( 1 - pM_matrix )
   # merge
   RAI <- rbind(RAI_AT, RAI_CG)
   mod_beta <- rbind(mod_beta_AT, mod_beta_CG)

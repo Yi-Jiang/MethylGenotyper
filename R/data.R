@@ -192,6 +192,7 @@
 #' \describe{
 #'  \item{CpG}{CpG list}
 #'  \item{Type}{Probe types}
+#'  \item{A2}{Alternative alleles}
 #' }
 #' @seealso Probe informations: \code{\link{probeInfo_snp()}}, \code{\link{probeInfo_typeI()}}, and \code{\link{probeInfo_typeII()}}.
 "probelist"
