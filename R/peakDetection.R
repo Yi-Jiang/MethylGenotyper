@@ -52,7 +52,7 @@ getMod <- function(x, bw=0.04, minDens=0.001, cpu=1){
         }
       }else if(nrow(modes)<2){
         print(paste0("Escape ", cpg, " as <2 valid peaks detected."))
-        return(c(CpG=cpg, nmod=nrow(modes), loc_pass=FALSE, loc0=NA, loc1=NA, loc2=NA, dens0=NA, dens1=NA, dens2=NA))
+        return(c(CpG=cpg, nmod=sum(!is.na(modes$loc)), loc_pass=FALSE, loc0=NA, loc1=NA, loc2=NA, dens0=NA, dens1=NA, dens2=NA))
       }
       loc012 <- modes$loc
       dens012 <- modes$dens
@@ -64,7 +64,7 @@ getMod <- function(x, bw=0.04, minDens=0.001, cpu=1){
         loc_pass=FALSE
       }
       
-      return(c(CpG=cpg, nmod=nrow(modes), loc_pass=loc_pass, 
+      return(c(CpG=cpg, nmod=sum(!is.na(modes$loc)), loc_pass=loc_pass, 
                loc0=loc012[1], loc1=loc012[2], loc2=loc012[3], 
                dens0=dens012[1], dens1=dens012[2], dens2=dens012[3]))
     }, error = function(e) return(paste0("Escape ", cpg, " with error: ", e)))
