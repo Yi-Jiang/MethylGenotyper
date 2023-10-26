@@ -24,6 +24,10 @@ getMod <- function(x, bw=0.04, minDens=0.001, cpu=1){
       modes <- data.frame(loc=loc$locations[idx], dens=loc$fvalue[idx])
       antimodes <- data.frame(loc=loc$locations[idx2], dens=loc$fvalue[idx2])
       
+      # Found NA for two Type II probes (cg13159277 and cg03436921) in RAI matrix
+      modes <- modes[!is.na(modes$loc),]
+      antimodes <- antimodes[!is.na(antimodes$loc),]
+      
       # Remove modes with low density. For the two nearby antimodes, remove the higher one.
       lowDens <- modes$dens <= minDens
       modes <- modes[!lowDens,]
