@@ -10,8 +10,7 @@
 getMod <- function(x, bw=0.04, minDens=0.001, cpu=1){
   cl<- makeCluster(cpu)
   registerDoParallel(cl) 
-  modRes <- foreach(cpg=rownames(x), .packages=c("tidyverse","multimode"), 
-                    .export=c("findCentralFromTwoPeaks")) %dopar% {
+  modRes <- foreach(cpg=rownames(x), .packages=c("tidyverse","multimode")) %dopar% {
     tryCatch({
       # Get mode location and density
       nMod <- nmodes(x[cpg,], bw, lowsup=0, uppsup=1)
