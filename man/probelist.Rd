@@ -9,6 +9,7 @@ A data frame with 27188 rows and 2 columns:
 \describe{
 \item{CpG}{CpG list}
 \item{Type}{Probe types}
+\item{A2}{Alternative alleles}
 }
 }
 \usage{
