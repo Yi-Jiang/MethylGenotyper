@@ -3,7 +3,7 @@
 \docType{data}
 \name{probeInfo_typeII_450K}
 \alias{probeInfo_typeII_450K}
-\title{Type II CCS probe information for 450K}
+\title{Type II probe information for 450K}
 \format{
 A data frame with 11875 rows and 14 columns:
 \describe{
@@ -30,6 +30,6 @@ A data frame with 11875 rows and 14 columns:
 data(probeInfo_typeII_450K)
 }
 \description{
-A dataset containing information of Type II CCS probes with SNPs at the extension bases. We only consider the situation that the alternative allele is A/T and the reference allele is C/G.
+A dataset containing information of Type II probes with SNPs at the extension bases. We only consider the situation that the alternative allele is A/T and the reference allele is C/G.
 }
 \keyword{datasets}

@@ -13,7 +13,7 @@ plot_AF(AF_input, AF_1KGP, pop, type)
 
 \item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL.}
 
-\item{type}{One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.}
+\item{type}{One of snp_probe, typeI_probe, and typeII_probe.}
 }
 \description{
 Plot the distribution of AFs in 1KGP and input data.

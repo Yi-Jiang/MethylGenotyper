@@ -15,7 +15,7 @@ A data frame with 12644 rows and 2 columns:
 data(probelist_450K)
 }
 \description{
-A dataset containing the list of 53 SNP probes on autosomes, 712 Type I CCS probes, and 11875 type II CCS probes.
+A dataset containing the list of 53 SNP probes on autosomes, 712 Type I probes, and 11875 type II probes.
 }
 \seealso{
 Probe informations: \code{\link{probeInfo_snp_450K()}}, \code{\link{probeInfo_typeI_450K()}}, and \code{\link{probeInfo_typeII_450K()}}.

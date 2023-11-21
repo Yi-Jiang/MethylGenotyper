@@ -2,18 +2,22 @@
 % Please edit documentation in R/peakDetection.R
 \name{getMod}
 \alias{getMod}
-\title{Filter probes according to the number and position of peaks}
+\title{Estimate mode location for each probe}
 \usage{
-getMod(RAI, cpu = 1)
+getMod(x, bw = 0.04, minDens = 0.001, cpu = 1)
 }
 \arguments{
-\item{RAI}{Matrix of RAI (Ratio of Alternative allele Intensity).}
+\item{x}{Matrix of beta or RAI values. Row names must be supplied.}
+
+\item{bw}{band width.}
+
+\item{minDens}{Minimum density for a valid peak.}
 
 \item{cpu}{Number of CPU.}
 }
 \value{
-Probe filtering results
+A data frame of mode locations.
 }
 \description{
-Filter probes according to the number and position of peaks
+Estimate mode location for each probe
 }

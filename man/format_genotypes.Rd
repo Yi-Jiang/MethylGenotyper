@@ -42,7 +42,7 @@ format_genotypes(
 
 \item{pop}{Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.}
 
-\item{type}{One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.}
+\item{type}{One of snp_probe, typeI_probe, and typeII_probe.}
 
 \item{plotAF}{To plot the distribution of AFs in 1KGP and input data.}
 

@@ -3,7 +3,7 @@
 \docType{data}
 \name{probeInfo_typeI_450K}
 \alias{probeInfo_typeI_450K}
-\title{Type I CCS probe information for 450K}
+\title{Type I probe information for 450K}
 \format{
 A data frame with 712 rows and 14 columns:
 \describe{
@@ -30,6 +30,6 @@ A data frame with 712 rows and 14 columns:
 data(probeInfo_typeI_450K)
 }
 \description{
-A dataset containing Type I CCS probe information.
+A dataset containing Type I probe information.
 }
 \keyword{datasets}

@@ -2,7 +2,7 @@
 #' Plot beta distributions for reference homozygous, heterozygous, and alternative homozygous
 #' 
 #' @param genotypes Genotype calls.
-#' @param type One of "snp_probe", "typeI_ccs_probe", and "typeII_ccs_probe".
+#' @param type One of "snp_probe", "typeI_probe", and "typeII_probe".
 #' @export
 plot_RAI_distribution <- function(genotypes, type){
   weights <- as.numeric(colMeans(genotypes$weights))
@@ -168,7 +168,7 @@ dosage2hard <- function(AA, AB, BB){
 #' @param MAF_cutoff MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with MAF below the cutoff will be removed.
 #' @param HWE_cutoff HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with HWE p value below the cutoff will be removed.
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
-#' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
+#' @param type One of snp_probe, typeI_probe, and typeII_probe.
 #' @param plotAF To plot the distribution of AFs in 1KGP and input data.
 #' @param platform EPIC or 450K.
 #' @return A matrix of genotype calls. Variants with R2s, HWE p values, MAFs, or missing rates beyond the cutoffs are removed.
@@ -236,13 +236,13 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, outli
       }else{
         data(probeInfo_snp_450K); probeInfo <- probeInfo_snp_450K
       }
-    }else if(type=="typeI_ccs_probe"){
+    }else if(type=="typeI_probe"){
       if(platform=="EPIC"){
         data(probeInfo_typeI); probeInfo <- probeInfo_typeI
       }else{
         data(probeInfo_typeI_450K); probeInfo <- probeInfo_typeI_450K
       }
-    }else if(type=="typeII_ccs_probe"){
+    }else if(type=="typeII_probe"){
       if(platform=="EPIC"){
         data(probeInfo_typeII); probeInfo <- probeInfo_typeII
       }else{
@@ -306,7 +306,7 @@ format_genotypes <- function(genotypes, vcf=FALSE, vcfName, GP_cutoff=0.9, outli
 #' @param AF_input A vector.
 #' @param AF_1KGP A vector.
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL.
-#' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
+#' @param type One of snp_probe, typeI_probe, and typeII_probe.
 #' @export
 plot_AF <- function(AF_input, AF_1KGP, pop, type){
   probes <- intersect(names(AF_input), names(AF_1KGP))

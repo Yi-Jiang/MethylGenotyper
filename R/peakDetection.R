@@ -1,77 +1,88 @@
 
-#' Filter probes according to the number and position of peaks
+#' Estimate mode location for each probe
 #' 
-#' @param RAI Matrix of RAI (Ratio of Alternative allele Intensity).
+#' @param x Matrix of beta or RAI values. Row names must be supplied.
+#' @param bw band width.
+#' @param minDens Minimum density for a valid peak.
 #' @param cpu Number of CPU.
-#' @return Probe filtering results
+#' @return A data frame of mode locations.
 #' @export
-getMod <- function(RAI, cpu=1){
-  print(paste(Sys.time(), "Running mod test."))
-  # Estimate number of modes for each probe
-  n <- apply(RAI, 1, function(x) (nmodes(x, 0.05, lowsup=0, uppsup=1)))
-  mod <- tibble(CpG=names(n), nmod=n)
-  mod[mod$nmod>3, "nmod"] <- 3
-  
-  # Estimate mode location for each probe
+getMod <- function(x, bw=0.04, minDens=0.001, cpu=1){
   cl<- makeCluster(cpu)
   registerDoParallel(cl) 
-  out <- foreach(i=mod$CpG, .packages=c("tidyverse","multimode")) %dopar% {
+  modRes <- foreach(cpg=rownames(x), .packages=c("tidyverse","multimode")) %dopar% {
     tryCatch({
-      a <- locmodes(RAI[i, ], mod0=dplyr::filter(mod, CpG==i)$nmod)
-      a
-    }, error = function(e) return(paste0("The variable '", i, "'", " caused the error: '", e, "'")))
+      # Get mode location and density
+      nMod <- nmodes(x[cpg,], bw, lowsup=0, uppsup=1)
+      loc <- locmodes(x[cpg,], mod0=nMod)
+      if(length(loc$locations) < 2){
+        print(paste0("Escape ", cpg, " as <2 valid peaks detected."))
+        return(c(CpG=cpg, nmod=length(loc$locations), loc_pass=FALSE, loc0=NA, loc1=NA, loc2=NA, dens0=NA, dens1=NA, dens2=NA))
+      }
+      idx <- seq(1, length(loc$locations), 2)
+      idx2 <- seq(2, length(loc$locations), 2)
+      modes <- data.frame(loc=loc$locations[idx], dens=loc$fvalue[idx])
+      antimodes <- data.frame(loc=loc$locations[idx2], dens=loc$fvalue[idx2])
+      
+      # Found NA for two Type II probes (cg13159277 and cg03436921) in RAI matrix
+      modes <- modes[!is.na(modes$loc),]
+      antimodes <- antimodes[!is.na(antimodes$loc),]
+      
+      # Remove modes with low density. For the two nearby antimodes, remove the higher one.
+      lowDens <- modes$dens <= minDens
+      modes <- modes[!lowDens,]
+      antimodes <- antimodes[!lowDens[-1],]
+      if(lowDens[1]){antimodes <- antimodes[-1,]}
+      modes <- modes[order(modes$loc),]
+      antimodes <- antimodes[order(antimodes$loc),]
+
+      # Detect the central mode
+      if(nrow(modes)==2){
+        distance <- abs(modes$loc - 0.5)
+        if(distance[1] < distance[2]){
+          modes <- rbind(NA, modes)
+        }else{
+          modes <- rbind(modes, NA)
+        }
+      }else if(nrow(modes)>3){ # remove the lowest peaks as they are mostly noise
+        while(nrow(modes)>3){
+          lowest <- which.min(modes$dens)
+          if(lowest==1){
+            antimodes <- antimodes[-1,]
+          }else{
+            antimodes <- antimodes[-(lowest - 1),]
+          }
+          modes <- modes[-lowest,]
+        }
+      }else if(nrow(modes)<2){
+        print(paste0("Escape ", cpg, " as <2 valid peaks detected."))
+        return(c(CpG=cpg, nmod=sum(!is.na(modes$loc)), loc_pass=FALSE, loc0=NA, loc1=NA, loc2=NA, dens0=NA, dens1=NA, dens2=NA))
+      }
+      loc012 <- modes$loc
+      dens012 <- modes$dens
+      
+      # Position of the central mode in a given range?
+      if(loc012[2]>0.3 & loc012[2]<0.7){
+          loc_pass=TRUE
+      }else{
+        loc_pass=FALSE
+      }
+      
+      return(c(CpG=cpg, nmod=sum(!is.na(modes$loc)), loc_pass=loc_pass, 
+               loc0=loc012[1], loc1=loc012[2], loc2=loc012[3], 
+               dens0=dens012[1], dens1=dens012[2], dens2=dens012[3]))
+    }, error = function(e) return(paste0("Escape ", cpg, " with error: ", e)))
   }
   stopImplicitCluster()
   stopCluster(cl)
-  names(out) <- mod$CpG
-  out2 <- out[dplyr::filter(mod, nmod==2)$CpG]
-  out3 <- out[dplyr::filter(mod, nmod==3)$CpG]
-  
-  # Filter mode density height (>0.1)
-  if(length(out2)>0){
-    height2 <- as.data.frame(do.call(rbind, list.map(out2, fvalue))) %>% dplyr::select(V1, V3)
-  }else{
-    height2 <- c()
-  }
-  if(length(out3)>0){
-    height3 <- as.data.frame(do.call(rbind, list.map(out3, fvalue))) %>% dplyr::select(V1, V3, V5)
-  }else{
-    height3 <- c()
-  }
-  height <- bind_rows(height2, height3)
-  colnames(height) <- paste0("height", 1:ncol(height))
-  hfilter <- rowSums(height>0.1, na.rm=T)>1
-  nhfilter <- rowSums(height>0.1, na.rm=T)
-  mod <- left_join(mod, tibble(CpG=names(hfilter), h_0.1=hfilter, nh_0.1=nhfilter))
-  
-  # Filter mode location
-  if(length(out2)>0){
-    lo2 <- as.data.frame(do.call(rbind, list.map(out2, locations))) %>% dplyr::select(V1, V3)
-    k.lo2.01 <- try(data.frame(dplyr::filter(lo2, V1<0.3&V3>0.3&V3<0.7), V5=NA_real_))
-    k.lo2.12 <- try(data.frame(V0=NA_real_, dplyr::filter(lo2, V1>0.3&V1<0.7&V3>0.7)))
-    if(class(k.lo2.01) %in% "try-error"){k.lo2.01<- c()}
-    if(class(k.lo2.12) %in% "try-error"){k.lo2.12<- c()}else{colnames(k.lo2.12) <- c("V1", "V3", "V5")}
-  }else{
-    k.lo2.01 <- c()
-    k.lo2.12 <- c()
-  }
-  if(length(out3)>0){
-    lo3 <- as.data.frame(do.call(rbind, list.map(out3, locations))) %>% dplyr::select(V1, V3, V5)
-    k.lo3 <- dplyr::filter(lo3, V1<0.3, V3>0.3, V3<0.7, V5>0.7)
-  }else{
-    k.lo3 <- c()
-  }
-  k.lo <- bind_rows(k.lo2.01, k.lo2.12, k.lo3)
-  colnames(k.lo) <- c("loc0", "loc1", "loc2")
-  k.lo <- data.frame(CpG=rownames(k.lo), k.lo)
-  mod <- mutate(mod, loc_pass=(CpG %in% rownames(k.lo))) %>% 
-    left_join(k.lo, by="CpG") %>% 
-    left_join(tibble(CpG=rownames(height), height), by="CpG")
-  mod <- as.data.frame(mod)
-  rownames(mod) <- mod$CpG
-
-  mod
+  modRes <- as.data.frame(do.call(rbind, modRes))
+  modRes$nmod <- as.numeric(as.character(modRes$nmod))
+  modRes$loc0 <- as.numeric(as.character(modRes$loc0))
+  modRes$loc1 <- as.numeric(as.character(modRes$loc1))
+  modRes$loc2 <- as.numeric(as.character(modRes$loc2))
+  modRes$dens0 <- as.numeric(as.character(modRes$dens0))
+  modRes$dens1 <- as.numeric(as.character(modRes$dens1))
+  modRes$dens2 <- as.numeric(as.character(modRes$dens2))
+  rownames(modRes) <- modRes$CpG
+  modRes
 }
-
-
-

@@ -1,7 +1,7 @@
 
 #' PCA and Procrustes analysis
 #'
-#' @param studyGeno A matrix of genotypes of study samples. Provide probes as rows and samples as columns. Include all SNP probes, type I CCS probes, and type II CCS probes if available.
+#' @param studyGeno A matrix of genotypes of study samples. Provide probes as rows and samples as columns. Include all SNP probes, type I probes, and type II probes if available.
 #' @param plotPCA To plot the projection of study samples in reference ancestry space.
 #' @param cpu Number of CPU.
 #' @param platform EPIC or 450K.
@@ -61,7 +61,7 @@ get_indAF <- function(snpvec, refPC, studyPC){
 #' Recalibrate genotypes for samples of mixed population
 #'
 #' @param genotypes A list returned by either `callGeno_snp`, `callGeno_typeI`, or `callGeno_typeII` function.
-#' @param type One of snp_probe, typeI_ccs_probe, and typeII_ccs_probe.
+#' @param type One of snp_probe, typeI_probe, and typeII_probe.
 #' @param indAF A matrix of individual-specific AFs. Provide SNPs as rows and samples as columns.
 #' @param platform EPIC or 450K.
 #' @param GP_cutoff When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.

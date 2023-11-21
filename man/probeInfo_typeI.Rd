@@ -3,7 +3,7 @@
 \docType{data}
 \name{probeInfo_typeI}
 \alias{probeInfo_typeI}
-\title{Type I CCS probe information for EPIC}
+\title{Type I probe information for EPIC}
 \format{
 A data frame with 715 rows and 16 columns:
 \describe{
@@ -21,7 +21,6 @@ A data frame with 715 rows and 16 columns:
 \item{AFR_AF}{Allele frequency of African}
 \item{EUR_AF}{Allele frequency of European}
 \item{SAS_AF}{Allele frequency of South Asian}
-\item{h_0.1}{Passed peak density test or not}
 \item{loc_pass}{Passed peak position test or not}
 }
 }
@@ -32,6 +31,6 @@ A data frame with 715 rows and 16 columns:
 data(probeInfo_typeI)
 }
 \description{
-A dataset containing Type I CCS probe information.
+A dataset containing Type I probe information.
 }
 \keyword{datasets}
