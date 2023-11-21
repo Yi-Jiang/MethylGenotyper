@@ -18,11 +18,11 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-The `MethylGenotyper` package provides functions to infer genotypes (produce a VCF file) for specific probes and on Illumina methylation array (EPIC or 450K). The probes include SNP probes, Type I CCS (color-channel-switching) probes, and Type II CCS probes. We defined RAI as the Ratio of Alternative allele Intensity to total intensity and calculated RAI for each probe and sample.
+The `MethylGenotyper` package provides functions to infer genotypes (produce a VCF file) for specific probes and on Illumina methylation array (EPIC or 450K). Three types of probes capable of calling genotypes were used, including SNP probe, Type I probe with color-channel-switching (CCS) SNP at the extension base, and Type II probe with SNP at the extension base. We defined RAI as the Ratio of Alternative allele Intensity to total intensity and calculated RAI for each probe and sample.
 
 -   **SNP probe:** There are 59 SNP probes (started with "rs") on EPIC array and 65 SNP probes on 450K array. Probes on sex chromosomes (six in EPIC and eight on 450K) were removed. We aligned each probe sequence to reference genome and calculated RAI, which is defined as the proportion of probe signals supporting alternative allele.
--   **Type I CCS probe:** These probes are type I probes with SNPs at the extension bases resulting in CCS (A,T \<-\> C,G mutation). The signals for probes with CCS SNPs are called out-of-band signals. The RAI is defined as the proportion of out-of-band signals over total signals.
--   **Type II CCS probe:** For this probe type, we only focus on type II probes with SNPs at the extension bases (CpG target sites), the reference alleles for the SNPs are C/G, and the alternative alleles are A/T. The RAI is defined as the proportion of signals supporting alternative alleles over total signals.
+-   **Type I probe:** We focus on Type I probes with CCS SNPs (A,T \<-\> C,G mutation) at the extension bases. The signals for probes with CCS SNPs are called out-of-band signals. The RAI is defined as the proportion of out-of-band signals over total signals.
+-   **Type II probe:** We focus on Type II probes with SNPs at the extension bases (CpG target sites). The alternative allele of SNP can be either A/T (CCS SNP) or G (SNP not switching color channel). Please refer to the manuscript for details in calculating RAI.
 
 The RAI values are usually distributed with three peaks, representing the three genotypes (reference homozygous, heterozygous, and alternative homozygous). To call genotypes from the RAI values, we fit a mixture of three beta distributions for the three genotypes and a uniform distribution for outliers based on the Expectation--maximization (EM) algorithm. Probe-specific weights derived from allele frequencies (AFs) were used in the EM algorithm. A VCF file containing dosage genotype ($\hat{D}_{ij}$), AF ($\hat{q}_i$), and $\hat{R}_i^2$ will be produced:
 
@@ -61,7 +61,7 @@ rgData <- correct_noob_dye(target, platform="EPIC", cpu=3)
 
 ### Call genotypes
 
-The genotype-calling procedure can be done for SNP probes, Type I CCS probes, and Type II CCS probes, separately. You should specify the correct population (One of EAS, AMR, AFR, EUR, SAS, and ALL) for your samples to get accurate genotype calls. If you have samples of mixed population, please specify the population with the largest sample size. 
+The genotype-calling procedure can be done for SNP probes, Type I probes, and Type II probes, separately. You should specify the correct population (One of EAS, AMR, AFR, EUR, SAS, and ALL) for your samples to get accurate genotype calls. If you have samples of mixed population, please specify the population with the largest sample size. 
 
 You can plot the distribution of the RAI values and produce a VCF file of the inferred genotypes by specifying `plotBeta=TRUE` and `vcf=TRUE`.
 
@@ -70,7 +70,7 @@ You can also specify cutoffs of $R^2$, MAF, HWE, and missing rate to filter vari
 We noted that in the example data, most of variants have $R^2$=0. This is because we only used three samples here. We strongly recommend to use a larger sample size to test the code, such as [GSE112179](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE112179).
 
 ```{r callGeno, eval=FALSE, warning=FALSE, message=FALSE}
-# Call genotypes for SNP probes, Type I CCS probes, and Type II CCS probes
+# Call genotypes for SNP probes, Type I probes, and Type II probes
 genotype_snp <- callGeno_snp(rgData, input="raw", vcf=TRUE, pop="EAS", platform="EPIC")
 genotype_typeI <- callGeno_typeI(rgData, vcf=TRUE, pop="EAS", platform="EPIC")
 genotype_typeII <- callGeno_typeII(rgData, input="raw", vcf=TRUE, pop="EAS", platform="EPIC")
@@ -79,10 +79,10 @@ genotype_typeII <- callGeno_typeII(rgData, input="raw", vcf=TRUE, pop="EAS", pla
 dosage <- rbind(genotype_snp$dosage, genotype_typeI$dosage, genotype_typeII$dosage)
 ```
 
-As an alternative option, you can input a matrix of beta values or M values, with each row indicates a probe and each column indicates a sample. This option only works for SNP probes and Type II CCS probes. Here are the examples of calling genotypes from beta values. For input of M values, please specify `input="mval"`. Remember to conduct background correction and dye-bias correction before running the following code. Also be noted that other correction should NOT be conducted, like BMIQ, as it flattens the peaks through a scale transformation.
+As an alternative option, you can input a matrix of beta values or M values, with each row indicates a probe and each column indicates a sample. This option only works for SNP probes and Type II probes. Here are the examples of calling genotypes from beta values. For input of M values, please specify `input="mval"`. Remember to conduct background correction and dye-bias correction before running the following code. Also be noted that other correction should NOT be conducted, like BMIQ, as it flattens the peaks through a scale transformation.
 
 ```{r callGeno2, eval=FALSE, warning=FALSE, message=FALSE}
-# Call genotypes for SNP probes and Type II CCS probes
+# Call genotypes for SNP probes and Type II probes
 genotype_snp <- callGeno_snp(beta_matrix, input="beta", vcf=TRUE, pop="EAS", platform="EPIC")
 genotype_typeII <- callGeno_typeII(beta_matrix, input="beta", vcf=TRUE, pop="EAS", platform="EPIC")
 
@@ -110,10 +110,10 @@ indAF <- get_indAF(snpvec, pc$refPC, pc$studyPC)
 <!-- **Recalibrate genotype probabilities based on individual-specific AFs: ** This step is based on the Bayesian approach, which can be implemented by using the `get_GP_bayesian` function. -->
 
 <!-- ```{r recal_geno, eval=FALSE, warning=FALSE, message=FALSE} -->
-<!-- # Recalibrate genotypes for SNP probes, Type I CCS probes, and Type II CCS probes -->
+<!-- # Recalibrate genotypes for SNP probes, Type I probes, and Type II probes -->
 <!-- genotype_snp_recal <- recal_Geno(genotype_snp, type="snp_probe", indAF=indAF, platform="EPIC") -->
-<!-- genotype_typeI_recal <- recal_Geno(genotype_typeI, type="typeI_ccs_probe", indAF=indAF, platform="EPIC") -->
-<!-- genotype_typeII_recal <- recal_Geno(genotype_typeII, type="typeII_ccs_probe", indAF=indAF, platform="EPIC") -->
+<!-- genotype_typeI_recal <- recal_Geno(genotype_typeI, type="typeI_probe", indAF=indAF, platform="EPIC") -->
+<!-- genotype_typeII_recal <- recal_Geno(genotype_typeII, type="typeII_probe", indAF=indAF, platform="EPIC") -->
 
 <!-- # Combine genotypes inferred from the three probe types -->
 <!-- dosage_recal <- rbind(genotype_snp_recal$dosage, genotype_typeI_recal$dosage, genotype_typeII_recal$dosage) -->

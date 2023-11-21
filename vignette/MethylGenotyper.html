@@ -12,7 +12,7 @@
 
 <meta name="author" content="Yi Jiang, Minghan Qu, Chaolong Wang" />
 
-<meta name="date" content="2023-06-14" />
+<meta name="date" content="2023-11-21" />
 
 <title>MethylGenotyper</title>
 
@@ -38,6 +38,7 @@ div.column{display: inline-block; vertical-align: top; width: 50%;}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 </style>
+
 
 
 <style type="text/css">
@@ -120,13 +121,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
   for (var i = 0; i < sheets.length; i++) {
     if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
     try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    for (var j = 0; j < rules.length; j++) {
+    var j = 0;
+    while (j < rules.length) {
       var rule = rules[j];
       // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -332,7 +340,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">MethylGenotyper</h1>
 <h4 class="author">Yi Jiang, Minghan Qu, Chaolong Wang</h4>
-<h4 class="date">2023-06-14</h4>
+<h4 class="date">2023-11-21</h4>
 
 
 
@@ -340,10 +348,12 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h2>Introduction</h2>
 <p>The <code>MethylGenotyper</code> package provides functions to infer
 genotypes (produce a VCF file) for specific probes and on Illumina
-methylation array (EPIC or 450K). The probes include SNP probes, Type I
-CCS (color-channel-switching) probes, and Type II CCS probes. We defined
-RAI as the Ratio of Alternative allele Intensity to total intensity and
-calculated RAI for each probe and sample.</p>
+methylation array (EPIC or 450K). Three types of probes capable of
+calling genotypes were used, including SNP probe, Type I probe with
+color-channel-switching (CCS) SNP at the extension base, and Type II
+probe with SNP at the extension base. We defined RAI as the Ratio of
+Alternative allele Intensity to total intensity and calculated RAI for
+each probe and sample.</p>
 <ul>
 <li><strong>SNP probe:</strong> There are 59 SNP probes (started with
 “rs”) on EPIC array and 65 SNP probes on 450K array. Probes on sex
@@ -351,16 +361,15 @@ chromosomes (six in EPIC and eight on 450K) were removed. We aligned
 each probe sequence to reference genome and calculated RAI, which is
 defined as the proportion of probe signals supporting alternative
 allele.</li>
-<li><strong>Type I CCS probe:</strong> These probes are type I probes
-with SNPs at the extension bases resulting in CCS (A,T &lt;-&gt; C,G
-mutation). The signals for probes with CCS SNPs are called out-of-band
-signals. The RAI is defined as the proportion of out-of-band signals
-over total signals.</li>
-<li><strong>Type II CCS probe:</strong> For this probe type, we only
-focus on type II probes with SNPs at the extension bases (CpG target
-sites), the reference alleles for the SNPs are C/G, and the alternative
-alleles are A/T. The RAI is defined as the proportion of signals
-supporting alternative alleles over total signals.</li>
+<li><strong>Type I probe:</strong> We focus on Type I probes with CCS
+SNPs (A,T &lt;-&gt; C,G mutation) at the extension bases. The signals
+for probes with CCS SNPs are called out-of-band signals. The RAI is
+defined as the proportion of out-of-band signals over total
+signals.</li>
+<li><strong>Type II probe:</strong> We focus on Type II probes with SNPs
+at the extension bases (CpG target sites). The alternative allele of SNP
+can be either A/T (CCS SNP) or G (SNP not switching color channel).
+Please refer to the manuscript for details in calculating RAI.</li>
 </ul>
 <p>The RAI values are usually distributed with three peaks, representing
 the three genotypes (reference homozygous, heterozygous, and alternative
@@ -393,7 +402,7 @@ sample contamination.</p>
 <code>tidyverse</code>, <code>foreach</code>, <code>doParallel</code>,
 <code>HardyWeinberg</code>, <code>multimode</code>, <code>rlist</code>,
 <code>stats4</code>, <code>ggplot2</code>, <code>ggpubr</code>.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MethylGenotyper)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(MethylGenotyper)</span></code></pre></div>
 </div>
 <div id="read-idat-files-and-perform-noob-and-dye-bias-correction" class="section level3">
 <h3>Read IDAT files and perform noob and dye-bias correction</h3>
@@ -403,32 +412,31 @@ exemplification of how this tool works. We strongly recommend to use a
 larger sample size to test the code, such as <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE112179">GSE112179</a>.
 Your may process your own data by specifying your target file list.
 Required collumns: Sample_Name, Basename.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>target <span class="ot">&lt;-</span> <span class="fu">get_target</span>(<span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(target)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    Sample_Name</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 200144450018</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 200144450019</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 200144450021</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                                                                           Basename</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 C:/Users/DELL/Documents/R/win-library/4.0/minfiDataEPIC/extdata/200144450018/200144450018_R04C01</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 C:/Users/DELL/Documents/R/win-library/4.0/minfiDataEPIC/extdata/200144450019/200144450019_R07C01</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 C:/Users/DELL/Documents/R/win-library/4.0/minfiDataEPIC/extdata/200144450021/200144450021_R05C01</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>target <span class="ot">&lt;-</span> <span class="fu">get_target</span>(<span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">head</span>(target)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co">#&gt;    Sample_Name</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; 1 200144450018</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt; 2 200144450019</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; 3 200144450021</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;                                                                                               Basename</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt; 1 C:/Users/DELL/AppData/Local/R/win-library/4.3/minfiDataEPIC/extdata/200144450018/200144450018_R04C01</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt; 2 C:/Users/DELL/AppData/Local/R/win-library/4.3/minfiDataEPIC/extdata/200144450019/200144450019_R07C01</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt; 3 C:/Users/DELL/AppData/Local/R/win-library/4.3/minfiDataEPIC/extdata/200144450021/200144450021_R05C01</span></span></code></pre></div>
 <p>With the following code, the IDAT files listed in <code>target</code>
 will be read one-by-one. For each sample, a noob background correction
 and dye-bias correction will be conducted. You can specify the number of
 CPUs to enable parallel processing. After that, a list of four elements
 will be returned, including corrected signals of probe A and probe B for
 the two color channels.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>rgData <span class="ot">&lt;-</span> <span class="fu">correct_noob_dye</span>(target, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>, <span class="at">cpu=</span><span class="dv">3</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>rgData <span class="ot">&lt;-</span> <span class="fu">correct_noob_dye</span>(target, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>, <span class="at">cpu=</span><span class="dv">3</span>)</span></code></pre></div>
 </div>
 <div id="call-genotypes" class="section level3">
 <h3>Call genotypes</h3>
-<p>The genotype-calling procedure can be done for SNP probes, Type I CCS
-probes, and Type II CCS probes, separately. You should specify the
-correct population (One of EAS, AMR, AFR, EUR, SAS, and ALL) for your
-samples to get accurate genotype calls. If you have samples of mixed
-population, please specify the population with the largest sample
-size.</p>
+<p>The genotype-calling procedure can be done for SNP probes, Type I
+probes, and Type II probes, separately. You should specify the correct
+population (One of EAS, AMR, AFR, EUR, SAS, and ALL) for your samples to
+get accurate genotype calls. If you have samples of mixed population,
+please specify the population with the largest sample size.</p>
 <p>You can plot the distribution of the RAI values and produce a VCF
 file of the inferred genotypes by specifying <code>plotBeta=TRUE</code>
 and <code>vcf=TRUE</code>.</p>
@@ -438,28 +446,28 @@ marked in the <code>FILTER</code> column.</p>
 <p>We noted that in the example data, most of variants have <span class="math inline">\(R^2\)</span>=0. This is because we only used three
 samples here. We strongly recommend to use a larger sample size to test
 the code, such as <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE112179">GSE112179</a>.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Call genotypes for SNP probes, Type I CCS probes, and Type II CCS probes</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>genotype_snp <span class="ot">&lt;-</span> <span class="fu">callGeno_snp</span>(rgData, <span class="at">input=</span><span class="st">&quot;raw&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>genotype_typeI <span class="ot">&lt;-</span> <span class="fu">callGeno_typeI</span>(rgData, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>genotype_typeII <span class="ot">&lt;-</span> <span class="fu">callGeno_typeII</span>(rgData, <span class="at">input=</span><span class="st">&quot;raw&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine genotypes inferred from the three probe types</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>dosage <span class="ot">&lt;-</span> <span class="fu">rbind</span>(genotype_snp<span class="sc">$</span>dosage, genotype_typeI<span class="sc">$</span>dosage, genotype_typeII<span class="sc">$</span>dosage)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Call genotypes for SNP probes, Type I probes, and Type II probes</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>genotype_snp <span class="ot">&lt;-</span> <span class="fu">callGeno_snp</span>(rgData, <span class="at">input=</span><span class="st">&quot;raw&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>genotype_typeI <span class="ot">&lt;-</span> <span class="fu">callGeno_typeI</span>(rgData, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>genotype_typeII <span class="ot">&lt;-</span> <span class="fu">callGeno_typeII</span>(rgData, <span class="at">input=</span><span class="st">&quot;raw&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co"># Combine genotypes inferred from the three probe types</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>dosage <span class="ot">&lt;-</span> <span class="fu">rbind</span>(genotype_snp<span class="sc">$</span>dosage, genotype_typeI<span class="sc">$</span>dosage, genotype_typeII<span class="sc">$</span>dosage)</span></code></pre></div>
 <p>As an alternative option, you can input a matrix of beta values or M
 values, with each row indicates a probe and each column indicates a
-sample. This option only works for SNP probes and Type II CCS probes.
-Here are the examples of calling genotypes from beta values. For input
-of M values, please specify <code>input=&quot;mval&quot;</code>. Remember to
-conduct background correction and dye-bias correction before running the
+sample. This option only works for SNP probes and Type II probes. Here
+are the examples of calling genotypes from beta values. For input of M
+values, please specify <code>input=&quot;mval&quot;</code>. Remember to conduct
+background correction and dye-bias correction before running the
 following code. Also be noted that other correction should NOT be
 conducted, like BMIQ, as it flattens the peaks through a scale
 transformation.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Call genotypes for SNP probes and Type II CCS probes</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>genotype_snp <span class="ot">&lt;-</span> <span class="fu">callGeno_snp</span>(beta_matrix, <span class="at">input=</span><span class="st">&quot;beta&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>genotype_typeII <span class="ot">&lt;-</span> <span class="fu">callGeno_typeII</span>(beta_matrix, <span class="at">input=</span><span class="st">&quot;beta&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine genotypes inferred from the three probe types</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>dosage <span class="ot">&lt;-</span> <span class="fu">rbind</span>(genotype_snp<span class="sc">$</span>dosage, genotype_typeII<span class="sc">$</span>dosage)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Call genotypes for SNP probes and Type II probes</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>genotype_snp <span class="ot">&lt;-</span> <span class="fu">callGeno_snp</span>(beta_matrix, <span class="at">input=</span><span class="st">&quot;beta&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>genotype_typeII <span class="ot">&lt;-</span> <span class="fu">callGeno_typeII</span>(beta_matrix, <span class="at">input=</span><span class="st">&quot;beta&quot;</span>, <span class="at">vcf=</span><span class="cn">TRUE</span>, <span class="at">pop=</span><span class="st">&quot;EAS&quot;</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co"># Combine genotypes inferred from the three probe types</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>dosage <span class="ot">&lt;-</span> <span class="fu">rbind</span>(genotype_snp<span class="sc">$</span>dosage, genotype_typeII<span class="sc">$</span>dosage)</span></code></pre></div>
 </div>
 <div id="infer-population-structure-and-individual-specific-afs-for-mixed-population" class="section level3">
 <h3>Infer population structure and individual-specific AFs for mixed
@@ -473,8 +481,8 @@ space. This step was originally implemented by the TRACE software and we
 have adapted it in R (<a href="https://www.nature.com/articles/ng.2924">Wang et al. Nat Genet
 2014</a>, <a href="http://dx.doi.org/10.1016/j.ajhg.2015.04.018">Wang et
 al. Am J Hum Genet 2015</a>).</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># PCA and Procrustes analysis, based on genotypes of all probes passing QC</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>pc <span class="ot">&lt;-</span> <span class="fu">projection</span>(dosage, <span class="at">plotPCA=</span><span class="cn">TRUE</span>, <span class="at">cpu=</span><span class="dv">3</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># PCA and Procrustes analysis, based on genotypes of all probes passing QC</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>pc <span class="ot">&lt;-</span> <span class="fu">projection</span>(dosage, <span class="at">plotPCA=</span><span class="cn">TRUE</span>, <span class="at">cpu=</span><span class="dv">3</span>, <span class="at">platform=</span><span class="st">&quot;EPIC&quot;</span>)</span></code></pre></div>
 <p><strong>Estimate individual-specific AFs:</strong> For each SNP, we
 model genotypes of the reference individuals as a linear function of top
 four PCs (<span class="math inline">\(v_\cdot\)</span>): <span class="math inline">\(G\sim\beta_0+\beta_1v_1+\beta_2v_2+\beta_3v_3+\beta_4v_4\)</span>.
@@ -483,15 +491,15 @@ each SNP and each sample can be obtained by: <span class="math inline">\(\hat{q}
 where <span class="math inline">\(\hat{v}_\cdot\)</span> are top four
 PCs in study samples. (<a href="https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021">Dou
 et al. PLoS Genet 2017</a>)</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(cpg2snp)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>snpvec <span class="ot">&lt;-</span> cpg2snp[<span class="fu">c</span>(<span class="fu">rownames</span>(genotype_snp<span class="sc">$</span>genotypes<span class="sc">$</span>RAI), <span class="fu">rownames</span>(genotype_typeI<span class="sc">$</span>genotypes<span class="sc">$</span>RAI), <span class="fu">rownames</span>(genotype_typeII<span class="sc">$</span>genotypes<span class="sc">$</span>RAI))]</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>indAF <span class="ot">&lt;-</span> <span class="fu">get_indAF</span>(snpvec, pc<span class="sc">$</span>refPC, pc<span class="sc">$</span>studyPC)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">data</span>(cpg2snp)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>snpvec <span class="ot">&lt;-</span> cpg2snp[<span class="fu">c</span>(<span class="fu">rownames</span>(genotype_snp<span class="sc">$</span>genotypes<span class="sc">$</span>RAI), <span class="fu">rownames</span>(genotype_typeI<span class="sc">$</span>genotypes<span class="sc">$</span>RAI), <span class="fu">rownames</span>(genotype_typeII<span class="sc">$</span>genotypes<span class="sc">$</span>RAI))]</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>indAF <span class="ot">&lt;-</span> <span class="fu">get_indAF</span>(snpvec, pc<span class="sc">$</span>refPC, pc<span class="sc">$</span>studyPC)</span></code></pre></div>
 <!-- **Recalibrate genotype probabilities based on individual-specific AFs: ** This step is based on the Bayesian approach, which can be implemented by using the `get_GP_bayesian` function. -->
 <!-- ```{r recal_geno, eval=FALSE, warning=FALSE, message=FALSE} -->
-<!-- # Recalibrate genotypes for SNP probes, Type I CCS probes, and Type II CCS probes -->
+<!-- # Recalibrate genotypes for SNP probes, Type I probes, and Type II probes -->
 <!-- genotype_snp_recal <- recal_Geno(genotype_snp, type="snp_probe", indAF=indAF, platform="EPIC") -->
-<!-- genotype_typeI_recal <- recal_Geno(genotype_typeI, type="typeI_ccs_probe", indAF=indAF, platform="EPIC") -->
-<!-- genotype_typeII_recal <- recal_Geno(genotype_typeII, type="typeII_ccs_probe", indAF=indAF, platform="EPIC") -->
+<!-- genotype_typeI_recal <- recal_Geno(genotype_typeI, type="typeI_probe", indAF=indAF, platform="EPIC") -->
+<!-- genotype_typeII_recal <- recal_Geno(genotype_typeII, type="typeII_probe", indAF=indAF, platform="EPIC") -->
 <!-- # Combine genotypes inferred from the three probe types -->
 <!-- dosage_recal <- rbind(genotype_snp_recal$dosage, genotype_typeI_recal$dosage, genotype_typeII_recal$dosage) -->
 <!-- ``` -->
@@ -517,9 +525,9 @@ monozygotic twins (MZ) or duplicates. Sample pairs more distant than 3rd
 degree are treated as unrelated.</p>
 <p>Inbreeding coefficients are calculated as: <span class="math inline">\(F=2\phi_{ii}-1\)</span>, where <span class="math inline">\(\phi_{ii}\)</span> is the self-kinship coefficient
 for sample <span class="math inline">\(i\)</span>.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">getKinship</span>(dosage)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>kinship <span class="ot">&lt;-</span> res<span class="sc">$</span>kinship <span class="co"># kinship coefficients</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>inbreed <span class="ot">&lt;-</span> res<span class="sc">$</span>inbreed <span class="co"># inbreeding coefficients</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">getKinship</span>(dosage)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>kinship <span class="ot">&lt;-</span> res<span class="sc">$</span>kinship <span class="co"># kinship coefficients</span></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>inbreed <span class="ot">&lt;-</span> res<span class="sc">$</span>inbreed <span class="co"># inbreeding coefficients</span></span></code></pre></div>
 </div>
 </div>
 
