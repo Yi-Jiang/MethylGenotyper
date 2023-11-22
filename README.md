@@ -1,7 +1,5 @@
 # MethylGenotyper: Call genotypes from Illumina methylation array data
 
-#### Yi Jiang, Minghan Qu, Chaolong Wang
-
 The `MethylGenotyper` package provides functions to infer genotypes (produce a VCF file) for specific probes and on Illumina methylation array (EPIC or 450K). Three types of probes capable of calling genotypes were used, including SNP probe, Type I probe with color-channel-switching (CCS) SNP at the extension base, and Type II probe with SNP at the extension base. We defined RAI as the Ratio of Alternative allele Intensity to total intensity and calculated RAI for each probe and sample.
 
 -   **SNP probe:** There are 59 SNP probes (started with "rs") on EPIC array and 65 SNP probes on 450K array. Probes on sex chromosomes (six in EPIC and eight on 450K) were removed. We aligned each probe sequence to reference genome and calculated RAI, which is defined as the proportion of probe signals supporting alternative allele.
