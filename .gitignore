@@ -40,7 +40,6 @@ vignettes/*.pdf
 
 # Others
 /notebook/
-/vignette/
 
 # Other temporary files
 tmp.*
