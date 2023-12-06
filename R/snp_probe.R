@@ -1,7 +1,7 @@
 
 #' Call genotypes for SNP probes
 #' 
-#' @param rgData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
+#' @param inData If input="raw", provide rgData here (Noob and dye-bias corrected signals produced by using `correct_noob_dye`). Otherwise, provide beta or M-value matrix here.
 #' @param input Input data types. One of "raw", "beta", and "mval". If input is "beta" or "mval", please use probes as rows and samples as columns.
 #' @param plotRAI If TRUE, plot distribution of RAIs.
 #' @param vcf If TRUE, will write a VCF file in the current directory.
@@ -20,19 +20,19 @@
 #' \item{dosage}{A matrix of genotype calls. Variants with R2s, HWE p values, MAFs, or missing rates beyond the cutoffs are removed.}
 #' \item{genotypes}{A list containing RAI, shapes of the mixed beta distributions, prior probabilities that the RAI values belong to one of the three genotypes, proportion of RAI values being outlier (U), and genotype probability (GP).}
 #' @export
-callGeno_snp <- function(rgData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfName="genotypes.snp_probe.vcf", 
+callGeno_snp <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfName="genotypes.snp_probe.vcf", 
                          GP_cutoff=0.9, outlier_cutoff="max", missing_cutoff=0.1, 
                          R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, 
                          pop="EAS", bayesian=FALSE, platform="EPIC", verbose=1){
   if(input=="raw"){
-    RAI <- getRAI_snp(rgData, platform=platform)
+    RAI <- getRAI_snp(inData, platform=platform)
   }else if(input=="beta"){
     if(platform=="EPIC"){
       data(probeInfo_snp)
     }else{
       data(probeInfo_snp_450K); probeInfo_snp <- probeInfo_snp_450K
     }
-    beta <- rgData[rownames(rgData) %in% probeInfo_snp$CpG, ]
+    beta <- inData[rownames(inData) %in% probeInfo_snp$CpG, ]
     if(nrow(beta)==0){print("No SNP probes found. Exit!"); return(NA)}
     RAI_typeI <- 1 - beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IAG", "IAR", "IIR"), "CpG"], ] # alternative alleles match unmethylated probes.
     RAI_typeII <- beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IBG", "IBR", "IIG"), "CpG"], ]
@@ -43,7 +43,7 @@ callGeno_snp <- function(rgData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfName=
     }else{
       data(probeInfo_snp_450K); probeInfo_snp <- probeInfo_snp_450K
     }
-    beta <- mval2beta(rgData[rownames(rgData) %in% probeInfo_snp$CpG, ])
+    beta <- mval2beta(inData[rownames(inData) %in% probeInfo_snp$CpG, ])
     if(nrow(beta)==0){print("No SNP probes found. Exit!"); return(NA)}
     RAI_typeI <- 1 - beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IAG", "IAR", "IIR"), "CpG"], ]
     RAI_typeII <- beta[rownames(beta) %in% probeInfo_snp[probeInfo_snp$Group %in% c("IBG", "IBR", "IIG"), "CpG"], ]
@@ -75,17 +75,17 @@ mval2beta <- function(mval){
 
 #' Get RAI (Ratio of Alternative allele Intensity) for SNP probes
 #' 
-#' @param rgData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
+#' @param inData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
 #' @param platform EPIC or 450K.
 #' @return RAI (Ratio of Alternative allele Intensity).
 #' @export
-getRAI_snp <- function(rgData, platform="EPIC"){
+getRAI_snp <- function(inData, platform="EPIC"){
   if(platform=="EPIC"){
     data(probeInfo_snp)
   }else{
     data(probeInfo_snp_450K); probeInfo_snp <- probeInfo_snp_450K
   }
-  cg <- rownames(rgData[["AR"]])
+  cg <- rownames(inData[["AR"]])
   cg_IAR <- cg[cg %in% probeInfo_snp[probeInfo_snp$Group=="IAR", "CpG"]] # Type I, Red channel, Alt allele match probeA
   cg_IBR <- cg[cg %in% probeInfo_snp[probeInfo_snp$Group=="IBR", "CpG"]] # Type I, Red channel, Alt allele match probeB
   cg_IAG <- cg[cg %in% probeInfo_snp[probeInfo_snp$Group=="IAG", "CpG"]] # Type I, Grn channel, Alt allele match probeA
@@ -93,12 +93,12 @@ getRAI_snp <- function(rgData, platform="EPIC"){
   cg_IIR <- cg[cg %in% probeInfo_snp[probeInfo_snp$Group=="IIR", "CpG"]] # Type II, Alt allele match Red
   cg_IIG <- cg[cg %in% probeInfo_snp[probeInfo_snp$Group=="IIG", "CpG"]] # Type II, Alt allele match Grn
   RAI <- rbind(
-    rgData[["AR"]][cg_IAR,] / (rgData[["AR"]][cg_IAR,] + rgData[["BR"]][cg_IAR,]),
-    rgData[["BR"]][cg_IBR,] / (rgData[["AR"]][cg_IBR,] + rgData[["BR"]][cg_IBR,]),
-    rgData[["AG"]][cg_IAG,] / (rgData[["AG"]][cg_IAG,] + rgData[["BG"]][cg_IAG,]),
-    rgData[["BG"]][cg_IBG,] / (rgData[["AG"]][cg_IBG,] + rgData[["BG"]][cg_IBG,]),
-    rgData[["AR"]][cg_IIR,] / (rgData[["AG"]][cg_IIR,] + rgData[["AR"]][cg_IIR,]),
-    rgData[["AG"]][cg_IIG,] / (rgData[["AG"]][cg_IIG,] + rgData[["AR"]][cg_IIG,])
+    inData[["AR"]][cg_IAR,] / (inData[["AR"]][cg_IAR,] + inData[["BR"]][cg_IAR,]),
+    inData[["BR"]][cg_IBR,] / (inData[["AR"]][cg_IBR,] + inData[["BR"]][cg_IBR,]),
+    inData[["AG"]][cg_IAG,] / (inData[["AG"]][cg_IAG,] + inData[["BG"]][cg_IAG,]),
+    inData[["BG"]][cg_IBG,] / (inData[["AG"]][cg_IBG,] + inData[["BG"]][cg_IBG,]),
+    inData[["AR"]][cg_IIR,] / (inData[["AG"]][cg_IIR,] + inData[["AR"]][cg_IIR,]),
+    inData[["AG"]][cg_IIG,] / (inData[["AG"]][cg_IIG,] + inData[["AR"]][cg_IIG,])
   )
   RAI
 }

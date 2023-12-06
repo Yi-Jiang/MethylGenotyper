@@ -11,9 +11,8 @@
 #' @param R2_cutoff_up,R2_cutoff_down R-square cutoffs to filter variants (Variants with R-square > R2_cutoff_up or < R2_cutoff_down should be removed). Note that for VCF output, variants with R-square outside this range will be marked in the `FILTER` column. For the returned dosage matrix, variants with R-square outside this range will be removed.
 #' @param MAF_cutoff A MAF cutoff to filter variants. Note that for VCF output, variants with MAF below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with MAF below the cutoff will be removed.
 #' @param HWE_cutoff HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with HWE p value below the cutoff will be removed.
-#' @param train If TRUE, will fit the distribution of RAI (Ratio of Alternative allele Intensity) and filter probes by number of peaks. If FALSE, will use predefined probe list.
-#' @param cpu Number of CPU. Only effective when train=TRUE.
-#' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.
+#' @param cpu Number of CPU cores.
+#' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept.
 #' @param bw band width.
 #' @param minDens A parameter for mode test. Minimum density for a valid peak.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
@@ -27,11 +26,7 @@ callGeno_typeI <- function(rgData, plotRAI=FALSE, vcf=FALSE, vcfName="genotypes.
                            bw=0.04, minDens=0.001, 
                            GP_cutoff=0.9, outlier_cutoff="max", missing_cutoff=0.1, 
                            R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6, 
-                           train=TRUE, cpu=1, pop="EAS", bayesian=FALSE, platform="EPIC", verbose=1){
-  if(!train & platform!="EPIC"){
-    print("Error: train=FALSE only works with platform=EPIC.")
-    return(NA)
-  }
+                           cpu=1, pop="EAS", bayesian=FALSE, platform="EPIC", verbose=1){
   if(!(pop %in% c("EAS", "AMR", "AFR", "EUR", "SAS", "ALL"))){
     stop("pop must be one of EAS, AMR, AFR, EUR, SAS, and ALL.")
   }
@@ -63,16 +58,9 @@ callGeno_typeI <- function(rgData, plotRAI=FALSE, vcf=FALSE, vcfName="genotypes.
   )
   
   # filter probes based on peak density and positions.
-  if(train){
-    mod <- getMod(RAI, bw=bw, minDens=minDens, cpu=cpu)
-    RAI <- RAI[dplyr::filter(mod, nmod>=2)$CpG,]
-  }else{
-    mod <- dplyr::filter(probeInfo_typeI, nmod>=2) %>%
-      dplyr::select(SNP, CpG, nmod, loc0, loc1, loc2)
-    rownames(mod) <- mod$CpG
-    RAI <- RAI[mod$CpG,]
-  }
-  
+  mod <- getMod(RAI, bw=bw, minDens=minDens, cpu=cpu)
+  RAI <- RAI[dplyr::filter(mod, nmod>=2)$CpG,]
+
   # call genotypes
   genotypes <- call_genotypes(RAI, pop=pop, type="typeI_probe", maxiter=50, 
                                        bayesian=bayesian, platform=platform, verbose=verbose)

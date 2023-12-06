@@ -72,7 +72,7 @@ You can plot the distribution of the RAI values and produce a VCF file of the in
 
 You can also specify cutoffs of $R^2$, MAF, HWE, and missing rate to filter variants. Note that for VCF output, variants beyond the cutoffs will be marked in the `FILTER` column.
 
-We noted that in the example data, most of variants have $R^2$=0. This is because we only used three samples here. We strongly recommend to use a larger sample size to test the code, such as [GSE112179](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE112179).
+We noted that in the example data, most of variants have $R^2$=0. This is because we only used three samples here. Again, we strongly recommend to use a larger sample size to test the code, such as [GSE112179](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE112179).
 
 ```{r callGeno, eval=FALSE, warning=FALSE, message=FALSE}
 # Call genotypes for SNP probes, Type I probes, and Type II probes
