@@ -1,6 +1,5 @@
 ---
 title: "MethylGenotyper: Call genotypes from array-based methylation data"
-author: "Yi Jiang, Minghan Qu, Chaolong Wang"
 date: "`r Sys.Date()`"
 output: pdf_document
 vignette: >
