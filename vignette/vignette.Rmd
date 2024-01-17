@@ -132,7 +132,7 @@ indAF <- get_indAF(snpvec, pc$refPC, pc$studyPC)
 With the inferred genotypes, you can estimate sample relationships and sample contamination using the `getKinship` function. The output of this function is a list of two elements: 1) a data frame containing kinship coefficient ($\phi$) and sample relationships between each two samples; 2) a vector of inbreeding coefficients, which can be used to infer sample contamination.
 
 Kinship coefficient is calculated according to the SEEKIN software ([Dou et al. PLoS Genet 2017](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021)):
-$$2\phi_{ij} = \frac{\sum_m(G_{im}-2p_m)(G_{jm}-2p_m)}{2p_m(1-p_m)(R^2)^2}$$
+$$2\phi_{ij} = \frac{\sum_m(G_{im}-2p_m)(G_{jm}-2p_m)}{\sum_m{2p_m(1-p_m)(R_m^2)^2}}$$
 where $\phi_{ij}$ denotes the kinship coefficient between $i$-th and $j$-th sample. $G_{im}$ and $G_{jm}$ denotes genotypes of $m$-th SNP for $i$-th and $j$-th sample. $p_m$ denotes allele frequency of $m$-th SNP. $R^2$ is calculated as $R^2 = \frac{Var(D)}{2q(1-q)}$, where $D$ is the dosage genotype. We classified sample pairs as k-degree related if $2^{-k-1.5} < \phi_{ij} < 2^{-k-0.5}$ ([Manichaikul et al. Bioinformatics 2010](https://academic.oup.com/bioinformatics/article/26/22/2867/228512)). A zero-degree related pair means monozygotic twins (MZ) or duplicates. Sample pairs more distant than 3rd degree are treated as unrelated. 
 
 Inbreeding coefficients are calculated as: $F=2\phi_{ii}-1$, where $\phi_{ii}$ is the self-kinship coefficient for sample $i$.
