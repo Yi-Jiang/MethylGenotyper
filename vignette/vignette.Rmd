@@ -1,5 +1,5 @@
 ---
-title: "MethylGenotyper: Call genotypes from array-based methylation data"
+title: "MethylGenotyper: Accurate estimation of SNP genotypes from DNA methylation data"
 date: "`r Sys.Date()`"
 output: pdf_document
 vignette: >
@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-The `MethylGenotyper` package provides functions to infer genotypes (produce a VCF file) for specific probes and on Illumina methylation array (EPIC or 450K). Three types of probes capable of calling genotypes were used, including SNP probe, Type I probe with color-channel-switching (CCS) SNP at the extension base, and Type II probe with SNP at the extension base. We defined RAI as the Ratio of Alternative allele Intensity to total intensity and calculated RAI for each probe and sample.
+The `MethylGenotyper` package provides functions to infer genotypes (produce a standard VCF file) for specific probes and on Illumina methylation array (EPIC or 450K). Three types of probes capable of calling genotypes were used, including SNP probes, Type I probes with color-channel-switching (CCS) SNPs at the extension bases, and Type II probes with SNPs at the extension bases. We defined `RAI` as the Ratio of Alternative allele Intensity to total intensity and calculated RAI for each probe and sample.
 
 -   **SNP probe:** There are 59 SNP probes (started with "rs") on EPIC array and 65 SNP probes on 450K array. Probes on sex chromosomes (six in EPIC and eight on 450K) were removed. We aligned each probe sequence to reference genome and calculated RAI, which is defined as the proportion of probe signals supporting alternative allele.
 -   **Type I probe:** We focus on Type I probes with CCS SNPs (A,T \<-\> C,G mutation) at the extension bases. The signals for probes with CCS SNPs are called out-of-band signals. The RAI is defined as the proportion of out-of-band signals over total signals.
@@ -32,7 +32,7 @@ The RAI values are usually distributed with three peaks, representing the three 
 
 For samples of mixed population, we provided an option to infer population structure and calculate individual-specific AFs, which can improve the accuracy of estimating kinship coefficients.
 
-We also provided functions to estimate kinship coefficients and sample contamination.
+We also provided functions to estimate kinship coefficients and genetic relatedness.
 
 ## Recommended workflow
 
