@@ -1,7 +1,12 @@
 ---
 title: "MethylGenotyper: Accurate estimation of SNP genotypes from DNA methylation data"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: 
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    highlight: "tango"
 vignette: >
   %\VignetteIndexEntry{MethylGenotyper}
   %\VignetteEngine{knitr::rmarkdown}
@@ -16,29 +21,29 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Introduction
+# Introduction
 
 The `MethylGenotyper` package provides functions to infer genotypes (produce a standard VCF file) for specific probes and on Illumina methylation array (EPIC or 450K). Three types of candidate probes are used for genotype calling, including SNP probes, Type I probes with color-channel-switching (CCS) SNPs at the extension bases, and Type II probes with SNPs at the extension bases.
 
 Here is a detailed information about the three candidate probes:
 
-### SNP probe
+## Candidate SNP probe
 
 There are 59 SNP probes (started with "rs") on EPIC array and 65 SNP probes on 450K array. Probes on sex chromosomes (six in EPIC and eight on 450K) are removed. These probes are specifically designed to target common SNPs and facilitate genotype calling for sample swapping checks.
 
-### Type I probe
+## Candidate Type I probe
 
 Type I probe uses two types of probes at each CpG locus: **M** for methylation and **U** for unmethylation. The **M** probe ends with bases `CG`, while the **U** probe ends with bases `CA`. After bisulfite conversion, methylated base `C` remains unchanged and binds with **M** probe, while unmethylated base `C` changes to `T` and binds with **U** probe. Then, the probes binding with DNA sequences will extend a single base. If the extended base is `A` or `T`, a red color will be detected. If the extended base is `C` or `G`, a green color will be detected. SNPs (except for A/T and G/C SNPs) at the extension base will cause color channel switching (CCS), thus out-of-band signals will be detected. We focus on Type I probes with CCS SNPs (A,T \<-\> C,G mutation) at the extension bases.
 
 ![The illustration of Type I probe](Type_I_probe.png)
 
-### Type II probe
+## Candidate Type II probe
 
 Type II probes use a single bead at each CpG locus, with the extension base occurring at the target CpG. After bisulfite conversion, the red-labeled `A` and green-labeled `G` nucleotides will bind to the unmethylated and methylated alleles, respectively. In the presence of a SNP at the target CpG, a red color will be detected if the target `C` allele is mutated to `A` or `T` despite no effect of bisulfite conversion. On the other hand, a green color will remain detected if `C` is mutated to `G`. We focus on Type II probes with SNPs at the extension bases (CpG target sites).
 
 ![The illustration of Type II probe](Type_II_probe.png)
 
-## Workflow of MethylGenotyper
+# Workflow of MethylGenotyper
 
 Here is a brief overview of the steps in MethylGenotyper:
 
@@ -51,7 +56,7 @@ Here is a brief overview of the steps in MethylGenotyper:
 
 We will now introduce the workflow in detail, providing R code to illustrate the procedure:
 
-### Load the MethylGenotyper package
+## Load the MethylGenotyper package
 
 This package has the following dependencies: `minfi`, `tidyverse`, `foreach`, `doParallel`, `HardyWeinberg`, `multimode`, `rlist`, `stats4`, `ggplot2`, `ggpubr`.
 
@@ -59,7 +64,7 @@ This package has the following dependencies: `minfi`, `tidyverse`, `foreach`, `d
 library(MethylGenotyper)
 ```
 
-### Read IDAT files and perform noob and dye-bias correction
+## Read IDAT files and perform noob and dye-bias correction
 
 MethylGenotyper supports two types of input: raw data (IDAT files) or preprocessed data ($\beta$-value or M-value matrix).
 
@@ -83,7 +88,7 @@ With the following code, the IDAT files listed in `target` will be read one-by-o
 rgData <- correct_noob_dye(target, cpu=3)
 ```
 
-### Call genotypes
+## Call genotypes
 
 This section includes calculating `RAI`, filtering probes, fitting the mixed model, calling genotypes, and quality control.
 
@@ -133,7 +138,7 @@ genotype_typeII <- callGeno_typeII(beta_matrix, input="beta", vcf=TRUE, pop="EAS
 dosage <- rbind(genotype_snp$dosage, genotype_typeII$dosage)
 ```
 
-### Infer population structure and individual-specific AFs for mixed population
+## Infer population structure and individual-specific AFs for mixed population
 
 For samples of mixed population, we provided an option to infer population structure and calculate individual-specific AFs.
 
@@ -168,7 +173,7 @@ indAF <- get_indAF(snpvec, pc$refPC, pc$studyPC)
 <!-- dosage_recal <- rbind(genotype_snp_recal$dosage, genotype_typeI_recal$dosage, genotype_typeII_recal$dosage) -->
 <!-- ``` -->
 
-### Estimate kinship relationships and inbreeding coefficients
+## Estimate kinship relationships and inbreeding coefficients
 
 With the inferred genotypes, you can estimate kinship coefficients using the SEEKIN software ([Dou et al. PLoS Genet 2017](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007021)), which has been wrapped in MethylGenotyper: the $SEEKIN_{hom}$ estimator for homogeneous samples and the $SEEKIN_{het}$ estimator for heterogeneous samples can be invoked by the `getKinship` and `getKinship_het` function, respectively.
 
