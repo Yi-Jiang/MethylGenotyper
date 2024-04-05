@@ -10,3 +10,4 @@ Suggests: knitr, rmarkdown
 Roxygen: list(markdown = TRUE)
 Depends: 
     R (>= 2.10)
+Encoding: UTF-8

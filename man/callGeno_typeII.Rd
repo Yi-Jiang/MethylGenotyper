@@ -19,7 +19,6 @@ callGeno_typeII(
   R2_cutoff_down = 0.75,
   MAF_cutoff = 0.01,
   HWE_cutoff = 1e-06,
-  train = TRUE,
   cpu = 1,
   pop = "EAS",
   maxiter = 50,
@@ -55,11 +54,9 @@ callGeno_typeII(
 
 \item{HWE_cutoff}{HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the \code{FILTER} column. For the returned dosage matrix, variants with HWE p value below the cutoff will be removed.}
 
-\item{train}{If TRUE, will fit the distribution of RAI (Ratio of Alternative allele Intensity) and filter probes by number of peaks. If FALSE, will use predefined probe list.}
+\item{cpu}{Number of CPU cores.}
 
-\item{cpu}{Number of CPU. Only effective when train=TRUE.}
-
-\item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept. Only effective when train=TRUE.}
+\item{pop}{Population. One of EAS, AMR, AFR, EUR, SAS, and ALL. Only probes with MAF of matching population > 0.01 will be kept.}
 
 \item{maxiter}{Maximal number of iterations for the EM algorithm.}
 

@@ -18,7 +18,4 @@ data(probelist)
 \description{
 A dataset containing the list of 53 SNP probes on autosomes, 715 Type I probes, and 26420 type II probes.
 }
-\seealso{
-Probe informations: \code{\link{probeInfo_snp()}}, \code{\link{probeInfo_typeI()}}, and \code{\link{probeInfo_typeII()}}.
-}
 \keyword{datasets}

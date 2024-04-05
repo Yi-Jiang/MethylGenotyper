@@ -141,6 +141,10 @@ fit_beta_em <- function(RAI, maxiter=50, verbose=1){
 }
 
 #' Moments estimator for beta distribution (adapted from ewastools)
+#' 
+#' @param x A vector of RAI values.
+#' @param w Weights.
+#' @return A list of beta distribution shapes.
 #' @export
 eBeta = function(x,w){
   n = length(w)

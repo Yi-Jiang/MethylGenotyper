@@ -194,7 +194,6 @@
 #'  \item{Type}{Probe types}
 #'  \item{A2}{Alternative alleles}
 #' }
-#' @seealso Probe informations: \code{\link{probeInfo_snp()}}, \code{\link{probeInfo_typeI()}}, and \code{\link{probeInfo_typeII()}}.
 "probelist"
 
 #' Probe list for 450K
@@ -207,7 +206,6 @@
 #'  \item{CpG}{CpG list}
 #'  \item{Type}{Probe types}
 #' }
-#' @seealso Probe informations: \code{\link{probeInfo_snp_450K()}}, \code{\link{probeInfo_typeI_450K()}}, and \code{\link{probeInfo_typeII_450K()}}.
 "probelist_450K"
 
 #' Reference genotypes in the 1000 Genomes Project

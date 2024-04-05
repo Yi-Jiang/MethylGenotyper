@@ -1,7 +1,7 @@
 
 #' Get sample relationships
 #' 
-#' @param Phi A vector of kinship coefficient (Phi).
+#' @param phi A vector of kinship coefficient (Phi).
 #' @return A vector of sample relationships.
 #' @export
 getRelation <- function(phi) {

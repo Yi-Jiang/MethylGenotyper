@@ -6,6 +6,14 @@
 \usage{
 eBeta(x, w)
 }
+\arguments{
+\item{x}{A vector of RAI values.}
+
+\item{w}{Weights.}
+}
+\value{
+A list of beta distribution shapes.
+}
 \description{
 Moments estimator for beta distribution (adapted from ewastools)
 }

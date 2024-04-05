@@ -5,7 +5,7 @@
 \title{Call genotypes for SNP probes}
 \usage{
 callGeno_snp(
-  rgData,
+  inData,
   input = "raw",
   plotRAI = FALSE,
   vcf = FALSE,
@@ -24,7 +24,7 @@ callGeno_snp(
 )
 }
 \arguments{
-\item{rgData}{Noob and dye-bias corrected signals produced by using \code{correct_noob_dye}.}
+\item{inData}{If input="raw", provide rgData here (Noob and dye-bias corrected signals produced by using \code{correct_noob_dye}). Otherwise, provide beta or M-value matrix here.}
 
 \item{input}{Input data types. One of "raw", "beta", and "mval". If input is "beta" or "mval", please use probes as rows and samples as columns.}
 
