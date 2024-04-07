@@ -1,6 +1,6 @@
 Package: MethylGenotyper
 Type: Package
-Title: MethylGenotyper: Call genotypes from SNP probes and CCS probes on Illumina methylation array
+Title: MethylGenotyper: Accurate estimation of SNP genotypes from DNA methylation data
 Version: 1.0
 RoxygenNote: 7.2.3
 Imports: minfi, tidyverse, foreach, doParallel, HardyWeinberg, multimode, rlist, stats4, ggplot2, ggpubr, ggsci
