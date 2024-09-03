@@ -48,12 +48,12 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   # calculate beta values
   if(input=="raw"){
     cg <- rownames(inData[["AR"]])
-    cg_IIR <- cg[cg %in% probeInfo_typeII[probeInfo_typeII[,"Group"]=="IIR" & probeInfo_typeII[,tag_af]>0.01 & probeInfo_typeII[,tag_af]<0.99, "CpG"]] # Type II, Alt allele match Red
+    cg_IIR <- cg[cg %in% probeInfo_typeII[probeInfo_typeII[,"Group"]=="IIR" & probeInfo_typeII[,tag_af]>=0.01 & probeInfo_typeII[,tag_af]<=0.99, "CpG"]] # Type II, Alt allele match Red
     beta <- inData[["AG"]][cg_IIR,] / (inData[["AG"]][cg_IIR,] + inData[["AR"]][cg_IIR,])
   }else if(input=="beta"){
-    beta <- inData[rownames(inData) %in% probeInfo_typeII[probeInfo_typeII[,tag_af]>0.01 & probeInfo_typeII[,tag_af]<0.99, "CpG"], ]
+    beta <- inData[rownames(inData) %in% probeInfo_typeII[probeInfo_typeII[,tag_af]>=0.01 & probeInfo_typeII[,tag_af]<=0.99, "CpG"], ]
   }else if(input=="mval"){
-    beta <- mval2beta(inData[rownames(inData) %in% probeInfo_typeII[probeInfo_typeII[,tag_af]>0.01 & probeInfo_typeII[,tag_af]<0.99, "CpG"], ])
+    beta <- mval2beta(inData[rownames(inData) %in% probeInfo_typeII[probeInfo_typeII[,tag_af]>=0.01 & probeInfo_typeII[,tag_af]<=0.99, "CpG"], ])
   }else{
     print("Error: Input data type must be one of raw, beta, and mval.")
     return(NA)
