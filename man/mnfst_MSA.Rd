@@ -5,7 +5,7 @@
 \alias{mnfst_MSA}
 \title{MSA manifest file}
 \format{
-A data frame with 284318 rows and 5 columns:
+A data frame with 269110 rows and 5 columns:
 \describe{
 \item{Name}{CpG name}
 \item{AddressA_ID}{AdressA ID}

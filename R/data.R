@@ -36,7 +36,7 @@
 #' A dataset containing all MSA probes information.
 #' 
 #' @usage data(mnfst_MSA)
-#' @format A data frame with 284318 rows and 5 columns:
+#' @format A data frame with 269110 rows and 5 columns:
 #' \describe{
 #'  \item{Name}{CpG name}
 #'  \item{AddressA_ID}{AdressA ID}
@@ -118,7 +118,7 @@
 #' A dataset containing SNP probe information.
 #' 
 #' @usage data(probeInfo_snp_MSA)
-#' @format A data frame with 4034 rows and 14 columns:
+#' @format A data frame with 3524 rows and 14 columns:
 #' \describe{
 #'  \item{Chr}{Chromosome ID}
 #'  \item{Pos}{Position}
@@ -219,7 +219,7 @@
 #' A dataset containing Type I probe information.
 #' 
 #' @usage data(probeInfo_typeI_MSA)
-#' @format A data frame with 4272 rows and 14 columns:
+#' @format A data frame with 4189 rows and 14 columns:
 #' \describe{
 #'  \item{Chr}{Chromosome ID}
 #'  \item{Pos}{Position}
@@ -295,7 +295,7 @@
 #' A dataset containing information of Type II probes with SNPs at the extension bases. We only consider the situation that the alternative allele is A/T and the reference allele is C/G.
 #' 
 #' @usage data(probeInfo_typeII_MSA)
-#' @format A data frame with 4737 rows and 14 columns:
+#' @format A data frame with 4370 rows and 14 columns:
 #' \describe{
 #'  \item{Chr}{Chromosome ID}
 #'  \item{Pos}{Position}
