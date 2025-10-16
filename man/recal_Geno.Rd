@@ -25,7 +25,7 @@ recal_Geno(
 
 \item{indAF}{A matrix of individual-specific AFs. Provide SNPs as rows and samples as columns.}
 
-\item{platform}{EPIC or 450K.}
+\item{platform}{EPIC, 450K, or MSA.}
 
 \item{GP_cutoff}{When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.}
 

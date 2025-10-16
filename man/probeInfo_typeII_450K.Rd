@@ -24,7 +24,7 @@ A data frame with 11875 rows and 14 columns:
 }
 }
 \source{
-\url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
+\url{https://webdata.illumina.com/downloads/productfiles/humanmethylation450/humanmethylation450_15017482_v1-2.csv}
 }
 \usage{
 data(probeInfo_typeII_450K)

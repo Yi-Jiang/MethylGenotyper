@@ -9,7 +9,7 @@ getRAI_snp(inData, platform = "EPIC")
 \arguments{
 \item{inData}{Noob and dye-bias corrected signals produced by using \code{correct_noob_dye}.}
 
-\item{platform}{EPIC, 450K, or EPIC_v2.}
+\item{platform}{EPIC, EPIC_v2, 450K, or MSA.}
 }
 \value{
 RAI (Ratio of Alternative allele Intensity).

@@ -4,7 +4,7 @@
 #' @param studyGeno A matrix of genotypes of study samples. Provide probes as rows and samples as columns. Include all SNP probes, type I probes, and type II probes if available.
 #' @param plotPCA To plot the projection of study samples in reference ancestry space.
 #' @param cpu Number of CPU.
-#' @param platform EPIC or 450K.
+#' @param platform EPIC, 450K, or MSA.
 #' @return A list containing
 #' \item{refPC}{Top PCs in the reference}
 #' \item{studyPC}{Top PCs in study samples}
@@ -17,8 +17,12 @@ projection <- function(studyGeno, plotPCA=TRUE, cpu=1, platform="EPIC"){
   studyGeno <- studyGeno[AF>0.1 & AF<0.9 & R2>0.9,]
   if(platform=="EPIC"){
     data(cpg2snp)
-  }else{
+  }else if(platform=="450K"){
     data(cpg2snp_450K); cpg2snp <- cpg2snp_450K
+  }else if(platform=="MSA"){
+    data(cpg2snp_MSA); cpg2snp <- cpg2snp_MSA
+  }else{
+    print("ERROR: Please specify platform to one of EPIC, 450K, and MSA.")
   }
   rownames(studyGeno) <- cpg2snp[rownames(studyGeno)]
   
@@ -63,7 +67,7 @@ get_indAF <- function(snpvec, refPC, studyPC){
 #' @param genotypes A list returned by either `callGeno_snp`, `callGeno_typeI`, or `callGeno_typeII` function.
 #' @param type One of snp_probe, typeI_probe, and typeII_probe.
 #' @param indAF A matrix of individual-specific AFs. Provide SNPs as rows and samples as columns.
-#' @param platform EPIC or 450K.
+#' @param platform EPIC, 450K, or MSA.
 #' @param GP_cutoff When calculating missing rate, genotypes with the highest genotype probability < GP_cutoff will be treated as missing.
 #' @param outlier_cutoff "max" or a number ranging from 0 to 1. If outlier_cutoff="max", genotypes with outlier probability larger than all of the three genotype probabilities will be set as missing. If outlier_cutoff is a number, genotypes with outlier probability > outlier_cutoff will be set as missing.
 #' @param missing_cutoff Missing rate cutoff to filter variants. Note that for VCF output, variants with missing rate above the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with missing rate above the cutoff will be removed.
@@ -79,8 +83,12 @@ recal_Geno <- function(genotypes, type, indAF, platform="EPIC", GP_cutoff=0.9, o
                        R2_cutoff_up=1.1, R2_cutoff_down=0.75, MAF_cutoff=0.01, HWE_cutoff=1e-6){
   if(platform=="EPIC"){
     data(snp2cpg)
-  }else{
+  }else if(platform=="450K"){
     data(snp2cpg_450K); snp2cpg <- snp2cpg_450K
+  }else if(platform=="MSA"){
+    data(snp2cpg_MSA); snp2cpg <- snp2cpg_MSA
+  }else{
+    print("ERROR: Please specify platform to one of EPIC, 450K, and MSA.")
   }
   rownames(indAF) <- snp2cpg[rownames(indAF)]
   indAF <- indAF[rownames(genotypes$genotypes$GP$pAA), colnames(genotypes$genotypes$GP$pAA)]

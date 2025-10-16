@@ -16,7 +16,7 @@
 #' @param bw band width.
 #' @param minDens A parameter for mode test. Minimum density for a valid peak.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
-#' @param platform EPIC or 450K.
+#' @param platform EPIC, 450K, or MSA.
 #' @param verbose Verbose mode: 0/1/2.
 #' @return A list containing
 #' \item{dosage}{A matrix of genotype calls. Variants with R2s, HWE p values, MAFs, or missing rates beyond the cutoffs are removed.}
@@ -33,8 +33,12 @@ callGeno_typeI <- function(rgData, plotRAI=FALSE, vcf=FALSE, vcfName="genotypes.
   tag_af <- paste0(pop, "_AF")
   if(platform=="EPIC"){
     data(probeInfo_typeI)
-  }else{
+  }else if(platform=="450K"){
     data(probeInfo_typeI_450K); probeInfo_typeI <- probeInfo_typeI_450K
+  }else if(platform=="MSA"){
+    data(probeInfo_typeI_MSA); probeInfo_typeI <- probeInfo_typeI_MSA
+  }else{
+    print("ERROR: Please specify platform to one of EPIC, 450K, and MSA.")
   }
   
   # remove probes if they have common SNPs (MAF>0.01 in corresponding population) within 5bps

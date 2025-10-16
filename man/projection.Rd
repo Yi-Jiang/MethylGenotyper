@@ -13,7 +13,7 @@ projection(studyGeno, plotPCA = TRUE, cpu = 1, platform = "EPIC")
 
 \item{cpu}{Number of CPU.}
 
-\item{platform}{EPIC or 450K.}
+\item{platform}{EPIC, 450K, or MSA.}
 }
 \value{
 A list containing

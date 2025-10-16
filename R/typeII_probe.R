@@ -18,7 +18,7 @@
 #' @param minDens A parameter for mode test. Minimum density for a valid peak.
 #' @param maxiter Maximal number of iterations for the EM algorithm.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
-#' @param platform EPIC or 450K.
+#' @param platform EPIC, 450K, or MSA.
 #' @param verbose Verbose mode: 0/1/2.
 #' @return A list containing
 #' \item{dosage}{A matrix of genotype calls. Variants with R2s, HWE p values, MAFs, or missing rates beyond the cutoffs are removed.}
@@ -37,9 +37,14 @@ callGeno_typeII <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfNa
   if(platform=="EPIC"){
     data(probeInfo_typeII)
     data(probelist)
-  }else{
+  }else if(platform=="450K"){
     data(probeInfo_typeII_450K); probeInfo_typeII <- probeInfo_typeII_450K
     data(probelist_450K); probelist <- probelist_450K
+  }else if(platform=="MSA"){
+    data(probeInfo_typeII_MSA); probeInfo_typeII <- probeInfo_typeII_MSA
+    data(probelist_MSA); probelist <- probelist_MSA
+  }else{
+    print("ERROR: Please specify platform to one of EPIC, 450K, and MSA.")
   }
   
   # remove probes if they have common SNPs (MAF>0.01 in corresponding population) within 5bps

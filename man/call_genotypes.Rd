@@ -25,7 +25,7 @@ call_genotypes(
 
 \item{bayesian}{Use the Bayesian approach to calculate posterior genotype probabilities.}
 
-\item{platform}{EPIC, 450K, or EPIC_v2.}
+\item{platform}{EPIC, EPIC_v2, 450K, or MSA.}
 
 \item{verbose}{Verbose mode: 0/1/2.}
 }

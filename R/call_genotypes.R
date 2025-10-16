@@ -8,7 +8,7 @@
 #' @param type One of snp_probe, typeI_probe, and typeII_probe.
 #' @param maxiter Maximal number of iterations for the EM algorithm.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
-#' @param platform EPIC, 450K, or EPIC_v2.
+#' @param platform EPIC, EPIC_v2, 450K, or MSA.
 #' @param verbose Verbose mode: 0/1/2.
 #' @return  A list containing
 #' \item{RAI}{Ratio of Alternative allele Intensity}
@@ -167,10 +167,9 @@ eBeta = function(x,w){
 
 #' Extract AFs from matching population in the 1000 Genomes Project (1KGP)
 #'
-#' @param platform EPIC or 450K.
 #' @param pop Population to be used to extract AFs. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param type One of snp_probe, typeI_probe, and typeII_probe.
-#' @param platform EPIC, 450K, or EPIC_v2.
+#' @param platform EPIC, EPIC_v2, 450K, or MSA.
 #' @return A vector of AFs
 #' @export
 get_AF <- function(pop="EAS", type, platform="EPIC"){
@@ -184,8 +183,10 @@ get_AF <- function(pop="EAS", type, platform="EPIC"){
       data(probeInfo_snp_450K); probeInfo_snp <- probeInfo_snp_450K
     }else if(platform=="EPIC_v2"){
       data(probeInfo_snp_936K); probeInfo_snp <- probeInfo_snp_936K
+    }else if(platform=="MSA"){
+      data(probeInfo_snp_MSA); probeInfo_snp <- probeInfo_snp_MSA
     }else{
-      print("ERROR: Please specify platform to one of EPIC, 450K, and EPIC_v2.")
+      print("ERROR: Please specify platform to one of EPIC, EPIC_v2, 450K, and MSA.")
     }
     probe2af <- probeInfo_snp[, paste0(pop, "_AF")]
     names(probe2af) <- probeInfo_snp$CpG
@@ -194,8 +195,10 @@ get_AF <- function(pop="EAS", type, platform="EPIC"){
       data(probeInfo_typeI)
     }else if(platform=="450K"){
       data(probeInfo_typeI_450K); probeInfo_typeI <- probeInfo_typeI_450K
+    }else if(platform=="MSA"){
+      data(probeInfo_typeI_MSA); probeInfo_typeI <- probeInfo_typeI_MSA
     }else{
-      print("ERROR: Please specify platform to one of EPIC and 450K.")
+      print("ERROR: Please specify platform to one of EPIC, 450K, and MSA.")
     }
     probe2af <- probeInfo_typeI[, paste0(pop, "_AF")]
     names(probe2af) <- probeInfo_typeI$CpG
@@ -204,8 +207,10 @@ get_AF <- function(pop="EAS", type, platform="EPIC"){
       data(probeInfo_typeII)
     }else if(platform=="450K"){
       data(probeInfo_typeII_450K); probeInfo_typeII <- probeInfo_typeII_450K
+    }else if(platform=="MSA"){
+      data(probeInfo_typeII_MSA); probeInfo_typeII <- probeInfo_typeII_MSA
     }else{
-      print("ERROR: Please specify platform to one of EPIC and 450K.")
+      print("ERROR: Please specify platform to one of EPIC, 450K, and MSA.")
     }
     probe2af <- probeInfo_typeII[, paste0(pop, "_AF")]
     names(probe2af) <- probeInfo_typeII$CpG

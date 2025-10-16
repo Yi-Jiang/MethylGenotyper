@@ -14,7 +14,7 @@
 #' @param HWE_cutoff HWE p value cutoff to filter variants. Note that for VCF output, variants with HWE p value below the cutoff will be marked in the `FILTER` column. For the returned dosage matrix, variants with HWE p value below the cutoff will be removed.
 #' @param pop Population. One of EAS, AMR, AFR, EUR, SAS, and ALL.
 #' @param bayesian Use the Bayesian approach to calculate posterior genotype probabilities.
-#' @param platform EPIC, 450K, or EPIC_v2.
+#' @param platform EPIC, EPIC_v2, 450K, or MSA.
 #' @param verbose Verbose mode: 0/1/2.
 #' @return A list containing
 #' \item{dosage}{A matrix of genotype calls. Variants with R2s, HWE p values, MAFs, or missing rates beyond the cutoffs are removed.}
@@ -33,8 +33,10 @@ callGeno_snp <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfName=
       data(probeInfo_snp_450K); probeInfo_snp <- probeInfo_snp_450K
     }else if(platform=="EPIC_v2"){
       data(probeInfo_snp_936K); probeInfo_snp <- probeInfo_snp_936K
+    }else if(platform=="MSA"){
+      data(probeInfo_snp_MSA); probeInfo_snp <- probeInfo_snp_MSA
     }else{
-      print("ERROR: Please specify platform to one of EPIC, 450K, and EPIC_v2.")
+      print("ERROR: Please specify platform to one of EPIC, EPIC_v2, 450K, and MSA.")
     }
     beta <- inData[rownames(inData) %in% probeInfo_snp$CpG, ]
     if(nrow(beta)==0){print("No SNP probes found. Exit!"); return(NA)}
@@ -48,8 +50,10 @@ callGeno_snp <- function(inData, input="raw", plotRAI=FALSE, vcf=FALSE, vcfName=
       data(probeInfo_snp_450K); probeInfo_snp <- probeInfo_snp_450K
     }else if(platform=="EPIC_v2"){
       data(probeInfo_snp_936K); probeInfo_snp <- probeInfo_snp_936K
+    }else if(platform=="MSA"){
+      data(probeInfo_snp_MSA); probeInfo_snp <- probeInfo_snp_MSA
     }else{
-      print("ERROR: Please specify platform to one of EPIC, 450K, and EPIC_v2.")
+      print("ERROR: Please specify platform to one of EPIC, EPIC_v2, 450K, and MSA.")
     }
     beta <- mval2beta(inData[rownames(inData) %in% probeInfo_snp$CpG, ])
     if(nrow(beta)==0){print("No SNP probes found. Exit!"); return(NA)}
@@ -84,7 +88,7 @@ mval2beta <- function(mval){
 #' Get RAI (Ratio of Alternative allele Intensity) for SNP probes
 #' 
 #' @param inData Noob and dye-bias corrected signals produced by using `correct_noob_dye`.
-#' @param platform EPIC, 450K, or EPIC_v2.
+#' @param platform EPIC, EPIC_v2, 450K, or MSA.
 #' @return RAI (Ratio of Alternative allele Intensity).
 #' @export
 getRAI_snp <- function(inData, platform="EPIC"){
@@ -94,8 +98,10 @@ getRAI_snp <- function(inData, platform="EPIC"){
     data(probeInfo_snp_450K); probeInfo_snp <- probeInfo_snp_450K
   }else if(platform=="EPIC_v2"){
     data(probeInfo_snp_936K); probeInfo_snp <- probeInfo_snp_936K
+  }else if(platform=="MSA"){
+    data(probeInfo_snp_MSA); probeInfo_snp <- probeInfo_snp_MSA
   }else{
-    print("ERROR: Please specify platform to one of EPIC, 450K, and EPIC_v2.")
+    print("ERROR: Please specify platform to one of EPIC, EPIC_v2, 450K, and MSA.")
   }
   cg <- rownames(inData[["AR"]])
   cg_IAR <- cg[cg %in% probeInfo_snp[probeInfo_snp$Group=="IAR", "CpG"]] # Type I, Red channel, Alt allele match probeA

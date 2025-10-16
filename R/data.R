@@ -31,6 +31,22 @@
 #' @source \url{https://webdata.illumina.com/downloads/productfiles/humanmethylation450/humanmethylation450_15017482_v1-2.csv}
 "mnfst_450K"
 
+#' MSA manifest file
+#' 
+#' A dataset containing all MSA probes information.
+#' 
+#' @usage data(mnfst_MSA)
+#' @format A data frame with 284318 rows and 5 columns:
+#' \describe{
+#'  \item{Name}{CpG name}
+#'  \item{AddressA_ID}{AdressA ID}
+#'  \item{AddressB_ID}{AdressB ID}
+#'  \item{Infinium_Design_Type}{Infinium design type}
+#'  \item{Color_Channel}{Color channel}
+#' }
+#' @source \url{https://support.illumina.com/array/array_kits/infinium-methylation-screening-array.html}
+"mnfst_MSA"
+
 #' EPIC_v2 manifest file
 #' 
 #' A dataset containing all EPIC_v2 probes information.
@@ -94,8 +110,33 @@
 #'  \item{EUR_AF}{Allele frequency of European}
 #'  \item{SAS_AF}{Allele frequency of South Asian}
 #' }
-#' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
+#' @source \url{https://webdata.illumina.com/downloads/productfiles/humanmethylation450/humanmethylation450_15017482_v1-2.csv}
 "probeInfo_snp_450K"
+
+#' SNP probe information for MSA
+#' 
+#' A dataset containing SNP probe information.
+#' 
+#' @usage data(probeInfo_snp_MSA)
+#' @format A data frame with 4034 rows and 14 columns:
+#' \describe{
+#'  \item{Chr}{Chromosome ID}
+#'  \item{Pos}{Position}
+#'  \item{SNP}{SNP ID targeted by the CpG}
+#'  \item{RefAllele}{Reference allele}
+#'  \item{AltAllele}{Alternative allele}
+#'  \item{CpG}{CpG}
+#'  \item{Color}{Color channel}
+#'  \item{Group}{Probe types, color channel, and signal corresponds to alternative allele}
+#'  \item{ALL_AF}{Allele frequency of all population}
+#'  \item{EAS_AF}{Allele frequency of East Asian}
+#'  \item{AMR_AF}{Allele frequency of American}
+#'  \item{AFR_AF}{Allele frequency of African}
+#'  \item{EUR_AF}{Allele frequency of European}
+#'  \item{SAS_AF}{Allele frequency of South Asian}
+#' }
+#' @source \url{https://support.illumina.com/array/array_kits/infinium-methylation-screening-array.html}
+"probeInfo_snp_MSA"
 
 #' SNP probe information for EPIC_v2
 #' 
@@ -170,8 +211,33 @@
 #'  \item{EUR_AF}{Allele frequency of European}
 #'  \item{SAS_AF}{Allele frequency of South Asian}
 #' }
-#' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
+#' @source \url{https://webdata.illumina.com/downloads/productfiles/humanmethylation450/humanmethylation450_15017482_v1-2.csv}
 "probeInfo_typeI_450K"
+
+#' Type I probe information for MSA
+#' 
+#' A dataset containing Type I probe information.
+#' 
+#' @usage data(probeInfo_typeI_MSA)
+#' @format A data frame with 4272 rows and 14 columns:
+#' \describe{
+#'  \item{Chr}{Chromosome ID}
+#'  \item{Pos}{Position}
+#'  \item{SNP}{SNP ID targeted by the CpG}
+#'  \item{RefAllele}{Reference allele}
+#'  \item{AltAllele}{Alternative allele}
+#'  \item{CpG}{CpG}
+#'  \item{Color}{Color channel}
+#'  \item{Group}{NA}
+#'  \item{ALL_AF}{Allele frequency of all population}
+#'  \item{EAS_AF}{Allele frequency of East Asian}
+#'  \item{AMR_AF}{Allele frequency of American}
+#'  \item{AFR_AF}{Allele frequency of African}
+#'  \item{EUR_AF}{Allele frequency of European}
+#'  \item{SAS_AF}{Allele frequency of South Asian}
+#' }
+#' @source \url{https://support.illumina.com/array/array_kits/infinium-methylation-screening-array.html}
+"probeInfo_typeI_MSA"
 
 #' Type II probe information for EPIC
 #' 
@@ -221,8 +287,33 @@
 #'  \item{EUR_AF}{Allele frequency of European}
 #'  \item{SAS_AF}{Allele frequency of South Asian}
 #' }
-#' @source \url{https://webdata.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b5-manifest-file-csv.zip}
+#' @source \url{https://webdata.illumina.com/downloads/productfiles/humanmethylation450/humanmethylation450_15017482_v1-2.csv}
 "probeInfo_typeII_450K"
+
+#' Type II probe information for MSA
+#' 
+#' A dataset containing information of Type II probes with SNPs at the extension bases. We only consider the situation that the alternative allele is A/T and the reference allele is C/G.
+#' 
+#' @usage data(probeInfo_typeII_MSA)
+#' @format A data frame with 4737 rows and 14 columns:
+#' \describe{
+#'  \item{Chr}{Chromosome ID}
+#'  \item{Pos}{Position}
+#'  \item{SNP}{SNP ID targeted by the CpG}
+#'  \item{RefAllele}{Reference allele}
+#'  \item{AltAllele}{Alternative allele}
+#'  \item{CpG}{CpG}
+#'  \item{Color}{Color channel}
+#'  \item{Group}{Probe types, color channel, and signal corresponds to alternative allele}
+#'  \item{ALL_AF}{Allele frequency of all population}
+#'  \item{EAS_AF}{Allele frequency of East Asian}
+#'  \item{AMR_AF}{Allele frequency of American}
+#'  \item{AFR_AF}{Allele frequency of African}
+#'  \item{EUR_AF}{Allele frequency of European}
+#'  \item{SAS_AF}{Allele frequency of South Asian}
+#' }
+#' @source \url{https://support.illumina.com/array/array_kits/infinium-methylation-screening-array.html}
+"probeInfo_typeII_MSA"
 
 #' Probe list for EPIC
 #' 
@@ -246,8 +337,22 @@
 #' \describe{
 #'  \item{CpG}{CpG list}
 #'  \item{Type}{Probe types}
+#'  \item{A2}{Alternative alleles}
 #' }
 "probelist_450K"
+
+#' Probe list for MSA
+#' 
+#' A dataset containing the list of SNP probes, Type I probes, and type II probes.
+#' 
+#' @usage data(probelist_MSA)
+#' @format A data frame with 12926 rows and 3 columns:
+#' \describe{
+#'  \item{CpG}{CpG list}
+#'  \item{Type}{Probe types}
+#'  \item{A2}{Alternative alleles}
+#' }
+"probelist_MSA"
 
 #' Probe list for EPIC_v2
 #' 

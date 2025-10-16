@@ -11,7 +11,7 @@ get_AF(pop = "EAS", type, platform = "EPIC")
 
 \item{type}{One of snp_probe, typeI_probe, and typeII_probe.}
 
-\item{platform}{EPIC, 450K, or EPIC_v2.}
+\item{platform}{EPIC, EPIC_v2, 450K, or MSA.}
 }
 \value{
 A vector of AFs

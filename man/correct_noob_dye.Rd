@@ -9,7 +9,7 @@ correct_noob_dye(target, platform = "EPIC", cpu = 1)
 \arguments{
 \item{target}{A data frame of two columns: Sample_Name, Basename, where Basename tells the location of IDAT files.}
 
-\item{platform}{EPIC, 450K, or EPIC_v2.}
+\item{platform}{EPIC, EPIC_v2, 450K, or MSA.}
 
 \item{cpu}{Number of CPU.}
 }
