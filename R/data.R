@@ -402,3 +402,16 @@
 #' }
 "sam2pop"
 
+#' Control probes for MSA
+#' 
+#' Control probes for IlluminaHumanMethylationMSA.
+#' 
+#' @usage data(control_probes_MSA)
+#' @format A data frame with 2511 rows and 4 columns:
+#' \describe{
+#'  \item{Address}{Address}
+#'  \item{Type}{Type}
+#'  \item{Color}{Color}
+#'  \item{ExtendedType}{ExtendedType}
+#' }
+"control_probes_MSA"

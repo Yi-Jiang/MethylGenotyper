@@ -86,7 +86,11 @@ correct_noob_dye <- function(target, platform="EPIC", cpu=1){
         rgData0 <- rgData0[rgData0$Name %in% probelist$CpG,]
         
         ## Fit linear regression of red and green channel
-        control_probes <- minfi::getProbeInfo(rgSet, type = "Control")
+        if(platform=="MSA"){
+          data(control_probes_MSA); control_probes <- control_probes_MSA
+        }else{
+          control_probes <- minfi::getProbeInfo(rgSet, type = "Control")
+        }
         controls <- as.data.frame(control_probes) %>% 
             left_join(tibble(G=green, Address=names(green))) %>% 
             left_join(tibble(R=red, Address=names(red)))
